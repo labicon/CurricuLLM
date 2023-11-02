@@ -93,6 +93,7 @@ class CurriculumEvalCallback(EventCallback):
         self.evaluations_results_task = []
         self.evaluations_timesteps = []
         self.evaluations_length = []
+        self.evaluations_tasks = []
         # For computing success rate
         self._is_success_buffer = []
         self.evaluations_successes = []
@@ -162,6 +163,9 @@ class CurriculumEvalCallback(EventCallback):
                 self.evaluations_results_main.append(episode_rewards_main)
                 self.evaluations_results_task.append(episode_rewards_task)
                 self.evaluations_length.append(episode_lengths)
+                self.evaluations_results_main.append(episode_rewards_main)
+                self.evaluations_results_task.append(episode_rewards_task)
+                self.evaluations_tasks.append(self.task)
 
                 kwargs = {}
                 # Save success log if present

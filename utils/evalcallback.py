@@ -163,8 +163,6 @@ class CurriculumEvalCallback(EventCallback):
                 self.evaluations_results_main.append(episode_rewards_main)
                 self.evaluations_results_task.append(episode_rewards_task)
                 self.evaluations_length.append(episode_lengths)
-                self.evaluations_results_main.append(episode_rewards_main)
-                self.evaluations_results_task.append(episode_rewards_task)
                 self.evaluations_tasks.append(self.task)
 
                 kwargs = {}
@@ -173,27 +171,27 @@ class CurriculumEvalCallback(EventCallback):
                     self.evaluations_successes.append(self._is_success_buffer)
                     kwargs = dict(successes=self.evaluations_successes)
 
-                data = pd.DataFrame(
-                    {
-                        "timesteps": self.evaluations_timesteps,
-                        "results_main": self.evaluations_results_main,
-                        "results_task": self.evaluations_results_task,
-                        "task": self.task,
-                        "ep_lengths": self.evaluations_length,
-                        "successes": self.evaluations_successes,
-                    }
-                )
-
-                data.to_pickle(self.log_path + ".pkl")
-                # np.savez(
-                #     self.log_path,
-                #     timesteps=self.evaluations_timesteps,
-                #     results_main=self.evaluations_results_main,
-                #     results_task=self.evaluations_results_task,
-                #     task=self.task,
-                #     ep_lengths=self.evaluations_length,
-                #     **kwargs,
+                # data = pd.DataFrame(
+                #     {
+                #         "timesteps": self.evaluations_timesteps,
+                #         "results_main": self.evaluations_results_main,
+                #         "results_task": self.evaluations_results_task,
+                #         "task": self.task,
+                #         "ep_lengths": self.evaluations_length,
+                #         "successes": self.evaluations_successes,
+                #     }
                 # )
+
+                # data.to_pickle(self.log_path + ".pkl")
+                np.savez(
+                    self.log_path,
+                    timesteps=self.evaluations_timesteps,
+                    results_main=self.evaluations_results_main,
+                    results_task=self.evaluations_results_task,
+                    task=self.evaluations_tasks,
+                    ep_lengths=self.evaluations_length,
+                    **kwargs,
+                )
 
             mean_reward_main, std_reward_main = np.mean(episode_rewards_main), np.std(episode_rewards_main)
             mean_reward_task, std_reward_task = np.mean(episode_rewards_task), np.std(episode_rewards_task)
@@ -203,8 +201,8 @@ class CurriculumEvalCallback(EventCallback):
 
             if self.verbose >= 1:
                 print("Task: ", self.task)
-                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward_main:.2f} +/- {std_reward_main:.2f}")
-                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward_task:.2f} +/- {std_reward_task:.2f}")
+                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_task={mean_reward_task:.2f} +/- {std_reward_task:.2f}")
+                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_main={mean_reward_main:.2f} +/- {std_reward_main:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
             # Add to current Logger
             self.logger.record("eval/mean_reward_main", float(mean_reward_main))

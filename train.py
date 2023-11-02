@@ -112,6 +112,7 @@ if __name__ == "__main__":
         model.save(f"./logs/{env_id}/ppo_{task}/model_{i}")
 
         if mean_reward_task > task_threshold[task] * max_step:
+            print(f"Mean reward task: {mean_reward_task} > {task_threshold[task]} * {max_step}")
             print("Task complete!")
             try:
                 task = task_list[task_list.index(task) + 1]

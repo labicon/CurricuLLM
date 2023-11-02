@@ -83,8 +83,8 @@ if __name__ == "__main__":
 
     # Create the callback: check every 10000 steps
     eval_callback = CurriculumEvalCallback(eval_env,
-                                            log_path=logger_path, eval_freq=10_000,
-                                            deterministic=True, render=False, warn=False)
+                                            log_path=logger_path, eval_freq=5_000,
+                                            deterministic=True, render=False, warn=False, task=task)
 
     model = CurriculumPPO("MlpPolicy", 
                               training_env, 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         print(f"Task: {task}")
         print(f"Task Threshold: {task_threshold[task]}")
 
-        model.learn(total_timesteps=50_000, callback=eval_callback)
+        model.learn(total_timesteps=20_000, callback=eval_callback)
 
         print("Evaluating the trained policy")
         mean_reward_main, std_reward_main, mean_reward_task, std_reward_task = \
@@ -120,6 +120,5 @@ if __name__ == "__main__":
                 task = None
             training_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
             eval_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
-            eval_callback = CurriculumEvalCallback(eval_env, log_path=logger_path, eval_freq=500,
-                                                    deterministic=True, render=False)
+            eval_callback.task = task
             model.set_env(training_env)

@@ -208,6 +208,10 @@ class CurriculumEvalCallback(EventCallback):
             self.logger.record("eval/mean_reward_main", float(mean_reward_main))
             self.logger.record("eval/mean_reward_task", float(mean_reward_task))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
+            if self.task is not None:
+                self.logger.record("eval/current_task", self.task)
+            else:
+                self.logger.record("eval/current_task", "None")
 
             if len(self._is_success_buffer) > 0:
                 success_rate = np.mean(self._is_success_buffer)

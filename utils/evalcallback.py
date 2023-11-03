@@ -235,13 +235,12 @@ class CurriculumEvalCallback(EventCallback):
 
             # Average over the last 10 evaluations
             reward_task = sum(self.last_ten_rewards) / len(self.last_ten_rewards)
-            if reward_task > self.task_threshold[self.task]:
-                print("Task threshold reached!")
-                self.last_ten_rewards = deque([0]*10, maxlen=10)
-                continue_training = False
-                task_finished = True
-            else:
-                task_finished = False
+            if self.task is not None:
+                if reward_task > self.task_threshold[self.task]:
+                    print("Task threshold reached!")
+                    self.last_ten_rewards = deque([0]*10, maxlen=10)
+                    continue_training = False
+                    task_finished = True
 
         return continue_training, task_finished
 

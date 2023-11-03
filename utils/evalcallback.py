@@ -4,6 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 import warnings
+from collections import deque
 from utils.evaluation import curriculum_evaluate_policy
 
 try:
@@ -76,6 +77,7 @@ class CurriculumEvalCallback(EventCallback):
         self.eval_freq = eval_freq
         self.best_mean_reward = -np.inf
         self.last_mean_reward = -np.inf
+        self.last_ten_rewards = deque([0]*10, maxlen=10)
         self.deterministic = deterministic
         self.render = render
         self.warn = warn
@@ -191,6 +193,7 @@ class CurriculumEvalCallback(EventCallback):
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
             self.last_mean_reward_main = mean_reward_main
             self.last_mean_reward_task = mean_reward_task
+            self.last_ten_rewards.append(mean_reward_task)
 
             if self.verbose >= 1:
                 print("Task: ", self.task)
@@ -230,8 +233,9 @@ class CurriculumEvalCallback(EventCallback):
             if self.callback is not None:
                 continue_training = continue_training and self._on_event()
 
-
-            if mean_reward_task > self.task_threshold[self.task]:
+            # Average over the last 10 evaluations
+            reward_task = sum(self.last_ten_rewards) / len(self.last_ten_rewards)
+            if reward_task > self.task_threshold[self.task]:
                 print("Task threshold reached!")
                 continue_training = False
                 task_finished = True

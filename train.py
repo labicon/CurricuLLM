@@ -100,8 +100,11 @@ if __name__ == "__main__":
 
     for i in range(30):
         print(f"Training iteration: {i}")
-        print(f"Task: {task}")
-        print(f"Task Threshold: {task_threshold[task]}")
+        if task is not None:
+            print(f"Task: {task}")
+            print(f"Task Threshold: {task_threshold[task]}")
+        else:
+            print("Task: Main")
 
         task_finished = model.learn(total_timesteps=500_000, callback=eval_callback)
 

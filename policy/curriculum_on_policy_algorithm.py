@@ -149,7 +149,7 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
         callback: BaseCallback,
         rollout_buffer: RolloutBuffer,
         n_rollout_steps: int,
-    ) -> bool:
+    ) -> (bool, bool):
         """
         Collect experiences using the current policy and fill a ``RolloutBuffer``.
         The term rollout here refers to the model-free notion and should not
@@ -205,8 +205,9 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
 
             # Give access to local variables
             callback.update_locals(locals())
-            if not callback.on_step():
-                return False
+            continue_training, task_finished = callback.on_step()
+            if not continue_training and task_finished:
+                return False, True
 
             self._update_info_buffer(infos)
             n_steps += 1
@@ -249,7 +250,7 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
 
         callback.on_rollout_end()
 
-        return True
+        return True, False
 
     def train(self) -> None:
         """
@@ -282,7 +283,7 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
         assert self.env is not None
 
         while self.num_timesteps < total_timesteps:
-            continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+            continue_training, task_finished = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
 
             if not continue_training:
                 break
@@ -308,30 +309,15 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
 
         callback.on_training_end()
 
-        return self
+        return task_finished
 
     def _get_torch_save_params(self) -> Tuple[List[str], List[str]]:
         state_dicts = ["policy", "policy.optimizer"]
 
         return state_dicts, []
-    
-    def compute_rollout_rewards(self, n_rollout_steps: int = None):
-        # shape of rollout_buffer.rewards: np array (buffer_size, n_envs)
-        if n_rollout_steps is not None:
-            if 10 * n_rollout_steps > self.rollout_buffer.buffer_size:
-                average_reward = self.rollout_buffer.rewards.mean()
-            else:
-                average_reward = self.rollout_buffer.rewards[10 * n_rollout_steps:].mean()
-        else:
-            average_reward = self.rollout_buffer.rewards.mean()
-
-        return average_reward
 
     def task_transitiion(self):
-        threshold = self.task_transitiion_threshold[self.current_task]
-        reward = self.compute_rollout_rewards()
-        if reward > threshold:
-            try:
-                self.current_task = self.task_list[self.task_list.index(self.current_task) + 1]
-            except:
-                self.current_task = None
+        try:
+            self.current_task = self.task_list[self.task_list.index(self.current_task) + 1]
+        except:
+            self.current_task = None

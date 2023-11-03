@@ -16,7 +16,7 @@ from utils.evaluation import curriculum_evaluate_policy
 from utils.evalcallback import CurriculumEvalCallback
 
 
-def make_env(env_id: str, rank: int, task = None, seed: int = 0):
+def make_env(env_id: str, rank: int, task = None, seed: int = 0, render_mode: str = None):
     """
     Utility function for multiprocessed env.
 
@@ -26,7 +26,10 @@ def make_env(env_id: str, rank: int, task = None, seed: int = 0):
     :param rank: index of the subprocess
     """
     def _init():
-        env = gym.make(env_id, task=task)
+        if render_mode is None:
+            env = gym.make(env_id, task=task)
+        else:
+            env = gym.make(env_id, task=task, render_mode=render_mode)
         check_env(env) # check the environment
         env.reset(seed=seed + rank)
         return env
@@ -71,6 +74,7 @@ if __name__ == "__main__":
     task = task_list[0]
 
     max_step = get_env_maximum_step(env_id)
+    task_threshold = {task: task_threshold[task] * max_step for task in task_threshold}
 
     # Create the logger
     logger_path = "./logs/" + env_id + "/"
@@ -84,7 +88,8 @@ if __name__ == "__main__":
     # Create the callback: check every 10000 steps
     eval_callback = CurriculumEvalCallback(eval_env,
                                             log_path=logger_path, eval_freq=5_000,
-                                            deterministic=True, render=False, warn=False, task=task)
+                                            deterministic=True, render=False, warn=False, 
+                                            task=task, task_list=task_list, task_threshold=task_threshold)
 
     model = CurriculumPPO("MlpPolicy", 
                               training_env, 
@@ -94,32 +99,33 @@ if __name__ == "__main__":
     model.set_logger(new_logger)
 
     for i in range(30):
+        print(f"Training iteration: {i}")
         print(f"Task: {task}")
         print(f"Task Threshold: {task_threshold[task]}")
 
-        model.learn(total_timesteps=20_000, callback=eval_callback)
+        task_finished = model.learn(total_timesteps=500_000, callback=eval_callback)
 
-        print("Evaluating the trained policy")
-        mean_reward_main, std_reward_main, mean_reward_task, std_reward_task = \
-            curriculum_evaluate_policy(model, 
-                                       eval_env, 
-                                       n_eval_episodes=4, 
-                                       deterministic=False, render=False, warn=False)
+        if task_finished:
+            print("Task complete! Saving model...")
+            model.save(f"./logs/{env_id}/ppo_{task}")
 
-        print(f"mean_reward_main: {mean_reward_main}, std_reward_main: {std_reward_main}")
-        print(f"mean_reward_task: {mean_reward_task}, std_reward_task: {std_reward_task}")
+            # # Visualize the trained policy
+            # obs = eval_env.reset()
+            # for _ in range(1000):
+            #     action, _states = model.predict(obs)
+            #     obs, rewards, dones, info = eval_env.step(action)
+            #     eval_env.render()
 
-        model.save(f"./logs/{env_id}/ppo_{task}/model_{i}")
-
-        if mean_reward_task > task_threshold[task] * max_step:
-            print(f"Mean reward task: {mean_reward_task} > {task_threshold[task]} * {max_step}")
-            print("Task complete!")
             try:
                 task = task_list[task_list.index(task) + 1]
             except:
                 print("All tasks complete!")
                 task = None
+
+            del training_env, eval_env
             training_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
             eval_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
-            eval_callback.task = task
+            eval_callback.change_current_task(task)
             model.set_env(training_env)
+        else:
+            print("Task not complete! Continuing training...")

@@ -62,6 +62,8 @@ class CurriculumEvalCallback(EventCallback):
         verbose: int = 1,
         warn: bool = True,
         task: Optional[str] = None,
+        task_list: Optional[List[str]] = None,
+        task_threshold: Optional[Dict[str, float]] = None,
     ):
         super().__init__(callback_after_eval, verbose=verbose)
 
@@ -78,6 +80,8 @@ class CurriculumEvalCallback(EventCallback):
         self.render = render
         self.warn = warn
         self.task = task
+        self.task_list = task_list
+        self.task_threshold = task_threshold
 
         # Convert to VecEnv for consistency
         if not isinstance(eval_env, VecEnv):
@@ -129,8 +133,9 @@ class CurriculumEvalCallback(EventCallback):
             if maybe_is_success is not None:
                 self._is_success_buffer.append(maybe_is_success)
 
-    def _on_step(self) -> bool:
+    def _on_step(self) -> (bool, bool):
         continue_training = True
+        task_finished = False
 
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
             # Sync training and eval env if there is VecNormalize
@@ -171,18 +176,6 @@ class CurriculumEvalCallback(EventCallback):
                     self.evaluations_successes.append(self._is_success_buffer)
                     kwargs = dict(successes=self.evaluations_successes)
 
-                # data = pd.DataFrame(
-                #     {
-                #         "timesteps": self.evaluations_timesteps,
-                #         "results_main": self.evaluations_results_main,
-                #         "results_task": self.evaluations_results_task,
-                #         "task": self.task,
-                #         "ep_lengths": self.evaluations_length,
-                #         "successes": self.evaluations_successes,
-                #     }
-                # )
-
-                # data.to_pickle(self.log_path + ".pkl")
                 np.savez(
                     self.log_path,
                     timesteps=self.evaluations_timesteps,
@@ -237,7 +230,15 @@ class CurriculumEvalCallback(EventCallback):
             if self.callback is not None:
                 continue_training = continue_training and self._on_event()
 
-        return continue_training
+
+            if mean_reward_task > self.task_threshold[self.task]:
+                print("Task threshold reached!")
+                continue_training = False
+                task_finished = True
+            else:
+                task_finished = False
+
+        return continue_training, task_finished
 
     def update_child_locals(self, locals_: Dict[str, Any]) -> None:
         """
@@ -247,3 +248,9 @@ class CurriculumEvalCallback(EventCallback):
         """
         if self.callback:
             self.callback.update_locals(locals_)
+
+    def change_current_task(self, task):
+        if not (task in self.task_list) and task is not None:
+            raise ValueError("Task not in task list!")
+        
+        self.task = task

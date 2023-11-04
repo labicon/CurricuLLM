@@ -1,0 +1,1 @@
+from Curriculum.envs.curriculum_halfcheetah import HalfCheetahEnv

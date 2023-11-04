@@ -8,7 +8,7 @@ from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.logger import configure
 
-from envs.curriculum_halfcheetah import HalfCheetahEnv
+import Curriculum
 
 from policy.curriculum_ppo import CurriculumPPO
 

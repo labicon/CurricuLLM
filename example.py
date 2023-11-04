@@ -1,14 +1,15 @@
 import gymnasium as gym
+import Curriculum
 
-env = gym.make("ALE/MontezumaRevenge-v5", render_mode='human')
+env = gym.make("Curriculum/HalfCheetah-v4", task="enhanced_stability")
 
 observation, info = env.reset(seed=42)
 for _ in range(1000):
-    action = 0
+    action = env.action_space.sample()
     observation, reward, terminated, truncated, info = env.step(action)
 
-    ram = env.unwrapped.ale.getRAM()
-    print(ram)
+    print(reward)
+    print(info)
 
     if terminated or truncated:
         observation, info = env.reset()

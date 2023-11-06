@@ -70,14 +70,16 @@ if __name__ == "__main__":
     env_id = "Curriculum/HalfCheetah-v4"
     num_cpu = 4
 
-    task_list, task_threshold = get_task_env(env_id)
-    task = task_list[0]
+    # task_list, task_threshold = get_task_env(env_id)
+    task = None
+    task_list = None
 
     max_step = get_env_maximum_step(env_id)
-    task_threshold = {task: task_threshold[task] * max_step for task in task_threshold}
+    # task_threshold = {task: task_threshold[task] * max_step for task in task_threshold}
+    task_threshold = None
 
     # Create the logger
-    logger_path = "./logs/" + env_id + "_2/"
+    logger_path = "./logs/" + env_id + "_baseline/"
     new_logger = configure(logger_path, ["stdout", "csv"])
 
     # Create the vectorized environment

@@ -77,7 +77,7 @@ class CurriculumEvalCallback(EventCallback):
         self.eval_freq = eval_freq
         self.best_mean_reward = -np.inf
         self.last_mean_reward = -np.inf
-        self.last_ten_rewards = deque([0]*10, maxlen=10)
+        self.recent_task_rewards = deque([0]*10, maxlen=10)
         self.deterministic = deterministic
         self.render = render
         self.warn = warn
@@ -193,7 +193,7 @@ class CurriculumEvalCallback(EventCallback):
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
             self.last_mean_reward_main = mean_reward_main
             self.last_mean_reward_task = mean_reward_task
-            self.last_ten_rewards.append(mean_reward_task)
+            self.recent_task_rewards.append(mean_reward_task)
 
             if self.verbose >= 1:
                 print("Task: ", self.task)
@@ -203,6 +203,8 @@ class CurriculumEvalCallback(EventCallback):
             # Add to current Logger
             self.logger.record("eval/mean_reward_main", float(mean_reward_main))
             self.logger.record("eval/mean_reward_task", float(mean_reward_task))
+            task_mean_recent = sum(self.recent_task_rewards) / len(self.recent_task_rewards)
+            self.logger.record("eval/mean_reward_task_recent", float(task_mean_recent))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
             if self.task is not None:
                 self.logger.record("eval/current_task", self.task)
@@ -234,11 +236,10 @@ class CurriculumEvalCallback(EventCallback):
                 continue_training = continue_training and self._on_event()
 
             # Average over the last 10 evaluations
-            reward_task = sum(self.last_ten_rewards) / len(self.last_ten_rewards)
+            
             if self.task is not None:
-                if reward_task > self.task_threshold[self.task]:
+                if task_mean_recent > self.task_threshold[self.task]:
                     print("Task threshold reached!")
-                    self.last_ten_rewards = deque([0]*10, maxlen=10)
                     continue_training = False
                     task_finished = True
 
@@ -258,3 +259,4 @@ class CurriculumEvalCallback(EventCallback):
             raise ValueError("Task not in task list!")
         
         self.task = task
+        self.recent_task_rewards = deque([0]*10, maxlen=10)

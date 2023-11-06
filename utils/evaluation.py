@@ -97,7 +97,7 @@ def curriculum_evaluate_policy(
         )
         new_observations, rewards, dones, infos = env.step(actions)
         current_rewards_main += np.array([info["reward_main"] for info in infos])
-        current_rewards_task += np.array([info["reward_task"] for info in infos])
+        current_rewards_task += rewards
         current_lengths += 1
         for i in range(n_envs):
             if episode_counts[i] < episode_count_targets[i]:

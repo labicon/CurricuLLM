@@ -79,7 +79,7 @@ if __name__ == "__main__":
     task_threshold = None
 
     # Create the logger
-    logger_path = "./logs/" + env_id + "_baseline/"
+    logger_path = "./logs/" + env_id + "_baseline_save_models/"
     new_logger = configure(logger_path, ["stdout", "csv"])
 
     # Create the vectorized environment
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     # Create the callback: check every 10000 steps
     eval_callback = CurriculumEvalCallback(eval_env,
-                                            log_path=logger_path, eval_freq=5_000,
+                                            log_path=logger_path, best_model_save_path=logger_path, eval_freq=5_000,
                                             deterministic=True, render=False, warn=False, 
                                             task=task, task_list=task_list, task_threshold=task_threshold)
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
                               verbose=1)
     model.set_logger(new_logger)
 
-    for i in range(30):
+    for i in range(10):
         print(f"Training iteration: {i}")
         if task is not None:
             print(f"Task: {task}")
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
         if task_finished:
             print("Task complete! Saving model...")
-            model.save(f"./logs/{env_id}/ppo_{task}")
+            model.save(logger_path + f"ppo_{task}")
 
             # # Visualize the trained policy
             # obs = eval_env.reset()
@@ -135,3 +135,6 @@ if __name__ == "__main__":
             model.set_env(training_env)
         else:
             print("Task not complete! Continuing training...")
+
+    print("Training complete!")
+    model.save(logger_path + "ppo_final")

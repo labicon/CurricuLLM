@@ -12,8 +12,8 @@ import Curriculum
 
 from policy.curriculum_ppo import CurriculumPPO
 
-from utils.evaluation import curriculum_evaluate_policy
-from utils.evalcallback import CurriculumEvalCallback
+from evaluation.evaluation import curriculum_evaluate_policy
+from evaluation.evalcallback import CurriculumEvalCallback
 
 
 def make_env(env_id: str, rank: int, task = None, seed: int = 0, render_mode: str = None):

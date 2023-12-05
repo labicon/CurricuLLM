@@ -81,10 +81,10 @@ if __name__ == "__main__":
                                             deterministic=True, render=False, warn=False, 
                                             task=task)
 
-    # model = PPO("MlpPolicy", 
-    #                 training_env, 
-    #                 verbose=1)
-    model = PPO.load(logger_path + "ppo_forward_movement")
+    model = PPO("MlpPolicy", 
+                    training_env, 
+                    verbose=1)
+    # model = PPO.load(logger_path + "ppo_forward_movement")
     previous_task = task
     for i in range(10):     
         single_task_training(model, env_id, task, logger_path, eval_callback, num_cpu=num_cpu, total_timesteps=400_000)

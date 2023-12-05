@@ -1,1 +1,4 @@
+# Be careful with this file, it contains your OpenAI API key.
+# Do not commit this file to a public repository.
+
 OPENAI_API_KEY: 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

@@ -10,8 +10,6 @@ from stable_baselines3.common.logger import configure
 
 import Curriculum
 
-from policy.curriculum_ppo import CurriculumPPO
-
 from utils.envs_utils import *
 
 if __name__ == "__main__":

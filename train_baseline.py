@@ -5,8 +5,6 @@ from stable_baselines3 import PPO, DDPG, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.logger import configure
 
-from policy.curriculum_ppo import CurriculumPPO
-
 from evaluation.evalcallback import CurriculumEvalCallback
 
 from utils.envs_utils import *

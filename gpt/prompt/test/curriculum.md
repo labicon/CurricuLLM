@@ -1,39 +1,35 @@
 Task 1 Name
-Understanding the Basics of Balance
+Learn to Stand
 
 Task 1 Description
-The agent should learn to maintain the hopper in an upright position with zero velocity (not falling over) for an extended period of time. The starting position is set with the hopper's torso standing vertically with a slight randomized initial disturbance in position and velocity. The reward is positively proportional to the time maintaining balance without exceeding a predefined maximum angle deviation from vertical.
+Before hopping, the agent must learn to balance and stand upright. Starting from a variety of positions within the initial state space, the goal is to achieve and maintain an upright torso with minimal movement. The agent should apply torques to all joints to prevent the hopper from falling over, prioritizing minimal energy expenditure. Success is measured by maintaining a z height of the torso above a threshold (such as 1.2 times the initial z height) and keeping the torso angle within a limited range for a duration without falling or exceeding energy thresholds.
 
 Task 2 Name
-Stationary Hopping
+Static Balance on One Foot
 
 Task 2 Description
-The agent must learn to perform a single hop and land back to the starting position without tilting or falling over. The hopper must remain in place (x-coordinate should not change significantly) while only moving in the z direction. The reward is given for successfully performing a hop and returning to the balance position within a small margin of error for x-position and angles of body parts. 
+The agent needs to learn how to balance statically on its foot. This task involves controlling the torques on the three hinges without any hopping, such that the hopper maintains an upright position with zero velocity while withstanding perturbations (small external forces applied to the body parts). Success is measured by the hopper's ability to re-stabilize after perturbations without falling, maintaining a z height above a preset threshold and torso angle within a limited range for a certain duration.
 
 Task 3 Name
-Controlled Hopping
+Small Controlled Hops
 
 Task 3 Description
-This task involves performing multiple hops in the same place, with the goal of achieving a rhythmic and consistent hopping pattern. The agent is tasked to control the applied torques to ensure that the hopper takes off and lands in the same x-coordinate while maintaining a healthy posture described by the is_healthy function. Rewards are provided for each successful hop and maintaining the upright position.
+In this task, the agent progresses from standing to performing small vertical hops while trying to minimize forward or backward movement. The agent should apply controlled torques that lift the foot off the ground by a small amount and then cushion the landing to achieve a soft touch-down. The performance is measured by the consistency of the hop height, the smoothness of each landing, and the ability to maintain overall balance without tilting or falling.
 
 Task 4 Name
-Directional Hopping
+Forward Hops with Balance
 
 Task 4 Description
-Now, the agent should learn to hop forward by applying torques that push the hopper in the right direction while still maintaining balance. The reward function should encourage forward motion with minimal sideways drift. The sequence of tasks should lead to developing an efficient gait that combines balance, power, and direction.
+The agent now combines balance with small forward hops. Here, the goal is to hop forward, landing each time without losing balance and falling over. The agent must maintain a forward trajectory, controlling its body orientation and applying torques to regulate both vertical and horizontal motion. Performance is evaluated based on the forward distance covered, the consistency of hop lengths, the time spent airborne, and the ability to remain steady upon landing.
 
 Task 5 Name
-Efficient Forward Hopping
+Maximize Forward Velocity
 
 Task 5 Description
-Here, the agent needs to optimize the hopping sequence for efficient forward travel. The agent must achieve higher forward velocity by improving the coordination of torques applied. The reward function should now heavily penalize inefficient energy usage and sideways movement, and provide bonuses for speed, as well as maintaining a healthy state as per the is_healthy function.
+Building on the previous task, the current goal is to maximize forward velocity while hopping. The agent should apply torques to the hinges to achieve the greatest possible forward speed through a sequence of hops without compromising its stability. The performance is evaluated on the increase in the x velocity of the torso as calculated in the reward function, while also managing control costs and maintaining the health criteria set by the environment.
 
-Task 6 Name
-Maximize Distance within Time Limit
+Task 6 Original Task
+Efficient and Healthy Hopping
 
-Task 6 Description
-The goal for the agent here is to maximize the horizontal distance covered in a fixed time limit with a series of hops. The agent must apply the learnings from previous tasks to achieve the greatest distance possible before time runs out. The reward is based on the forward distance covered minus the control costs and the healthy state reward. There are penalties for falling over before the time limit.
-
-Task n Original Task
-Task n Original Task Description
-The agent should use the torques at its joints to achieve hops that move in the forward (right) direction while maximizing the cumulative reward. This involves complex coordination of all the learnings from previous tasks to maintain balance, control, and efficiency, minimizing control costs and maintaining a healthy torso angle and height throughout the hopping sequence. The performance of the hopper is evaluated based on the distance covered in the forward direction, subtracting the costs of control and ensuring a healthy state is maintained across the entire task.
+Task 6 Original Task Description
+The original task is to combine the skills learned from the earlier tasks to perform efficient and healthy hops in the forward direction. The agent must apply torques on the hinges connecting the torso, thigh, leg, and foot to achieve maximum forward momentum. The hops need to be smooth, controlled, and efficient, optimizing for forward speed while minimizing energy use and avoiding unhealthy states (falling, tipping over, or reaching unsafe angles). Hopping performance will be assessed using the reward function provided in the environment code, taking into account x velocity, healthiness of the hopper, and control costs.

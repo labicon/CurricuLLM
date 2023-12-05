@@ -1,0 +1,22 @@
+This is a learning curve for task: {TASK}
+Analyze the learning curve and recommend between three options.
+(1) Move to next task
+(2) Continue training
+(3) Revise the reward function
+
+{REWARD_REFLECTION_HERE}
+
+Some tips for decision makings
+(1) If the reward has increased significantly compared to the beginning and converged, move to next task.
+(2) If the reward has been increasing and not yet converged, keep training on same reward function.
+(3) If the reward is not increasing, then you must rewrite the reward functions.
+(4) If the values for a certain reward component are near identical throughout, then this means RL is not able to optimize this component as it is written. You may consider
+(a) Changing its scale or the value of its temperature parameter
+(b) Re-writing the reward component
+(c) Discarding the reward component
+(5) If some reward components’ magnitude is significantly larger, then you must re-scale its value to a proper range
+
+Output format should follow one of these
+[Option 1] Reason: 
+[Option 2] Reason:
+[Option 3] Reason:

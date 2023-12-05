@@ -14,6 +14,8 @@ from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedul
 from stable_baselines3.common.utils import obs_as_tensor, safe_mean
 from stable_baselines3.common.vec_env import VecEnv
 
+from evaluation.evalcallback_feedback import CurriculumEvalCallback
+
 SelfOnPolicyAlgorithm = TypeVar("SelfOnPolicyAlgorithm", bound="CurriculumOnPolicyAlgorithm")
 
 
@@ -70,8 +72,6 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
         max_grad_norm: float,
         use_sde: bool,
         sde_sample_freq: int,
-        task_list: list = None,
-        task_threshold: dict = None,
         rollout_buffer_class: Optional[Type[RolloutBuffer]] = None,
         rollout_buffer_kwargs: Optional[Dict[str, Any]] = None,
         stats_window_size: int = 100,
@@ -108,12 +108,6 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
         self.max_grad_norm = max_grad_norm
         self.rollout_buffer_class = rollout_buffer_class
         self.rollout_buffer_kwargs = rollout_buffer_kwargs or {}
-        self.task_list = task_list
-        if task_list is not None:
-            self.current_task = task_list[0]
-        else:
-            self.current_task = None
-        self.task_transitiion_threshold = task_threshold
 
         if _init_setup_model:
             self._setup_model()
@@ -150,7 +144,7 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
         rollout_buffer: RolloutBuffer,
         n_rollout_steps: int,
         iteration: int,
-    ) -> (bool, bool):
+    ) -> bool:
         """
         Collect experiences using the current policy and fill a ``RolloutBuffer``.
         The term rollout here refers to the model-free notion and should not
@@ -206,9 +200,9 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
 
             # Give access to local variables
             callback.update_locals(locals())
-            continue_training, task_finished = callback.on_step()
-            if not continue_training and task_finished and iteration > self.task_min_iteration:
-                return False, True
+            continue_training = callback.on_step()
+            if not continue_training:
+                return False
 
             self._update_info_buffer(infos)
             n_steps += 1
@@ -251,7 +245,7 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
 
         callback.on_rollout_end()
 
-        return True, False
+        return True
 
     def train(self) -> None:
         """
@@ -270,7 +264,6 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
         reset_num_timesteps: bool = True,
         progress_bar: bool = False,
     ) -> SelfOnPolicyAlgorithm:
-        
         iteration = 0
         self.task_min_iteration = task_min_iteration
 
@@ -287,7 +280,7 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
         assert self.env is not None
 
         while self.num_timesteps < total_timesteps:
-            continue_training, task_finished = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps, iteration=iteration)
+            continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps, iteration=iteration)
 
             if not continue_training:
                 break
@@ -313,7 +306,11 @@ class CurriculumOnPolicyAlgorithm(BaseAlgorithm):
 
         callback.on_training_end()
 
-        return task_finished
+        if type(callback) == CurriculumEvalCallback:
+            reward_dict, success_rate = callback.get_training_info()
+            return reward_dict, success_rate
+        else:
+            return self
 
     def _get_torch_save_params(self) -> Tuple[List[str], List[str]]:
         state_dicts = ["policy", "policy.optimizer"]

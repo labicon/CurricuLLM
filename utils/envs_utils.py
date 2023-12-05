@@ -16,9 +16,11 @@ def make_env(env_id: str, rank: int, task = None, seed: int = 0, render_mode: st
     """
     def _init():
         if render_mode is None:
-            env = gym.make(env_id, task=task)
+            env = gym.make(env_id)
         else:
-            env = gym.make(env_id, task=task, render_mode=render_mode)
+            env = gym.make(env_id, render_mode=render_mode)
+        if task is not None:
+            env.set_task(task)
         check_env(env) # check the environment
         env.reset(seed=seed + rank)
         return env

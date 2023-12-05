@@ -1,1 +1,3 @@
 from Curriculum.envs.curriculum_halfcheetah import HalfCheetahEnv
+from Curriculum.envs.curriculum_halfcheetah_feedback import HalfCheetahEnvFeedback
+from Curriculum.envs.hopper import HopperEnv

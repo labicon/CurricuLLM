@@ -1,11 +1,12 @@
 from typing import Any, Callable, Dict, List, Optional, Union
+from collections import defaultdict
 import gymnasium as gym
 import os
 import numpy as np
 import pandas as pd
 import warnings
 from collections import deque
-from utils.evaluation import curriculum_evaluate_policy
+from evaluation.evaluation_feedback import curriculum_evaluate_policy_feedback
 
 try:
     from tqdm import TqdmExperimentalWarning
@@ -63,8 +64,7 @@ class CurriculumEvalCallback(EventCallback):
         verbose: int = 1,
         warn: bool = True,
         task: Optional[str] = None,
-        task_list: Optional[List[str]] = None,
-        task_threshold: Optional[Dict[str, float]] = None,
+        reward_component: Optional[List[str]] = None,
     ):
         super().__init__(callback_after_eval, verbose=verbose)
 
@@ -82,8 +82,7 @@ class CurriculumEvalCallback(EventCallback):
         self.render = render
         self.warn = warn
         self.task = task
-        self.task_list = task_list
-        self.task_threshold = task_threshold
+        self.reward_component = reward_component
 
         # Convert to VecEnv for consistency
         if not isinstance(eval_env, VecEnv):
@@ -97,11 +96,11 @@ class CurriculumEvalCallback(EventCallback):
         self.log_path = log_path
         self.evaluations_results_main = []
         self.evaluations_results_task = []
+        self.evaluations_results_dict = []
         self.evaluations_timesteps = []
         self.evaluations_length = []
         self.evaluations_tasks = []
         # For computing success rate
-        self._is_success_buffer = []
         self.evaluations_successes = []
 
     def _init_callback(self) -> None:
@@ -135,9 +134,8 @@ class CurriculumEvalCallback(EventCallback):
             if maybe_is_success is not None:
                 self._is_success_buffer.append(maybe_is_success)
 
-    def _on_step(self) -> (bool, bool):
+    def _on_step(self) -> bool:
         continue_training = True
-        task_finished = False
 
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
             # Sync training and eval env if there is VecNormalize
@@ -154,7 +152,7 @@ class CurriculumEvalCallback(EventCallback):
             # Reset success rate buffer
             self._is_success_buffer = []
 
-            episode_rewards_main, episode_rewards_task, episode_lengths = curriculum_evaluate_policy(
+            episode_rewards_main, episode_rewards_task, episode_rewards_dict, episode_lengths, episode_success = curriculum_evaluate_policy_feedback(
                 self.model,
                 self.eval_env,
                 n_eval_episodes=self.n_eval_episodes,
@@ -164,59 +162,73 @@ class CurriculumEvalCallback(EventCallback):
                 warn=self.warn,
                 callback=self._log_success_callback,
             )
+            # episode_ variable is a list of float, int(for success), or dictionary(for reward_dict)
 
             if self.log_path is not None:
                 self.evaluations_timesteps.append(self.num_timesteps)
                 self.evaluations_results_main.append(episode_rewards_main)
                 self.evaluations_results_task.append(episode_rewards_task)
+                self.evaluations_results_dict.append(episode_rewards_dict)
                 self.evaluations_length.append(episode_lengths)
+                self.evaluations_successes.append(episode_success)
                 self.evaluations_tasks.append(self.task)
-
-                kwargs = {}
-                # Save success log if present
-                if len(self._is_success_buffer) > 0:
-                    self.evaluations_successes.append(self._is_success_buffer)
-                    kwargs = dict(successes=self.evaluations_successes)
 
                 np.savez(
                     self.log_path,
                     timesteps=self.evaluations_timesteps,
                     results_main=self.evaluations_results_main,
                     results_task=self.evaluations_results_task,
+                    results_dict=self.evaluations_results_dict,
                     task=self.evaluations_tasks,
                     ep_lengths=self.evaluations_length,
-                    **kwargs,
+                    successes=self.evaluations_successes,
                 )
 
             mean_reward_main, std_reward_main = np.mean(episode_rewards_main), np.std(episode_rewards_main)
             mean_reward_task, std_reward_task = np.mean(episode_rewards_task), np.std(episode_rewards_task)
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
+            mean_success, std_success = np.mean(episode_success), np.std(episode_success)
+
+            # Calculate the mean and std of each reward component
+            sums = defaultdict(float)
+            for reward_dict in episode_rewards_dict:
+                for key, value in reward_dict.items():
+                    sums[key] += value
+
+            mean_reward_dict = {key: sums[key] / len(episode_rewards_dict) for key in sums.keys()}
+
+            sum_of_squares = defaultdict(float)
+            for reward_dict in episode_rewards_dict:
+                for key, value in reward_dict.items():
+                    sum_of_squares[key] += (value - mean_reward_dict[key]) ** 2
+
+            std_reward_dict = {key: np.sqrt(value / len(episode_rewards_dict)) for key, value in sums.items()}
+            
             self.last_mean_reward_main = mean_reward_main
             self.last_mean_reward_task = mean_reward_task
-            self.recent_task_rewards.append(mean_reward_task)
 
             if self.verbose >= 1:
                 print("Task: ", self.task)
                 print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_task={mean_reward_task:.2f} +/- {std_reward_task:.2f}")
                 print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_main={mean_reward_main:.2f} +/- {std_reward_main:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
+                print(f"Success rate: {mean_success:.2f} +/- {std_success:.2f}")
+                for key in mean_reward_dict.keys():
+                    print(f"{key}: {mean_reward_dict[key]:.2f} +/- {std_reward_dict[key]:.2f}")
+                print(f"Success rate: {mean_success:.2f} +/- {std_success:.2f}")
             # Add to current Logger
             self.logger.record("eval/mean_reward_main", float(mean_reward_main))
             self.logger.record("eval/mean_reward_task", float(mean_reward_task))
-            task_mean_recent = sum(self.recent_task_rewards) / len(self.recent_task_rewards)
-            self.logger.record("eval/mean_reward_task_recent", float(task_mean_recent))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
+            self.logger.record("eval/success_rate", mean_success)
             if self.task is not None:
                 self.logger.record("eval/current_task", self.task)
             else:
-                self.logger.record("eval/current_task", "None")
+                self.logger.record("eval/current_task", "Main")
 
-            if len(self._is_success_buffer) > 0:
-                success_rate = np.mean(self._is_success_buffer)
-                if self.verbose >= 1:
-                    print(f"Success rate: {100 * success_rate:.2f}%")
-                self.logger.record("eval/success_rate", success_rate)
-
+            for key in mean_reward_dict.keys():
+                self.logger.record(f"eval/{key}", mean_reward_dict[key])
+                
             # Dump log so the evaluation results are printed with the correct timestep
             self.logger.record("time/total_timesteps", self.num_timesteps, exclude="tensorboard")
             self.logger.dump(self.num_timesteps)
@@ -234,16 +246,8 @@ class CurriculumEvalCallback(EventCallback):
             # Trigger callback after every evaluation, if needed
             if self.callback is not None:
                 continue_training = continue_training and self._on_event()
-
-            # Average over the last 10 evaluations
             
-            if self.task is not None:
-                if task_mean_recent > self.task_threshold[self.task]:
-                    print("Task threshold reached!")
-                    continue_training = False
-                    task_finished = True
-
-        return continue_training, task_finished
+        return continue_training
 
     def update_child_locals(self, locals_: Dict[str, Any]) -> None:
         """
@@ -254,9 +258,13 @@ class CurriculumEvalCallback(EventCallback):
         if self.callback:
             self.callback.update_locals(locals_)
 
-    def change_current_task(self, task):
-        if not (task in self.task_list) and task is not None:
-            raise ValueError("Task not in task list!")
-        
+    def get_training_info(self):
+        return self.evaluations_results_dict, self.evaluations_successes
+
+    def change_environment(self, eval_env, task):
+        # Convert to VecEnv for consistency
+        if not isinstance(eval_env, VecEnv):
+            eval_env = DummyVecEnv([lambda: eval_env])
+
+        self.eval_env = eval_env
         self.task = task
-        self.recent_task_rewards = deque([0]*10, maxlen=10)

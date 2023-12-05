@@ -1,0 +1,57 @@
+Environment code is
+```python
+class HopperEnv(MujocoEnv, utils.EzPickle):
+    r"""
+    ## Starting State
+    The initial position state is $[0, 1.25, 0, 0, 0, 0] + \mathcal{U}_{[-reset\_noise\_scale \times 1_{6}, reset\_noise\_scale \times 1_{6}]}$.
+    The initial velocity state is $0_6 + \mathcal{U}_{[-reset\_noise\_scale \times 1_{6}, reset\_noise\_scale \times 1_{6}]}$.
+
+    where $\mathcal{U}$ is the multivariate uniform continuous distribution.
+
+    Note that the z-coordinate is non-zero so that the hopper can stand up immediately.
+    """
+    def get_observation(self):
+        # Position = [x coordinate of the torso, z height of the torso, angle of the torso, angle of the thigh joint, angle of the leg joint, angle of the foot joint]
+        position = self.data.qpos.flat.copy()
+
+        # velocity = [x velocity of the torso, z velocity of the torso, angular velocity of the torso, angular velocity of thigh hinge, angular velocity of the leg hinge, angular velocity of foot hinge] 
+        velocity = np.clip(self.data.qvel.flat.copy(), -10, 10)
+
+        observation = np.concatenate((position, velocity)).ravel()
+        return observation
+
+    def step(self, action):
+        current_observation = self.get_observation()
+        # Action: [Torque applied on the thigh rotor, Torque applied on the leg rotor, Torque applied on the foot rotor]
+        next_observation = simulation(current_observation, action)
+        reward = self.compute_reward(current_observation, action, next_observation):
+        return next_observation, action
+
+    def control_cost(self, action):
+        control_cost = 0.1 * np.sum(np.square(action))
+        return control_cost
+
+    def is_healthy(self, observation):
+        z, angle = observation[1:3]
+        state = observation[2:]
+
+        min_state, max_state = (-100, 100)
+        min_z, max_z = (0.7, np.inf)
+        min_angle, max_angle = (-0.2, 0.2)
+
+        healthy_state = np.all(np.logical_and(min_state < state, state < max_state))
+        healthy_z = min_z < z < max_z
+        healthy_angle = min_angle < angle < max_angle
+
+        is_healthy = all((healthy_state, healthy_z, healthy_angle))
+
+        return int(is_healthy)
+```
+
+Write the function that evaluate the success of
+
+Task 2 Name
+Learn to Squat and Rise
+
+Task 2 Description
+The second task is to learn a controlled squat and rise motion by flexing and extending the thigh, leg, and foot joints without hopping or moving horizontally. The agent must bend the joints to lower its center of mass and then extend them to rise back to the standing position. Evaluation is based on maintaining balance and smoothness of the squat and rise motion within the healthy range of states and without exceeding the boundaries for angles or z coordinates.

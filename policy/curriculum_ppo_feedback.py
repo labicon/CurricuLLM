@@ -11,7 +11,7 @@ from stable_baselines3.common.policies import ActorCriticCnnPolicy, ActorCriticP
 from stable_baselines3.common.type_aliases import GymEnv, MaybeCallback, Schedule
 from stable_baselines3.common.utils import explained_variance, get_schedule_fn
 
-from policy.curriculum_on_policy_algorithm import CurriculumOnPolicyAlgorithm
+from policy.curriculum_on_policy_algorithm_feedback import CurriculumOnPolicyAlgorithm
 
 SelfPPO = TypeVar("SelfPPO", bound="CurriculumPPO")
 
@@ -82,8 +82,6 @@ class CurriculumPPO(CurriculumOnPolicyAlgorithm):
         self,
         policy: Union[str, Type[ActorCriticPolicy]],
         env: Union[GymEnv, str],
-        task_list: Optional[list] = None,
-        task_threshold: Optional[dict] = None,
         learning_rate: Union[float, Schedule] = 3e-4,
         n_steps: int = 2048,
         batch_size: int = 64,
@@ -112,8 +110,6 @@ class CurriculumPPO(CurriculumOnPolicyAlgorithm):
         super().__init__(
             policy,
             env,
-            task_list=task_list,
-            task_threshold=task_threshold,
             learning_rate=learning_rate,
             n_steps=n_steps,
             gamma=gamma,
@@ -311,7 +307,6 @@ class CurriculumPPO(CurriculumOnPolicyAlgorithm):
     def learn(
         self: SelfPPO,
         total_timesteps: int,
-        task_min_iteration: int = 0,
         callback: MaybeCallback = None,
         log_interval: int = 1,
         tb_log_name: str = "PPO",
@@ -320,7 +315,6 @@ class CurriculumPPO(CurriculumOnPolicyAlgorithm):
     ) -> SelfPPO:
         return super().learn(
             total_timesteps=total_timesteps,
-            task_min_iteration=task_min_iteration,
             callback=callback,
             log_interval=log_interval,
             tb_log_name=tb_log_name,

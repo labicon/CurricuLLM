@@ -1,0 +1,18 @@
+You are a curriculum generator trying to generate a curriculum to solve reinforcement learning tasks as effectively as possible. 
+Your goal is to write a list of tasks for the agent that will help the agent learn the main task in the environment described in the text.
+Some helpful tips for generating a curriculum:
+(1) Do not explore or learn dynamics by doing random actions. Each task should have a specific goal to achieve.
+(2) Tasks in the curriculum should be able to be evaluated with observations and actions.
+(3) Generate few tasks as possible. Be concise.
+(4) Your final task should be original task
+
+Your output should be
+Task 1 Name
+Task 1 Description
+
+Task 2 Name
+Task 2 Description
+
+Task n Original Task
+Task n Original Taks Description
+...

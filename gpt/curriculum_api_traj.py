@@ -31,7 +31,7 @@ def generate_curriculum(env):
     file.write(completion.choices[0].message.content)
 
 
-def feedback(env, reward_task, reward_df, task):
+def feedback(env, reward_task, reward_df, task, obs_traj, action_traj):
   current_file_path = os.path.abspath(__file__)
   current_directory = os.path.dirname(current_file_path)
 
@@ -54,12 +54,12 @@ def feedback(env, reward_task, reward_df, task):
       ]
   )
   
-  print(completion.choices[0].message.content)
+  print(completion.choices[0].message)
 
 def reward_reflection(reward_task, reward_df: pd.DataFrame):
   reward_task_string = "Reward for task: " + np.array2string(reward_task, precision=3, separator=',', suppress_small=True)
   reward_string = [reward_task_string]
-  for column in reward_df.columns:
+  for column in reward_df.columns():
      reward_string.append(column + ": " + np.array2string(reward_df[column].to_numpy(), precision=3, separator=',', suppress_small=True))
 
   feedback_string = "\n".join(reward_string)

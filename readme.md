@@ -11,3 +11,5 @@ If you want to make video in Google Cloud, you should use virtual screen.
 ```
 xvfb-run -s "-screen 0 1400x900x24" python3 visualize_policy.py
 ```
+
+chmod +x ./visualize.sh

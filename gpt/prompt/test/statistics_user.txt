@@ -1,0 +1,39 @@
+The hopper is a two-dimensional one-legged figure that consist of four main body parts - the torso at the top, the thigh in the middle, the leg in the bottom, and a single foot on which the entire body rests. 
+
+Given task is
+Task 3: Moving Forward
+The final task involves moving forward by hopping in the correct direction. This is the actual behavior we want from the hopper.
+
+Task 3 Description:
+The agent's goal is to apply torques to the hinges in a way that creates forward momentum, resulting in the hopper moving forward at maximum speed (positive x-velocity), while staying upright.
+
+You have access to mean and standard deviation values of below variables to evaluate robot trajectory.
+(1) control_cost: A cost for penalizing the hopper if it takes actions that are too large. It is measured as 0.001*sum(action^2)
+(2) healthy_reward: The height of the hopper should be larger than 0.7 and the angle of torso should be contained in (-0.2, 0.2). If it satisfies these constraint, it receives healthy_reward of 1 otherwise 0
+(3) x_coordinate_of_the_torso : x coordinate of the torso which is the top body part
+(4) x_velocity_of_the_torso: x velocity of the torso which is the top body part
+(5) z_coordinate_of_the_torso : z coordinate of the torso which is the top body part
+(6) z_velocity_of_the_torso: z velocity of the torso which is the top body part
+(7) angle_of_the_torso: angle of the torso which is the top body part
+(8) angular_velocity_of_the_torso_angle: angular velocity of the torso which is the top body part
+(9) angle_of_the_thigh_joint: angle of the joint between torso and thigh
+(10) angular_velocity_of_the_thigh_joint: anglar velocity of the joint between torso and thigh
+(11) angle_of_the_leg_joint: angle of the joint between thight and leg
+(12) angular_velocity_of_the_leg_joint: angular velocity of the joint between thight and leg
+(13) angle_of_the_foot_joint: angle of the joint between leg and foot
+(14) angular_velocity_of_the_foot_joint: angular velocity of the joint between leg and foot
+
+Mention that whether each variables should be
+(1) Maximized
+(2) Minimized
+(3) Close to specific value [num]
+Do not chose something other than this option.
+
+Answer the required variables by following output format.
+Output format
+
+Required variables: [variables]
+[Variable]: [Maximized, Minimized, Close to [num]]
+[Variable]: [Maximized, Minimized, Close to [num]]
+...
+Reason

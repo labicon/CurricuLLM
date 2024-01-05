@@ -1,0 +1,82 @@
+The hopper is a two-dimensional one-legged figure that consist of four main body parts - the torso at the top, the thigh in the middle, the leg in the bottom, and a single foot on which the entire body rests. 
+
+Environment code is
+```python
+class HopperEnv(MujocoEnv, utils.EzPickle):
+    r"""
+    ## Starting State
+    The initial position state is $[0, 1.25, 0, 0, 0, 0] + \mathcal{U}_{[-reset\_noise\_scale \times 1_{6}, reset\_noise\_scale \times 1_{6}]}$.
+    The initial velocity state is $0_6 + \mathcal{U}_{[-reset\_noise\_scale \times 1_{6}, reset\_noise\_scale \times 1_{6}]}$.
+
+    where $\mathcal{U}$ is the multivariate uniform continuous distribution.
+
+    Note that the z-coordinate is non-zero so that the hopper can stand up immediately.
+    """
+    def get_observation(self):
+        # Position = [x coordinate of the torso, z height of the torso, angle of the torso, angle of the thigh joint, angle of the leg joint, angle of the foot joint]
+        position = self.data.qpos.flat.copy()
+
+        # velocity = [x velocity of the torso, z velocity of the torso, angular velocity of the torso, angular velocity of thigh hinge, angular velocity of the leg hinge, angular velocity of foot hinge] 
+        velocity = np.clip(self.data.qvel.flat.copy(), -10, 10)
+
+        observation = np.concatenate((position, velocity)).ravel()
+        return observation
+
+    def step(self, action):
+        current_observation = self.get_observation()
+        # Action: [Torque applied on the thigh rotor, Torque applied on the leg rotor, Torque applied on the foot rotor]
+        next_observation = simulation(current_observation, action)
+        reward = self.compute_reward(current_observation, action, next_observation):
+        return next_observation, action
+
+    def original_task_reward(self, observation, action, next_observation):
+        x_velocity = x_coordinate_of_the_torso(observation, next_observation)
+
+        control_cost = self.control_cost(action)
+
+        healthy_reward = self.is_healthy(next_observation)
+
+        reward = x_velocity + healthy_reward - control_cost
+
+        return reward, {"x_velocity": x_velocity, "control_cost": control_cost, "healthy_reward": healthy_reward}
+
+def control_cost(action):
+    control_cost = 0.001 * np.sum(np.square(action))
+    return control_cost
+
+def is_healthy(observation):
+    z, angle = observation[1:3]
+    state = observation[2:]
+
+    min_state, max_state = (-100, 100)
+    min_z, max_z = (0.7, np.inf)
+    min_angle, max_angle = (-0.2, 0.2)
+
+    healthy_state = np.all(np.logical_and(min_state < state, state < max_state))
+    healthy_z = min_z < z < max_z
+    healthy_angle = min_angle < angle < max_angle
+
+    is_healthy = all((healthy_state, healthy_z, healthy_angle))
+
+    return int(is_healthy)
+
+def x_coordinate_of_the_torso(observation):
+    x_coord = observation[0]
+    return x_coord
+
+def x_velocity_of_the_torso(observation, next_observation):
+    x_coord = observation[0]
+    next_x_coord = next_observation[0]
+    x_vel = (next_x_coord - x_coord)/0.008
+    return x_vel
+
+def z_coordinate_of_the_torso(observation):
+    z_coord = observation[1]
+    return z_coord
+
+def z_velocity_of_the_torso(observation, next_observation):
+    z_coord = observation[1]
+    next_z_coord = next_observation[1]
+    z_vel = (next_z_coord - z_coord)/0.008
+    return z_vel
+```

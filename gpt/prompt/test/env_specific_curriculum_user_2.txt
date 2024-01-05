@@ -1,0 +1,21 @@
+The hopper is a two-dimensional one-legged figure that consist of four main body parts - the torso at the top, the thigh in the middle, the leg in the bottom, and a single foot on which the entire body rests. 
+The original task is to make hops that move in the forward (right) direction by applying torques on the three hinges connecting the four body parts.
+
+The variables you can use to describe the curriculum includes
+(1) control_cost: A cost for penalizing the hopper if it takes actions that are too large. It is measured as 0.001*sum(action^2)
+(2) healthy_reward: The height of the hopper should be larger than 0.7 and the angle of torso should be contained in (-0.2, 0.2). If it satisfies these constraint, it receives healthy_reward of 1 otherwise 0
+(3) x_coordinate_of_the_torso : x coordinate of the torso which is the top body part
+(4) x_velocity_of_the_torso: x velocity of the torso which is the top body part
+(5) z_coordinate_of_the_torso : z coordinate of the torso which is the top body part
+(6) z_velocity_of_the_torso: z velocity of the torso which is the top body part
+(7) angle_of_the_torso: angle of the torso which is the top body part
+(8) angular_velocity_of_the_torso_angle: angular velocity of the torso which is the top body part
+(9) angle_of_the_thigh_joint: angle of the joint between torso and thigh
+(10) angular_velocity_of_the_thigh_joint: anglar velocity of the joint between torso and thigh
+(11) angle_of_the_leg_joint: angle of the joint between thight and leg
+(12) angular_velocity_of_the_leg_joint: angular velocity of the joint between thight and leg
+(13) angle_of_the_foot_joint: angle of the joint between leg and foot
+(14) angular_velocity_of_the_foot_joint: angular velocity of the joint between leg and foot
+
+The original task is to make hops that move in the forward (right) direction by applying torques on the three hinges connecting the four body parts.
+Therefore, original task can be described as maintain healthy_reward as 1, minimize control_cost, and maximize x_coordinate_of_the_torso.

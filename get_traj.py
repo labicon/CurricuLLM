@@ -13,7 +13,7 @@ if __name__ == "__main__":
     num_cpu = 4
     eval_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
 
-    model = PPO.load(logger_path + "/ppo_" + "stand_still")
+    model = PPO.load(logger_path + "/ppo_" + "move_forward")
 
     # get trajectory
     obs = eval_env.reset()
@@ -29,5 +29,5 @@ if __name__ == "__main__":
     obs_trajectory = np.array(obs_trajectory)
     action_trajectory = np.array(action_trajectory)
 
-    np.savetxt( "stand_still_observation.txt", obs_trajectory, delimiter=",", fmt='%.2f')
-    np.savetxt( "stand_still_action.txt", action_trajectory, delimiter=",", fmt='%.2f') 
+    np.savetxt( "move_forward_observation.txt", obs_trajectory, delimiter=",", fmt='%.2f')
+    np.savetxt( "move_forward_action.txt", action_trajectory, delimiter=",", fmt='%.2f') 

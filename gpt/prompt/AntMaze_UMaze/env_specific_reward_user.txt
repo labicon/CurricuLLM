@@ -1,0 +1,76 @@
+The ant is a 3D robot consisting of one torso (free rotational body) with four legs attached to it with each leg having two body parts.
+The original task in the environment is for ant to reach a target goal in a closed maze.
+
+Environment code is
+```python
+import sys
+from os import path
+from typing import Dict, List, Optional, Union
+
+import numpy as np
+from gymnasium import spaces
+from gymnasium.envs.mujoco.ant_v4 import AntEnv
+from gymnasium.utils.ezpickle import EzPickle
+
+from gymnasium_robotics.envs.maze.maps import U_MAZE
+from gymnasium_robotics.envs.maze.maze_v4 import MazeEnv
+from gymnasium_robotics.utils.mujoco_utils import MujocoModelNames
+
+
+class AntMazeEnv(MazeEnv, EzPickle):
+    def __init__(
+        self,
+        render_mode: Optional[str] = None,
+        maze_map: List[List[Union[str, int]]] = U_MAZE,
+        reward_type: str = "sparse",
+        continuing_task: bool = True,
+        reset_target: bool = False,
+        **kwargs,
+    ):
+        self.action_space = self.ant_env.action_space
+        obs_shape: tuple = self.ant_env.observation_space.shape
+        self.observation_space = spaces.Dict(
+            dict(
+                observation=spaces.Box(
+                    -np.inf, np.inf, shape=(obs_shape[0] - 2,), dtype="float64"
+                ),
+                achieved_goal=spaces.Box(-np.inf, np.inf, shape=(2,), dtype="float64"),
+                desired_goal=spaces.Box(-np.inf, np.inf, shape=(2,), dtype="float64"),
+            )
+        )
+
+    def torso_coordinate(self, ant_obs: np.ndarray):
+        xyz_coordinate = ant_obs[:3]
+
+        return xyz_coordinate
+    
+    def torso_orientation(self, ant_obs: np.ndarray):
+        xyz_orientation = ant_obs[3:6]
+
+        return xyz_orientation
+
+    def torso_velocity(self, ant_obs: np.ndarray):
+        xyz_velocity = ant_obs[15:18]
+
+        return xyz_velocity
+
+    def torso_angular_velocity(self, ant_obs: np.ndarray):
+        xyz_angular_velocity = ant_obs[18:21]
+
+        return xyz_angular_velocity
+
+    def goal_pos(self):
+
+        return self.goal
+
+    def goal_distance(self, ant_obs: np.ndarray):
+        goal_pos = self.goal_pos()
+        xyz_coordinate = self.torso_coordinate(ant_obs)
+        distance = np.linalg.norm(goal_pos - xyz_coordinate[:2])
+
+        return distance
+```
+
+Note that in the starting state where the ant is standing still, torso_orientation is [0.0, 0.75, 1.0].
+torso_coordinate, torso_velocity, and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
+goal_pos is initialized randomly.

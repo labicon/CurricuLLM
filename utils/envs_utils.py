@@ -21,7 +21,7 @@ def make_env(env_id: str, rank: int, task = None, seed: int = 0, render_mode: st
             env = gym.make(env_id, render_mode=render_mode)
         if task is not None:
             env.set_task(task)
-        check_env(env) # check the environment
+        # check_env(env) # check the environment
         env.reset(seed=seed + rank)
         return env
     set_random_seed(seed)

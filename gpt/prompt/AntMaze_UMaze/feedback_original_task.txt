@@ -1,0 +1,5 @@
+Task 5 Original Task
+Effective Maze Solver
+
+Task 5 Original Task Description
+Maintain a goal_distance of 0.45, effectively reaching the target in the closed maze using the skills developed from all previous tasks.

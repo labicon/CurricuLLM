@@ -1,0 +1,5 @@
+Task 3 Name
+Goal-oriented Locomotion
+
+Task 3 Description
+Minimize the goal_distance, directing the agent towards the random goal_pos while maintaining the torso_orientation and torso_angular_velocity as stable as possible. Use the locomotion skills from Task 1 and stabilization from Task 2.

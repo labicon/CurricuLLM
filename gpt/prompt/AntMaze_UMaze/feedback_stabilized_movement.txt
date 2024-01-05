@@ -1,0 +1,5 @@
+Task 2 Name
+Stabilized Movement
+
+Task 2 Description
+Minimize the torso_angular_velocity to ensure stability during movement. Maintain the velocity achieved in Task 1.

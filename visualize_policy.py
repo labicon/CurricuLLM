@@ -24,9 +24,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         task = sys.argv[1]
         sample_num = sys.argv[2]
-        log_dir = "./logs/AntMaze_UMaze/" + task + "/sample_" + sample_num 
+        log_dir = "./logs/AntMaze_UMaze_SAC/" + task + "/sample_" + sample_num 
         
-    model = PPO.load(log_dir + "/final_model.zip")
+    model = SAC.load(log_dir + "/final_model.zip")
 
     # Visualize the policy
     obs = test_env.reset()

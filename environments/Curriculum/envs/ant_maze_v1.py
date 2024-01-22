@@ -347,52 +347,41 @@ class AntMazeEnv(MazeEnv, EzPickle):
             raise ValueError(f"Task {self.task} not recognized.")
         
     def compute_basic_locomotion_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
+        orientation_temp = 0.5
+        velocity_temp = 1.0
+        
         velocity_reward = np.linalg.norm(self.torso_velocity(ant_obs))
-
-        # Define the initial orientation for reference
-        initial_orientation = np.array([0.0, 0.75, 1.0])
-        current_orientation = self.torso_orientation(ant_obs)
-        orientation_error = np.linalg.norm(current_orientation - initial_orientation)
+        # We want to keep torso_orientation close to the initial state [0.0, 0.75, 1.0]
+        orientation_penalty = np.linalg.norm(self.torso_orientation(ant_obs) - np.array([1.0, 0.0, 0.0]))
         
-        # Temperature parameters for scaling
-        velocity_temperature = 0.1
-        orientation_temperature = 1.0
+        # Applying exponential transformation to orientation penalty
+        orientation_penalty = np.exp(-orientation_temp * orientation_penalty)
+        # Normalize the velocity reward to a range, e.g. [0,1]
+        velocity_reward = np.tanh(velocity_temp * velocity_reward)
         
-        # Normalize orientation error with e^(-error)
-        orientation_penalty = -np.exp(-orientation_error / orientation_temperature)
-
-        # Aggregate rewards and penalties
-        reward = velocity_reward * velocity_temperature + orientation_penalty
-        
-        # Reward components dictionary
+        total_reward = velocity_reward - orientation_penalty
         reward_components = {
-            "velocity_reward": velocity_reward * velocity_temperature,
-            "orientation_penalty": orientation_penalty
+            'velocity_reward': velocity_reward,
+            'orientation_penalty': orientation_penalty,
         }
-
-        return reward, reward_components
+        
+        return total_reward, reward_components
     
     def compute_stabilized_movement_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
-        stability_temp = 1.0   # Temperature parameter to scale the stability reward
+        stability_temp = 2.0
         
-        # Get the torso angular velocity from the environment
-        torso_angular_velocity = self.torso_angular_velocity(ant_obs)
+        stability_penalty = np.linalg.norm(self.torso_angular_velocity(ant_obs))
         
-        # Calculate the magnitude of torso angular velocity for stability
-        stability_deviation = np.linalg.norm(torso_angular_velocity)
-        
-        # Reward for being stable (having low angular velocity)
-        stability_reward = np.exp(-stability_deviation**2 / stability_temp)
-        
-        # Get the basic locomotion reward to maintain forward velocity
+        # The reward for velocity is reused from Task 1
         velocity_reward, _ = self.compute_basic_locomotion_reward(ant_obs)
         
-        # Combine rewards with respective weights
-        total_reward = 0.5 * stability_reward + 0.5 * velocity_reward
+        # Applying exponential transformation to stability penalty
+        stability_penalty = np.exp(-stability_temp * stability_penalty)
         
+        total_reward = velocity_reward - stability_penalty
         reward_components = {
-            "stability_reward": stability_reward,
-            "velocity_reward": velocity_reward
+            'velocity_reward': velocity_reward,
+            'stability_penalty': stability_penalty,
         }
         
         return total_reward, reward_components

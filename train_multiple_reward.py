@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.logger import configure
 
@@ -88,14 +88,14 @@ if __name__ == "__main__":
     if task_idx != 0:
         previous_task = task_list[task_idx - 1]
         best_reward_sample = input("Enter the sample number of the best reward function: ")
-        previous_model_path = f"./logs/{env_name}/{previous_task}/sample_{best_reward_sample}/final_model.zip"
+        previous_model_path = f"./logs/{env_name}_SAC/{previous_task}/sample_{best_reward_sample}/final_model.zip"
 
-    for sample_num in range(5):
+    for sample_num in range(4,5):
         # Create a number of environments and train
 
         env_id = f"Curriculum/{env_name}-v{sample_num}"
         # Create the logger
-        logger_path = f"./logs/{env_name}/{task}/sample_{sample_num}"
+        logger_path = f"./logs/{env_name}_SAC/{task}/sample_{sample_num}"
         new_logger = configure(logger_path, ["stdout", "csv"])
 
         # Create the vectorized environment
@@ -112,11 +112,15 @@ if __name__ == "__main__":
                                             task=task)
         
         if task_idx == 0:
-            model = PPO("MultiInputPolicy",
+            # model = PPO("MultiInputPolicy",
+            #             training_env,
+            #             verbose=1)
+            model = SAC("MultiInputPolicy",
                         training_env,
                         verbose=1)
         else:
-            model = PPO.load(previous_model_path)
+            # model = PPO.load(previous_model_path)
+            model = SAC.load(previous_model_path)
 
         single_task_training(model, env_id, task, logger_path, eval_callback, num_cpu=num_cpu, total_timesteps=400_000)
 
@@ -126,7 +130,7 @@ if __name__ == "__main__":
         env_id = f"Curriculum/{env_name}-v{sample_num}"
         num_cpu = 4
         eval_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
-        model = PPO.load(f"./logs/{env_name}/{task}/sample_{sample_num}/final_model")
+        model = SAC.load(f"./logs/{env_name}_SAC/{task}/sample_{sample_num}/final_model")
         
         # Get trajectory
         obs = eval_env.reset()

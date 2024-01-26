@@ -71,6 +71,6 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return distance
 ```
 
-Note that in the starting state where the ant is standing still, torso_orientation is [0.0, 0.75, 1.0].
+Note that in the starting state where the ant is standing still, torso_orientation is [1.0, 0.0, 0.0, 0.0].
 torso_coordinate, torso_velocity, and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
 goal_pos is initialized randomly.

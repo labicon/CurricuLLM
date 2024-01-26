@@ -3,7 +3,7 @@ The original task in the environment is for ant to reach a target goal in a clos
 
 The variables you can use to describe the curriculum includes
 (1) torso_coordinate: xyz coordinate of the torso
-(2) torso_orientation: xyz orientation of the torso
+(2) torso_orientation: xyzw orientation of the torso
 (3) torso_velocity: xyz velocities of the torso
 (4) torso_angular_velocity: xyz angular velocities of the torso
 (5) goal_pos: final xy goal position of the ant
@@ -12,6 +12,6 @@ The variables you can use to describe the curriculum includes
 In the original task, the task is marked as success if a distance between torso xy position and goal xy position is less than 0.45.
 Therefore, the original task can be described as maintain goal_distance as 0.45.
 
-Note that in the starting state where the ant is standing still, torso_orientation is [0.0, 0.75, 1.0].
+Note that in the starting state where the ant is standing still, torso_orientation is [1.0, 0.0, 0.0, 0.0].
 torso_coordinate, torso_velocity, and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
 goal_pos is initialized randomly.

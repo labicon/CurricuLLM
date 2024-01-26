@@ -334,116 +334,129 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
     def compute_reward_curriculum(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
         if self.task == "basic_locomotion":
-            return self.compute_basic_locomotion_reward(ant_obs)
-        elif self.task == "stabilized_movement":
-            return self.compute_stabilized_movement_reward(ant_obs)
-        elif self.task == "goal_oriented_locomotion":
-            return self.compute_goal_oriented_locomotion_reward(ant_obs)
-        elif self.task == "maze_navigation":
-            return self.compute_maze_navigation_reward(ant_obs)
+            return self.basic_locomotion_reward(ant_obs)
+        elif self.task == "orientation_control":
+            return self.orientation_control_reward(ant_obs)
+        elif self.task == "goal_orientation":
+            return self.compute_goal_orientation_reward(ant_obs)
+        elif self.task == "navigation_turning":
+            return self.navigation_turning_reward(ant_obs)
         elif self.task == "original_task":
             return self.original_task_reward(ant_obs)
         else:
             raise ValueError(f"Task {self.task} not recognized.")
-        
-    def compute_basic_locomotion_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
-        orientation_temp = 0.5
-        velocity_temp = 1.0
-        
-        velocity_reward = np.linalg.norm(self.torso_velocity(ant_obs))
-        # We want to keep torso_orientation close to the initial state [0.0, 0.75, 1.0]
-        orientation_penalty = np.linalg.norm(self.torso_orientation(ant_obs) - np.array([1.0, 0.0, 0.0]))
-        
-        # Applying exponential transformation to orientation penalty
-        orientation_penalty = np.exp(-orientation_temp * orientation_penalty)
-        # Normalize the velocity reward to a range, e.g. [0,1]
-        velocity_reward = np.tanh(velocity_temp * velocity_reward)
-        
-        total_reward = velocity_reward - orientation_penalty
-        reward_components = {
-            'velocity_reward': velocity_reward,
-            'orientation_penalty': orientation_penalty,
-        }
-        
-        return total_reward, reward_components
     
-    def compute_stabilized_movement_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
-        stability_temp = 1.0   # Temperature parameter to scale the stability reward
-        
-        # Get the torso angular velocity from the environment
-        torso_angular_velocity = self.torso_angular_velocity(ant_obs)
-        
-        # Calculate the magnitude of torso angular velocity for stability
-        stability_deviation = np.linalg.norm(torso_angular_velocity)
-        
-        # Reward for being stable (having low angular velocity)
-        stability_reward = np.exp(-stability_deviation**2 / stability_temp)
-        
-        # Get the basic locomotion reward to maintain forward velocity
-        velocity_reward, _ = self.compute_basic_locomotion_reward(ant_obs)
-        
-        # Combine rewards with respective weights
-        total_reward = 0.5 * stability_reward + 0.5 * velocity_reward
-        
-        reward_components = {
-            "stability_reward": stability_reward,
-            "velocity_reward": velocity_reward
-        }
-        
-        return total_reward, reward_components
+    def basic_locomotion_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
+        # Get the torso velocity in the direction of movement (x-axis)
+        torso_vel = self.torso_velocity(ant_obs)
+        forward_velocity = torso_vel[0]  # Assuming that x-axis is the forward direction
 
-    def compute_goal_oriented_locomotion_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
-        orientation_temp = 1.0  # Temperature parameter to scale the orientation reward
-        goal_distance_temp = 1.0 # Temperature parameter to scale the goal distance reward
+        # Reward component based on the forward velocity of the torso (to encourage forward movement)
+        velocity_reward_weight = 1.0
+        velocity_reward = np.tanh(forward_velocity)
         
-        # Get the goal distance from the environment
-        goal_distance = self.goal_distance(ant_obs)
+        reward = velocity_reward_weight * velocity_reward
         
-        # Reward for being closer to the goal
-        goal_distance_reward = np.exp(-goal_distance**2 / goal_distance_temp)
-        
-        # Get the stabilized movement reward to maintain stability
-        stability_reward, _ = self.compute_stabilized_movement_reward(ant_obs)
-        
-        # Combine rewards with respective weights
-        total_reward = 0.5 * goal_distance_reward + 0.5 * stability_reward
-        
+        # Dictionary of individual components with their corresponding rewards
         reward_components = {
-            "goal_distance_reward": goal_distance_reward,
-            "stability_reward": stability_reward
+            'velocity_reward': velocity_reward
+        }
+        
+        return reward, reward_components
+    
+    def orientation_control_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
+        # Ideal orientation of the torso
+        ideal_orientation = np.array([1.0, 0.0, 0.0, 0.0])
+        
+        # Get the current orientation from the observation
+        current_orientation = self.torso_orientation(ant_obs)
+        
+        # Compute the L2 norm to measure how close the current orientation is to the ideal orientation
+        orientation_error = np.linalg.norm(current_orientation - ideal_orientation)
+        
+        # Use negative exponential of the orientation error as the reward to encourage lower error values
+        orientation_reward = np.exp(-orientation_error)
+        
+        # Assign a weight to the orientation reward component
+        orientation_weight = 1.0
+        
+        # Calculate total reward for orientation control
+        total_orientation_reward = orientation_weight * orientation_reward
+        
+        # Return the total reward and a dictionary of individual reward components
+        reward_components = {'orientation_error': orientation_error, 'orientation_reward': total_orientation_reward}
+        return total_orientation_reward, reward_components
+    
+    def compute_goal_orientation_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
+        # Define weight for orientation reward component
+        orientation_weight = 0.5
+        
+        # Calculate the distance to the goal
+        distance_to_goal = self.goal_distance(ant_obs)
+        
+        # Compute the orientation reward component using tanh to encourage the ant to face towards the goal
+        orientation_reward = -np.tanh(distance_to_goal)
+
+        # Multiply by weight
+        orientation_reward *= orientation_weight
+
+        # Sum up the total reward
+        total_reward = orientation_reward
+        
+        # Create a dictionary for individual reward components
+        reward_components = {
+            'orientation_reward': orientation_reward
         }
         
         return total_reward, reward_components
     
-    def compute_maze_navigation_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
-        # Since the environment and mechanics of maze navigation (like avoiding walls) are not elaborated
-        # The reward components for avoiding walls and staying within boundaries need to be defined based on those mechanics.
-        # Assuming those components exist, they would be integrated here along with goal-distance and stabilization.
-        
-        # Integrate goal-oriented locomotion reward as a base
-        total_reward, reward_components = self.compute_goal_oriented_locomotion_reward(ant_obs)
-        
-        # Add reward components for maze navigation specifics, e.g., penalties for hitting walls or rewards for correct direction
-        
-        # Incorporate additional rewards and penalties here
-        
-        return total_reward, reward_components
+    def navigation_turning_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
+        # Collect necessary observations
+        x_coordinate = self.torso_coordinate(ant_obs)[0]
+        goal_direction = self.goal_pos() - self.torso_coordinate(ant_obs)[:2]
+        goal_angle = np.arctan2(goal_direction[1], goal_direction[0])
+
+        # Components of the reward
+        forward_reward_weight = 1.0
+        turning_reward_weight = 0.5
+
+        # Calculate the reward for forward movement along the x-axis
+        forward_reward = np.tanh(x_coordinate)
+        # Apply an L2 norm to the difference in angle to face the goal
+        current_orientation = self.torso_orientation(ant_obs)
+        current_heading_angle = np.arctan2(current_orientation[1], current_orientation[0])
+        turning_reward = -np.tanh(np.linalg.norm(current_heading_angle - goal_angle))
+
+        # Aggregate the reward with their respective weights
+        reward = (forward_reward_weight * forward_reward) + (turning_reward_weight * turning_reward)
+        reward_components = {
+            "forward_reward": forward_reward,
+            "turning_reward": turning_reward
+        }
+
+        return reward, reward_components
     
     def original_task_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
-        desired_goal_distance = 0.5  # Assuming the task is to stay close to this distance from the goal
+        # Initialize reward dictionary.
+        reward_components: Dict[str, np.float64] = {}
         
-        # Calculate the current distance to the goal
-        current_distance = self.goal_distance(ant_obs)
+        # Define the weight for the goal_distance component.
+        goal_distance_weight: np.float64 = 1.0
         
-        # Reward for being close to the desired goal distance
-        goal_reward = 0.0
-        if current_distance <= desired_goal_distance:
-            goal_reward = 1.0
-
-        total_reward = goal_reward
-        reward_components = {"goal_distance_reward": goal_reward}
+        # Calculate the distance to the goal position.
+        goal_distance = self.goal_distance(ant_obs)
         
-        return total_reward, reward_components
+        # Use L2 norm to create a reward component based on the goal_distance.
+        # The further from 0.45, the more negative the reward will be.
+        goal_distance_reward: np.float64 = -goal_distance_weight * np.linalg.norm(goal_distance - 0.45)
+        
+        # Store the reward components in the dictionary.
+        reward_components["goal_distance_reward"] = goal_distance_reward
+        
+        # Compute the total reward.
+        reward = np.sum(list(reward_components.values()))
+        
+        return reward, reward_components
     
     def torso_coordinate(self, ant_obs: np.ndarray):
         xyz_coordinate = ant_obs[:3]
@@ -451,7 +464,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return xyz_coordinate
     
     def torso_orientation(self, ant_obs: np.ndarray):
-        xyz_orientation = ant_obs[3:6]
+        xyz_orientation = ant_obs[3:7]
 
         return xyz_orientation
 

@@ -38,7 +38,7 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
 
     for obs, goal in zip(obs_trajectory, goal_trajectory):
         torso_coord.append(obs[0:3])
-        torso_orientation.append(obs[3:6])
+        torso_orientation.append(obs[3:7])
         torso_velocity.append(obs[15:18])
         torso_angular_velocity.append(obs[18:21])
         goal_pos.append(goal)
@@ -72,7 +72,7 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
 if __name__ == "__main__":
     env_name = "AntMaze_UMaze"
     # generate_curriculum(env_name)
-    task_list = ['basic_locomotion', 'stabilized_movement', 'goal_oriented_locomotion', 'original_task']
+    task_list = ['basic_locomotion', 'orientation_control', 'goal_orientation', 'navigation_turning', 'original_task']
     # while True:
     #     task = input("Enter the task list, enter end if there is no more task: ")
     #     if task == "end":
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         best_reward_sample = input("Enter the sample number of the best reward function: ")
         previous_model_path = f"./logs/{env_name}_SAC/{previous_task}/sample_{best_reward_sample}/final_model.zip"
 
-    for sample_num in range(4,5):
+    for sample_num in range(5):
         # Create a number of environments and train
 
         env_id = f"Curriculum/{env_name}-v{sample_num}"

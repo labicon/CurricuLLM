@@ -1,0 +1,4 @@
+Task 2 
+Name: Match End Effector Velocity with Block
+Description: make [Block linear velocity in xyz direction relative to end effector] as zero
+Reason: Ensuring the end effector moves at the same velocity as the block (initially zero) will teach the agent the precision needed in controlling its speed and direction, important for gentle and accurate pushes.

@@ -1,5 +1,0 @@
-Task 4 Name
-Maze Navigation
-
-Task 4 Description
-Navigate towards the goal_pos while avoiding walls and obstacles, keeping the torso_coordinate within the maze boundaries. Apply the locomotion and stabilizing skills acquired in previous tasks to handle the maze's complexity.

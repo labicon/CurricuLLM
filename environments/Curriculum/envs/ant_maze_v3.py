@@ -20,7 +20,7 @@ from gymnasium import spaces
 from gymnasium.envs.mujoco.ant_v4 import AntEnv
 from gymnasium.utils.ezpickle import EzPickle
 
-from gymnasium_robotics.envs.maze.maps import U_MAZE
+from gymnasium_robotics.envs.maze.maps import OPEN, U_MAZE
 from gymnasium_robotics.envs.maze.maze_v4 import MazeEnv
 from gymnasium_robotics.utils.mujoco_utils import MujocoModelNames
 
@@ -291,7 +291,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         reward = reward_main
         reward_dict = {"reward_main": reward_main}
         if self.task is not None:
-            reward, reward_dict = self.compute_reward_curriculum()
+            reward, reward_dict = self.compute_reward_curriculum(ant_obs)
         terminated = self.compute_terminated(obs["achieved_goal"], self.goal, info)
         truncated = self.compute_truncated(obs["achieved_goal"], self.goal, info)
         info["success"] = bool(np.linalg.norm(obs["achieved_goal"] - self.goal) <= 0.45)
@@ -334,15 +334,29 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
     def compute_reward_curriculum(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
         if self.task == "basic_locomotion":
-            return self.basic_locomotion_reward(ant_obs)
+            reward_1, reward_dict_1 = self.basic_locomotion_reward(ant_obs)
+            reward_2, reward_dict_2 = self.orientation_control_reward(ant_obs)
+            reward_2 = 3*reward_2
+            # reward_dict_1 = reward_dict_1.update({k: 10*v for k, v in reward_dict_1.items()})
+            total_reward = reward_1 + reward_2
+            total_reward_dict = {**reward_dict_1,**reward_dict_2}
+            return total_reward, total_reward_dict
         elif self.task == "orientation_control":
             return self.orientation_control_reward(ant_obs)
         elif self.task == "goal_orientation":
-            return self.goal_orientation_reward(ant_obs)
+            reward_1, reward_dict_1 = self.basic_locomotion_reward(ant_obs)
+            reward_2, reward_dict_2 = self.goal_orientation_reward(ant_obs)
+            total_reward = reward_1 + reward_2
+            total_reward_dict = {**reward_dict_1,**reward_dict_2}
+            return total_reward, total_reward_dict
         elif self.task == "navigation_turning":
             return self.navigation_and_turning_reward(ant_obs)
         elif self.task == "original_task":
-            return self.original_task_reward(ant_obs)
+            reward_1, reward_dict_1 = self.original_task_reward(ant_obs)
+            reward_2, reward_dict_2 = self.goal_orientation_reward(ant_obs)
+            total_reward = reward_1 + reward_2
+            total_reward_dict = {**reward_dict_1,**reward_dict_2}
+            return total_reward, total_reward_dict
         else:
             raise ValueError(f"Task {self.task} not recognized.")
 
@@ -370,6 +384,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
         return reward, reward_components
     
+
     def orientation_control_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
 
         # Define the ideal orientation the torso should maintain
@@ -396,31 +411,52 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
         return total_reward, reward_components
     
+    # def goal_orientation_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
+    #     # Desired goal orientation - this could be a fixed value or dynamic based on some strategy.
+    #     # Given the starting state of orientation is [1.0, 0.0, 0.0, 0.0], a desired orientation to reach the goal might be similar.
+    #     desired_goal_orientation = np.array([1.0, 0.0, 0.0, 0.0])
+        
+    #     # Extract current orientation of the ant's torso
+    #     current_orientation = self.torso_orientation(ant_obs)
+        
+    #     # Compute the L2 norm difference between current and desired orientation
+    #     orientation_difference = np.linalg.norm(current_orientation - desired_goal_orientation)
+
+    #     # Reward for matching the orientation.
+    #     # A weight factor can be used to scale the importance of this task.
+    #     orientation_weight = 1.0
+    #     orientation_reward = -orientation_weight * orientation_difference
+        
+    #     # Total reward is just the orientation reward in this case
+    #     total_reward = orientation_reward
+
+    #     # Dictionary to store individual reward components
+    #     reward_components = {
+    #         'orientation_reward': orientation_reward
+    #     }
+        
+    #     return total_reward, reward_components
+
     def goal_orientation_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
-        # Desired goal orientation - this could be a fixed value or dynamic based on some strategy.
-        # Given the starting state of orientation is [1.0, 0.0, 0.0, 0.0], a desired orientation to reach the goal might be similar.
-        desired_goal_orientation = np.array([1.0, 0.0, 0.0, 0.0])
-        
-        # Extract current orientation of the ant's torso
-        current_orientation = self.torso_orientation(ant_obs)
-        
-        # Compute the L2 norm difference between current and desired orientation
-        orientation_difference = np.linalg.norm(current_orientation - desired_goal_orientation)
+        # Weights for reward components
+        goal_distance_weight = 1.0  # You can adjust weights to balance reward components
 
-        # Reward for matching the orientation.
-        # A weight factor can be used to scale the importance of this task.
-        orientation_weight = 1.0
-        orientation_reward = -orientation_weight * orientation_difference
+        # Calculate the distance to the goal from the torso position
+        distance_to_goal = self.goal_distance(ant_obs)
         
-        # Total reward is just the orientation reward in this case
-        total_reward = orientation_reward
+        # Utilize negative L2 norm to incentivize minimizing the distance to the goal
+        # Closer to zero is better, so we'll take the negative to encourage smaller values
+        reward_distance_to_goal = -goal_distance_weight * np.linalg.norm(distance_to_goal)
 
-        # Dictionary to store individual reward components
+        # Total reward is a combination of components
+        reward = reward_distance_to_goal
+        
+        # Include individual reward components for debugging and analysis
         reward_components = {
-            'orientation_reward': orientation_reward
+            'distance_to_goal': reward_distance_to_goal
         }
         
-        return total_reward, reward_components
+        return reward, reward_components
     
     def navigation_and_turning_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
         # Define the weights for different components of the reward
@@ -507,7 +543,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return xyz_orientation
 
     def torso_velocity(self, ant_obs: np.ndarray):
-        xyz_velocity = ant_obs[15:18]
+        xyz_velocity = ant_obs[15:17]
 
         return xyz_velocity
 

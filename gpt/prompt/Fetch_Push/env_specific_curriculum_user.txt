@@ -1,0 +1,17 @@
+This environment is Fetch-Push environment
+The original task in the environment is for a manipulator to move a block to a target position on top of a table by pushing with its gripper. 
+The robot is a 7-DoF Fetch Mobile Manipulator with a two-fingered parallel gripper.  
+The gripper is locked in a closed configuration in order to perform the push task.
+
+The variables you can use to describe the curriculum includes
+(1) End effector xyz position
+(2) Block xyz position
+(3) Block linear velocity in xyz direction relative to end effector
+(4) End effector linear velocity in xyz direction
+(5) Desired goal position in xyz coordinate 
+
+In the original task, the task is marked as success if a distance between block position and goal position is less than 0.05.
+
+Since the block is placed on a table, it has a fixed height of z = 0.42.
+Also, goal position is also on a table, therefore, having a height of z = 0.42, while xy position is initialized randomly.
+End effector is initialized in [1.34, 0.75, 0.55]

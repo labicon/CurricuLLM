@@ -1,5 +1,4 @@
 Task 1 Name
 Basic Locomotion
-
 Task 1 Description
-Maximize the torso_velocity to achieve faster locomotion, while maintaining the torso_orientation close to the initial state.
+Maximize torso_velocity

@@ -1,0 +1,100 @@
+This environment is Fetch-Push environment
+The original task in the environment is for a manipulator to move a block to a target position on top of a table by pushing with its gripper. 
+The robot is a 7-DoF Fetch Mobile Manipulator with a two-fingered parallel gripper.  
+The gripper is locked in a closed configuration in order to perform the push task.
+
+Environment code is
+```python
+class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
+    def __init__(self, reward_type="sparse", **kwargs):
+        initial_qpos = {
+            "robot0:slide0": 0.405,
+            "robot0:slide1": 0.48,
+            "robot0:slide2": 0.0,
+            "object0:joint": [1.25, 0.53, 0.4, 1.0, 0.0, 0.0, 0.0],
+        }
+        MujocoFetchEnv.__init__(
+            self,
+            model_path=MODEL_XML_PATH,
+            has_object=True,
+            block_gripper=True,
+            n_substeps=20,
+            gripper_extra_height=0.0,
+            target_in_the_air=False,
+            target_offset=0.0,
+            obj_range=0.15,
+            target_range=0.15,
+            distance_threshold=0.05,
+            initial_qpos=initial_qpos,
+            reward_type=reward_type,
+            **kwargs,
+        )
+        EzPickle.__init__(self, reward_type=reward_type, **kwargs)
+
+    def end_effector_position(self):
+        (
+            grip_pos,
+            object_pos,
+            object_rel_pos,
+            gripper_state,
+            object_rot,
+            object_velp,
+            object_velr,
+            grip_velp,
+            gripper_vel,
+        ) = self.generate_mujoco_observations()    
+
+        return grip_pos  
+
+    def block_position(self):
+        (
+            grip_pos,
+            object_pos,
+            object_rel_pos,
+            gripper_state,
+            object_rot,
+            object_velp,
+            object_velr,
+            grip_velp,
+            gripper_vel,
+        ) = self.generate_mujoco_observations()    
+
+        return object_pos  
+
+    def block_relative_linear_velocity(self):
+        (
+            grip_pos,
+            object_pos,
+            object_rel_pos,
+            gripper_state,
+            object_rot,
+            object_velp,
+            object_velr,
+            grip_velp,
+            gripper_vel,
+        ) = self.generate_mujoco_observations()    
+
+        return object_velp
+
+    def end_effector_linear_velocity(self):
+        (
+            grip_pos,
+            object_pos,
+            object_rel_pos,
+            gripper_state,
+            object_rot,
+            object_velp,
+            object_velr,
+            grip_velp,
+            gripper_vel,
+        ) = self.generate_mujoco_observations()    
+
+        return grip_velp
+
+    def goal_position(self):
+        return self.goal.copy()
+```
+
+Since the block is placed on a table, it has a fixed height of z = 0.42.
+Also, goal position is also on a table, therefore, having a height of z = 0.42, while xy position is initialized randomly.
+End effector is initialized in [1.34, 0.75, 0.55]

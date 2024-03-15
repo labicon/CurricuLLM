@@ -1,0 +1,28 @@
+Your reward function should use useful functions from the environment to write reward function. 
+
+The output of the reward function should consist of two items:
+(1) the total reward,
+(2) a dictionary of each individual reward component.
+Your reward function will be attached to given environment class.
+As an example, the reward function signature can be:
+def compute_reward(self) -> Tuple[np.float64, Dict[str, np.float64]]:
+...
+return reward, {}
+The code output should be formatted as a python code string: "‘‘‘python ... ‘‘‘".
+
+Some helpful tips for writing the reward function code:
+(1) If you want to get scalar value of some array, use np.linalg.norm()
+(2) If you want to make a variable to achieve specific value, use L2 norm with np.linalg.norm(variable - goal_value)
+(3) If you want to maximize specific variable, use np.tanh()
+(4) If you want to minimize specific variable, use -np.tanh()
+(5) You can introduce a weighting parameter inside and outside of the transformation function; this parameters must be a named variable in the reward function and it must not be an input variable.
+(6) Most importantly, the reward code’s input variables must contain only attributes of the provided functions, observation, and actions. Under no circumstance can you introduce new input variables.
+
+Therefore, your output should be
+Task n Name
+Task n Description
+```python
+def original_task_reward(self, ant_obs) -> Tuple[np.float64, Dict[str, np.float64]]:
+...
+return reward, {}
+```

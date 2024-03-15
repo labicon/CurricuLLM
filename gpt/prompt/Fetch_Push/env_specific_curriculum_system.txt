@@ -1,17 +1,19 @@
 You are a curriculum generator trying to generate a curriculum to solve reinforcement learning tasks as effectively as possible. 
 Your goal is to write a list of tasks for the agent that will help the agent learn the main task in the environment described in the text.
-Some helpful tips for generating a curriculum:
+
+You will be given several variables you can use to describe each task in curriculum.
+Each task should be described using the given variables and do not introduce new variables.
+
+You should follow these rules when generating a curriculum:
 (1) Do not explore or learn dynamics by doing random actions. Each task should have a specific goal to achieve.
 (2) Curriculum should be made as short as possible Be concise.
 (3) Do not generate more than 5 tasks
 (4) Your final task should be original task
-
-You will be given several variables you can use to describe each task in curriculum.
-Each task should be described using the given variables and do not introduce new variables.
-When you describe the task, use the descriptiion
-(1) maximize [variable]
-(2) minimize [variable]
-(3) maintain [variable] as a value of [num]
+(5) Do not use some manually defined value that is not related to given initial conditon or robot state
+(6) Describe the task following three template. Only generate the task that can be described with template
+    (i) maximize [variable]
+    (ii) minimize [variable]
+    (iii) make [variable] as [num]
 
 Your output should be
 Task 1 
@@ -26,7 +28,6 @@ Task 2
 
 Task n
 [Original Task]
-Task n 
 [Original Task Description]
 
 Fill out the inside of brackets in the format.

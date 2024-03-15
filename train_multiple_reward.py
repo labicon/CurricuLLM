@@ -39,8 +39,8 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
     for obs, goal in zip(obs_trajectory, goal_trajectory):
         torso_coord.append(obs[0:3])
         torso_orientation.append(obs[3:7])
-        torso_velocity.append(obs[15:18])
-        torso_angular_velocity.append(obs[18:21])
+        torso_velocity.append(np.linalg.norm(obs[15:17]))
+        torso_angular_velocity.append(np.linalg.norm(obs[18:21]))
         goal_pos.append(goal)
         goal_distance.append(np.linalg.norm(obs[0:2] - goal))
 
@@ -72,13 +72,7 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
 if __name__ == "__main__":
     env_name = "AntMaze_UMaze"
     # generate_curriculum(env_name)
-    task_list = ['basic_locomotion', 'orientation_control', 'goal_orientation', 'navigation_turning', 'original_task']
-    # while True:
-    #     task = input("Enter the task list, enter end if there is no more task: ")
-    #     if task == "end":
-    #         break
-    #     else:
-    #         task_list.append(task)
+    task_list = [ 'goal_orientation'] #'orientation_control', 'basic_locomotion', ,'original_task'
 
     curriculum_length = len(task_list)
     task_idx = input("Enter the task idx to start training: ")
@@ -90,12 +84,11 @@ if __name__ == "__main__":
         best_reward_sample = input("Enter the sample number of the best reward function: ")
         previous_model_path = f"./logs/{env_name}_SAC/{previous_task}/sample_{best_reward_sample}/final_model.zip"
 
-    for sample_num in range(5):
-        # Create a number of environments and train
-
+    for sample_num in range(0,1):
+        # Create the environment
         env_id = f"Curriculum/{env_name}-v{sample_num}"
         # Create the logger
-        logger_path = f"./logs/{env_name}_SAC/{task}/sample_{sample_num}"
+        logger_path = f"./logs/{env_name}_SAC/{task}/sample_{sample_num}_wo_curriculum"
         new_logger = configure(logger_path, ["stdout", "csv"])
 
         # Create the vectorized environment
@@ -113,8 +106,8 @@ if __name__ == "__main__":
         
         if task_idx == 0:
             # model = PPO("MultiInputPolicy",
-            #             training_env,
-            #             verbose=1)
+                        # training_env,
+                        # verbose=1)
             model = SAC("MultiInputPolicy",
                         training_env,
                         verbose=1)
@@ -122,37 +115,41 @@ if __name__ == "__main__":
             # model = PPO.load(previous_model_path)
             model = SAC.load(previous_model_path)
 
-        single_task_training(model, env_id, task, logger_path, eval_callback, num_cpu=num_cpu, total_timesteps=400_000)
+        # model = SAC.load("./logs/AntMaze_UMaze_SAC/original_task/sample_0_10M/final_model.zip")
 
-    # Evaluate the trained model
-    statistics = []
-    for sample_num in range(5):
-        env_id = f"Curriculum/{env_name}-v{sample_num}"
-        num_cpu = 4
-        eval_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
-        model = SAC.load(f"./logs/{env_name}_SAC/{task}/sample_{sample_num}/final_model")
+        single_task_training(model, env_id, task, logger_path, eval_callback, num_cpu=num_cpu, total_timesteps=15_000_000)
+
+        del model, training_env, eval_env, eval_callback
+
+    # # Evaluate the trained model
+    # statistics = []
+    # for sample_num in range(5):
+    #     env_id = f"Curriculum/{env_name}-v{sample_num}"
+    #     num_cpu = 4
+    #     eval_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
+    #     model = SAC.load(f"./logs/{env_name}_SAC/{task}/sample_{sample_num}/final_model")
+    #     # model = PPO.load(f"./logs/{env_name}_PPO/{task}/sample_{sample_num}/final_model")
         
-        # Get trajectory
-        obs = eval_env.reset()
-        obs_trajectory = [obs['observation'][0]]   
-        action_trajectory = []
-        goal_trajectory = [obs['desired_goal'][0]]
-        for i in range(1000):
-            action, _states = model.predict(obs, deterministic=True)
-            action_trajectory.append(action[0])
-            obs, rewards, dones, info = eval_env.step(action)
-            obs_trajectory.append(obs['observation'][0])
-            goal_trajectory.append(obs['desired_goal'][0])
+    #     # Get trajectory
+    #     obs = eval_env.reset()
+    #     obs_trajectory = [obs['observation'][0]]   
+    #     action_trajectory = []
+    #     goal_trajectory = [obs['desired_goal'][0]]
+    #     for i in range(1000):
+    #         action, _states = model.predict(obs, deterministic=True)
+    #         action_trajectory.append(action[0])
+    #         obs, rewards, dones, info = eval_env.step(action)
+    #         obs_trajectory.append(obs['observation'][0])
+    #         goal_trajectory.append(obs['desired_goal'][0])
 
-        # Analyze trajectory statistics
-        single_trajectory_statistics = analyze_trajectory_ant(obs_trajectory, goal_trajectory)
-        statistics.append(single_trajectory_statistics)
+    #     # Analyze trajectory statistics
+    #     single_trajectory_statistics = analyze_trajectory_ant(obs_trajectory, goal_trajectory)
+    #     statistics.append(single_trajectory_statistics)
+
+    #     # print(single_trajectory_statistics["torso_velocity_mean"])
     
-    # Ask LLM to choose the best trajectory and reward function
-    feedback(env_name, task, statistics)
+    # # Ask LLM to choose the best trajectory and reward function
+    # feedback(env_name, task, statistics)
 
-    user_input = input("Type the idx of reward function to choose: ")
-    print("Train next task with reward function: ", user_input)
-
-
-
+    # user_input = input("Type the idx of reward function to choose: ")
+    # print("Train next task with reward function: ", user_input)

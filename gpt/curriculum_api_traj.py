@@ -1,7 +1,6 @@
 from openai import OpenAI
 import yaml
 import os
-from gpt.utils import *
 import numpy as np
 import pandas as pd
 
@@ -9,6 +8,10 @@ with open('./gpt/key.yaml', 'r') as stream:
     config = yaml.safe_load(stream)
 
 client = OpenAI(api_key=config['OPENAI_API_KEY'])
+
+def file_to_string(filename):
+    with open(filename, 'r') as file:
+        return file.read()
 
 def generate_curriculum(env):
   current_file_path = os.path.abspath(__file__)

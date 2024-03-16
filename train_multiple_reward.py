@@ -9,22 +9,7 @@ from stable_baselines3.common.logger import configure
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
 
-from utils.envs_utils import *
-
-from gpt.curriculum_api_multiple import generate_curriculum, generate_reward, feedback
-
-def single_task_training(model, env_id, task, logger_path, eval_callback: CurriculumEvalCallback, num_cpu=4, total_timesteps=200_000):
-    # Create the vectorized environment
-    training_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
-
-    eval_env = SubprocVecEnv([make_env(env_id, i, task=task) for i in range(num_cpu)])
-
-    # change eval env and training env
-    eval_callback.change_environment(eval_env, task)
-    model.set_env(training_env)
-
-    model.learn(total_timesteps=total_timesteps, callback=eval_callback)
-    model.save(logger_path + "/final_model")
+from utils.train_utils import *
 
 def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations

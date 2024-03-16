@@ -10,9 +10,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
 
-from utils.envs_utils import *
-
-from gpt.curriculum_api_multiple import generate_curriculum, generate_reward, feedback
+from utils.train_utils import *
 
 def single_task_training(model, env_id, task, logger_path, eval_callback: CurriculumEvalCallback, num_cpu=4, total_timesteps=200_000):
     # Create the vectorized environment

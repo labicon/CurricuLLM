@@ -13,7 +13,7 @@ from stable_baselines3.common.logger import configure
 
 import Curriculum
 
-from utils.envs_utils import *
+from utils.train_utils import *
 
 import sys
 

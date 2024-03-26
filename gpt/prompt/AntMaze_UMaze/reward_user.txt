@@ -50,9 +50,9 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return xyz_orientation
 
     def torso_velocity(self, ant_obs: np.ndarray):
-        xyz_velocity = ant_obs[15:18]
+        xy_velocity = ant_obs[15:17]
 
-        return xyz_velocity
+        return xy_velocity
 
     def torso_angular_velocity(self, ant_obs: np.ndarray):
         xyz_angular_velocity = ant_obs[18:21]
@@ -62,6 +62,10 @@ class AntMazeEnv(MazeEnv, EzPickle):
     def goal_pos(self):
 
         return self.goal
+
+    def get_ant_obs(self):
+
+        return self.ant_env.get_obs()
 
     def goal_distance(self, ant_obs: np.ndarray):
         goal_pos = self.goal_pos()
@@ -74,3 +78,8 @@ class AntMazeEnv(MazeEnv, EzPickle):
 Note that in the starting state where the ant is standing still, torso_orientation is [1.0, 0.0, 0.0, 0.0].
 torso_coordinate, torso_velocity, and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
 goal_pos is initialized randomly.
+
+Generate a reward function code for
+Task Name: <<Task_Name>>
+Description: <<Task_Description>>
+Reason: <<Task_Reason>>

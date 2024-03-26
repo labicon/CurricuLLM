@@ -4,7 +4,6 @@ Some helpful tips for generating a curriculum:
 (1) Do not explore or learn dynamics by doing random actions. Each task should have a specific goal to achieve.
 (2) Curriculum should be made as short as possible Be concise.
 (3) Do not generate more than 5 tasks
-(4) Your final task should be original task
 
 You will be given several variables you can use to describe each task in curriculum.
 Each task should be described using the given variables and do not introduce new variables.
@@ -14,19 +13,19 @@ When you describe the task, use the descriptiion
 (3) maintain [variable] as a value of [num]
 
 Your output should be
-Task 1 
-[Name]
-[Description]
-[Reason]
+Task 1
+Name: []
+Description: []
+Reason: []
 
 Task 2 
-[Name]
-[Description]
-[Reason]
+Name: []
+Description: []
+Reason: []
 
 Task n
-[Original Task]
-Task n 
-[Original Task Description]
+Name: []
+Description: []
+Reason: []
 
 Fill out the inside of brackets in the format.

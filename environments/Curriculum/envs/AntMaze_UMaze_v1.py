@@ -366,47 +366,21 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
         return distance
 
+    import numpy as np
     
     def compute_reward_0(self):
         ant_obs = self.get_ant_obs()
-        goal_distance = self.goal_distance(ant_obs)
-        velocity_weight = 0.1
-        goal_distance_weight = 1.0
-    
-        # Reward for moving towards the goal
-        reward_for_goal_distance = -np.tanh(goal_distance) * goal_distance_weight
-    
-        # Reward for maintaining a certain velocity (encourage movement)
-        torso_velocity = self.torso_velocity(ant_obs)
-        desired_velocity = np.array([1.0, 0.0]) # Example desired velocity towards the goal
-        velocity_difference = np.linalg.norm(torso_velocity - desired_velocity)
-        reward_for_velocity = -np.tanh(velocity_difference) * velocity_weight
-    
-        # Total reward
-        total_reward = reward_for_goal_distance + reward_for_velocity
-    
-        reward_dict = {
-            'goal_distance': reward_for_goal_distance,
-            'velocity': reward_for_velocity
-        }
-    
-        return total_reward, reward_dict
-    
-    
-    def compute_reward_1(self):
-        ant_obs = self.get_ant_obs()
-        torso_vel = self.torso_velocity(ant_obs)
+        velocity = self.torso_velocity(ant_obs)
+        velocity_magnitude = np.linalg.norm(velocity)
         
         # Reward components
         velocity_reward_weight = 1.0
+        velocity_reward = np.tanh(velocity_magnitude)
         
-        # Reward calculations
-        velocity_reward = np.tanh(np.linalg.norm(torso_vel)) # Maximize torso velocity
-        
-        # Total reward calculation
+        # Total reward
         total_reward = velocity_reward_weight * velocity_reward
         
-        # Reward dictionary
+        # Reward components dictionary
         reward_dict = {
             'velocity_reward': velocity_reward
         }
@@ -417,7 +391,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
     def compute_reward_curriculum(self):
         total_reward = 0
         total_reward_dict = {}
-        n = 1
+        n = 0
         for i in range(n + 1):  # Including n, hence n + 1
             # Construct the function name based on i
             function_name = f'compute_reward_{i}'

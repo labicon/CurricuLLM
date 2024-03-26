@@ -13,9 +13,6 @@ In the original task, the task is marked as success if a distance between torso 
 Therefore, the original task can be described as making goal_distance as 0.45.
 
 Note that in the starting state where the ant is standing still, torso_orientation is [1.0, 0.0, 0.0, 0.0].
-torso_coordinate, torso_velocity, and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
+torso_coordinate and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
+torso_velocity is initialized as [0.0, 0.0].
 goal_pos is initialized randomly.
-
-Maze is in [[-5, 5], [-5, 5]] squre.
-From center to left is blocked with the wall, making rotated U shape.
-Therefore, we can say area around [[-5, 1], [-2, 2]] is blocked. 

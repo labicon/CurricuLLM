@@ -110,7 +110,7 @@ class Curriculum_Module:
             pre_tuned_model_path = self.logger_path + previous_task + f"/sample_{self.best_model_idx_list[-1]}/final_model.zip"
             model = SAC.load(pre_tuned_model_path)
 
-        model.learn(total_timesteps=100_000, callback=eval_callback)
+        model.learn(total_timesteps=5_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task_name}/sample_{sample_num}/final_model")
 
         del model, training_env, eval_env, eval_callback

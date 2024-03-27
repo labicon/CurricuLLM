@@ -1,4 +1,0 @@
-Task 3 
-Name: Reduce Distance to Goal
-Description: minimize [distance between Block xyz position and Desired goal position in xyz coordinate]
-Reason: This task focuses on the core objective of the original task - moving the block towards the goal. By minimizing the distance between the block and the goal, the agent learns to push the block in the correct direction.

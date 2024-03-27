@@ -94,8 +94,6 @@ class CurriculumEvalCallback(EventCallback):
         if log_path is not None:
             log_path = os.path.join(log_path, "evaluations")
         self.log_path = log_path
-        self.evaluations_results_main = []
-        self.evaluations_results_task = []
         self.evaluations_results_dict = []
         self.evaluations_timesteps = []
         self.evaluations_length = []
@@ -152,7 +150,7 @@ class CurriculumEvalCallback(EventCallback):
             # Reset success rate buffer
             self._is_success_buffer = []
 
-            episode_rewards_main, episode_rewards_task, episode_rewards_dict, episode_lengths, episode_success = curriculum_evaluate_policy_feedback(
+            episode_rewards_dict, episode_lengths, episode_success = curriculum_evaluate_policy_feedback(
                 self.model,
                 self.eval_env,
                 n_eval_episodes=self.n_eval_episodes,
@@ -166,8 +164,6 @@ class CurriculumEvalCallback(EventCallback):
 
             if self.log_path is not None:
                 self.evaluations_timesteps.append(self.num_timesteps)
-                self.evaluations_results_main.append(episode_rewards_main)
-                self.evaluations_results_task.append(episode_rewards_task)
                 self.evaluations_results_dict.append(episode_rewards_dict)
                 self.evaluations_length.append(episode_lengths)
                 self.evaluations_successes.append(episode_success)
@@ -176,16 +172,12 @@ class CurriculumEvalCallback(EventCallback):
                 np.savez(
                     self.log_path,
                     timesteps=self.evaluations_timesteps,
-                    results_main=self.evaluations_results_main,
-                    results_task=self.evaluations_results_task,
                     results_dict=self.evaluations_results_dict,
                     task=self.evaluations_tasks,
                     ep_lengths=self.evaluations_length,
                     successes=self.evaluations_successes,
                 )
 
-            mean_reward_main, std_reward_main = np.mean(episode_rewards_main), np.std(episode_rewards_main)
-            mean_reward_task, std_reward_task = np.mean(episode_rewards_task), np.std(episode_rewards_task)
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
             mean_success, std_success = np.mean(episode_success), np.std(episode_success)
 
@@ -203,42 +195,32 @@ class CurriculumEvalCallback(EventCallback):
                     sum_of_squares[key] += (value - mean_reward_dict[key]) ** 2
 
             std_reward_dict = {key: np.sqrt(value / len(episode_rewards_dict)) for key, value in sums.items()}
-            
-            self.last_mean_reward_main = mean_reward_main
-            self.last_mean_reward_task = mean_reward_task
 
             if self.verbose >= 1:
                 print("Task: ", self.task)
-                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_task={mean_reward_task:.2f} +/- {std_reward_task:.2f}")
-                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_main={mean_reward_main:.2f} +/- {std_reward_main:.2f}")
+                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_task={mean_reward_dict['task']:.2f} +/- {std_reward_dict['task']:.2f}")
+                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_main={mean_reward_dict['main']:.2f} +/- {std_reward_dict['main']:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
                 print(f"Success rate: {mean_success:.2f} +/- {std_success:.2f}")
-                for key in mean_reward_dict.keys():
-                    print(f"{key}: {mean_reward_dict[key]:.2f} +/- {std_reward_dict[key]:.2f}")
-                print(f"Success rate: {mean_success:.2f} +/- {std_success:.2f}")
             # Add to current Logger
-            self.logger.record("eval/mean_reward_main", float(mean_reward_main))
-            self.logger.record("eval/mean_reward_task", float(mean_reward_task))
+            self.logger.record("eval/mean_reward_main", float(mean_reward_dict["main"]))
+            self.logger.record("eval/mean_reward_task", float(mean_reward_dict["task"]))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
             self.logger.record("eval/success_rate", mean_success)
-            if self.task is not None:
-                self.logger.record("eval/current_task", self.task)
-            else:
-                self.logger.record("eval/current_task", "Main")
 
-            for key in mean_reward_dict.keys():
-                self.logger.record(f"eval/{key}", mean_reward_dict[key])
+            for key, value in mean_reward_dict.items():
+                self.logger.record(f"eval/{key}", value)
                 
             # Dump log so the evaluation results are printed with the correct timestep
             self.logger.record("time/total_timesteps", self.num_timesteps, exclude="tensorboard")
             self.logger.dump(self.num_timesteps)
 
-            if mean_reward_main > self.best_mean_reward:
+            if mean_reward_dict["main"] > self.best_mean_reward:
                 if self.verbose >= 1:
                     print("New best mean reward!")
                 if self.best_model_save_path is not None:
                     self.model.save(os.path.join(self.best_model_save_path, "best_model"))
-                self.best_mean_reward = mean_reward_main
+                self.best_mean_reward = mean_reward_dict["main"]
                 # Trigger callback on new best model, if needed
                 if self.callback_on_new_best is not None:
                     continue_training = self.callback_on_new_best.on_step()
@@ -260,11 +242,3 @@ class CurriculumEvalCallback(EventCallback):
 
     def get_training_info(self):
         return self.evaluations_results_dict, self.evaluations_successes
-
-    def change_environment(self, eval_env, task):
-        # Convert to VecEnv for consistency
-        if not isinstance(eval_env, VecEnv):
-            eval_env = DummyVecEnv([lambda: eval_env])
-
-        self.eval_env = eval_env
-        self.task = task

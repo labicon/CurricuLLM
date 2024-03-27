@@ -3,8 +3,7 @@ from typing import Dict, List, Optional, Union, Tuple
 import numpy as np
 
 from gymnasium.utils.ezpickle import EzPickle
-
-from Curriculum.envs.fetch_curriculum import MujocoFetchEnv, MujocoPyFetchEnv
+from gymnasium_robotics.envs.fetch import MujocoFetchEnv, MujocoPyFetchEnv
 
 # Ensure we get the path separator correct on windows
 MODEL_XML_PATH = os.path.join("fetch", "push.xml")
@@ -189,9 +188,6 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
         )
         EzPickle.__init__(self, reward_type=reward_type, **kwargs)
 
-    def set_task(self, task: str):
-        self.task = task
-
     def step(self, action):
         """Run one timestep of the environment's dynamics using the agent actions.
 
@@ -228,131 +224,14 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
         terminated = self.compute_terminated(obs["achieved_goal"], self.goal, info)
         truncated = self.compute_truncated(obs["achieved_goal"], self.goal, info)
 
-        reward, reward_dict = self.compute_reward(obs["achieved_goal"], self.goal, info)
+        reward_main = self.compute_reward(obs["achieved_goal"], self.goal, info)
+        reward, reward_dict = self.compute_reward_curriculum()
+        reward_dict["main"] = reward_main
+        reward_dict["task"] = reward
 
-        info["reward_main"] = reward
-        info["reward_task"] = reward
         info["reward_dict"] = reward_dict
 
         return obs, reward, terminated, truncated, info
-
-    def compute_reward(self, achieved_goal, goal, info) -> np.float64:
-        if self.task == "align_end_effector_with_block":
-            reward, reward_dict = self.align_end_effector_with_block()
-            return reward, reward_dict
-        elif self.task == "match_end_effector_velocity_with_block":
-            reward_1, reward_dict_1 = self.match_end_effector_velocity_with_block()
-            reward_2, reward_dict_2 = self.align_end_effector_with_block()
-            reward = reward_1 + reward_2
-            reward_dict = {**reward_dict_1, **reward_dict_2}
-            return reward, reward_dict
-        elif self.task == "reduced_distance_to_goal":
-            reward_1, reward_dict_1 = self.reduce_distance_to_goal()
-            reward_2, reward_dict_2 = self.match_end_effector_velocity_with_block()
-            reward = reward_1 + reward_2
-            reward_dict = {**reward_dict_1, **reward_dict_2}
-            return reward, reward_dict
-        elif self.task == "move_block_to_target_position":
-            reward_1, reward_dict_1 = self.original_task_reward()
-            reward_2, reward_dict_2 = self.reduce_distance_to_goal()
-            reward = reward_1 + reward_2
-            reward_dict = {**reward_dict_1, **reward_dict_2}
-            return reward, reward_dict
-        else:
-            raise ValueError(f"Task {self.task} not recognized.")
-
-    def align_end_effector_with_block(self) -> Tuple[np.float64, Dict[str, np.float64]]:
-        end_effector_pos = self.end_effector_position()
-        block_pos = self.block_position()
-        
-        # Calculate the distance between the end effector and the block
-        distance = np.linalg.norm(end_effector_pos - block_pos)
-        
-        # Reward function parameters
-        distance_weight = 1.0  # Weight for the distance penalty
-        
-        # Reward for aligning the end effector with the block
-        # We use the negative distance because lower distance is better, hence we want to minimize the distance
-        reward = -distance_weight * distance
-        
-        # Individual reward components
-        reward_components = {
-            'distance_penalty': -distance  # Negative distance as lower distance is desired
-        }
-        
-        return reward, reward_components
-    
-    def match_end_effector_velocity_with_block(self) -> Tuple[np.float64, Dict[str, np.float64]]:
-        # Observing the End effector and block velocity
-        block_velocity_relative_to_end_effector = self.block_relative_linear_velocity()
-
-        # Computing the difference in velocities to minimize it
-        velocity_difference = np.linalg.norm(block_velocity_relative_to_end_effector)
-
-        # Reward is higher when the difference is smaller. We can use negative velocity_difference for this, but using -np.tanh() to constrain the value between -1 and 0
-        reward_velocity_match = -np.tanh(velocity_difference)
-        
-        # Detailed rewards for inspection purposes
-        detailed_rewards = {
-            "velocity_match": reward_velocity_match,
-        }
-
-        total_reward = reward_velocity_match
-        return total_reward, detailed_rewards
-    
-    def reduce_distance_to_goal(self) -> Tuple[np.float64, Dict[str, np.float64]]:
-        block_position = self.block_position()
-        goal_position = self.goal_position()
-        distance_to_goal = np.linalg.norm(block_position - goal_position)
-        
-        # Set a weighting factor to scale the importance of this component
-        distance_weight = 1.0
-        
-        # Minimize the distance using -tanh to ensure the reward increases as distance decreases
-        reward = -np.tanh(distance_weight * distance_to_goal)
-        
-        # It's helpful to break down the reward components for debugging and understanding the contributions 
-        reward_components = {
-            "distance_to_goal": -distance_to_goal  # Negative to indicate minimization
-        }
-        
-        return reward, reward_components
-    
-    def original_task_reward(self) -> Tuple[np.float64, Dict[str, np.float64]]:
-        # Define weight parameters
-        distance_weight = 1.0
-        velocity_weight = 0.1
-        
-        # Get positions and velocities
-        block_pos = self.block_position()
-        goal_pos = self.goal_position()
-        block_vel = self.block_relative_linear_velocity()
-        ee_vel = self.end_effector_linear_velocity()
-        
-        # Compute distance to goal (ignore z axis)
-        distance_to_goal = np.linalg.norm(block_pos[:2] - goal_pos[:2])
-        
-        # Compute reward components
-        distance_reward = -distance_weight * distance_to_goal  # Reward for moving block closer to goal
-        
-        # Also, we want to control the velocity at which the block is pushed towards the goal
-        # Reward for keeping a slow and steady pace in the direction of the goal
-        block_velocity_reward = -velocity_weight * np.linalg.norm(block_vel)
-        
-        # Encourage the end effector to move at a reasonable speed to ensure precise control
-        ee_velocity_reward = -velocity_weight * np.linalg.norm(ee_vel)
-        
-        # Compute total reward
-        total_reward = distance_reward + block_velocity_reward + ee_velocity_reward
-        
-        # Reward components dictionary
-        reward_components = {
-            "distance_reward": distance_reward,
-            "block_velocity_reward": block_velocity_reward,
-            "ee_velocity_reward": ee_velocity_reward
-        }
-        
-        return total_reward, reward_components
 
     def end_effector_position(self):
         (

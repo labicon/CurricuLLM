@@ -74,8 +74,6 @@ def curriculum_evaluate_policy_feedback(
         )
 
     n_envs = env.num_envs
-    episode_rewards_main = []
-    episode_rewards_task = []
     episode_rewards_dict = []
     episode_lengths = []
     episode_success = []
@@ -84,8 +82,6 @@ def curriculum_evaluate_policy_feedback(
     # Divides episodes among different sub environments in the vector as evenly as possible
     episode_count_targets = np.array([(n_eval_episodes + i) // n_envs for i in range(n_envs)], dtype="int")
 
-    current_rewards_main = np.zeros(n_envs)
-    current_rewards_task = np.zeros(n_envs)
     current_rewards_dict = [None for _ in range(n_envs)]
     current_lengths = np.zeros(n_envs, dtype="int")
     current_success = np.zeros(n_envs, dtype="int")
@@ -101,8 +97,6 @@ def curriculum_evaluate_policy_feedback(
             deterministic=deterministic,
         )
         new_observations, rewards, dones, infos = env.step(actions)
-        current_rewards_main += np.array([info["reward_main"] for info in infos])
-        current_rewards_task += np.array([info["reward_task"] for info in infos])
         current_success += np.array([info["success"] for info in infos]).astype(int)
 
         for env_idx, info in enumerate(infos):
@@ -126,14 +120,10 @@ def curriculum_evaluate_policy_feedback(
                     if is_monitor_wrapped:
                         raise NotImplementedError("Evaluation with Monitor wrapper is not supported yet.")
                     else:
-                        episode_rewards_main.append(current_rewards_main[i])
-                        episode_rewards_task.append(current_rewards_task[i])
                         episode_rewards_dict.append(current_rewards_dict[i])
                         episode_lengths.append(current_lengths[i])
                         episode_success.append(current_success[i]/current_lengths[i])
                         episode_counts[i] += 1
-                    current_rewards_main[i] = 0
-                    current_rewards_task[i] = 0
                     current_rewards_dict[i] = None
                     current_success[i] = 0
                     current_lengths[i] = 0
@@ -144,12 +134,12 @@ def curriculum_evaluate_policy_feedback(
             env.render()
 
     # episode_ variable is a list of float, int(for success), or dictionary(for reward_dict)
-    mean_reward_main = np.mean(episode_rewards_main)
-    std_reward_main = np.std(episode_rewards_main)
-    mean_reward_task = np.mean(episode_rewards_task)
-    std_reward_task = np.std(episode_rewards_task)
+    mean_reward_main = np.mean([reward_dict["main"] for reward_dict in episode_rewards_dict])
+    std_reward_main = np.std([reward_dict["main"] for reward_dict in episode_rewards_dict])
+    mean_reward_task = np.mean([reward_dict["task"] for reward_dict in episode_rewards_dict])
+    std_reward_task = np.std([reward_dict["task"] for reward_dict in episode_rewards_dict])
     if reward_threshold is not None:
         assert mean_reward_task > reward_threshold, "Mean reward task below threshold: " f"{mean_reward_task:.2f} < {reward_threshold:.2f}"
     if return_episode_rewards:
-        return episode_rewards_main, episode_rewards_task, episode_rewards_dict, episode_lengths, episode_success
+        return episode_rewards_dict, episode_lengths, episode_success
     return mean_reward_main, std_reward_main, mean_reward_task, std_reward_task

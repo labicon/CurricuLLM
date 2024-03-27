@@ -13,9 +13,9 @@ from utils.train_utils import *
 from train_ant import Curriculum_Module
 
 if __name__ == "__main__":
-    env_name = "AntMaze_UMaze"
-    env_path = "./environments/Curriculum/envs/AntMaze_UMaze.py"
-    logger_path = "./logs/Curriculum/UMaze/"
+    env_name = "Fetch_Push"
+    env_path = "./environments/Curriculum/envs/Fetch_Push.py"
+    logger_path = "./logs/Fetch/Push/"
 
     # Generate curriculum module
     curriculum_module = Curriculum_Module(env_name, env_path, logger_path)

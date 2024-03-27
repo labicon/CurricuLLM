@@ -88,8 +88,7 @@ class CurriculumAPI:
                 print("Failed to generate reward code. Retrying...")
 
         # Save the reward code
-        task_name = task['Name']
-        save_string_to_file(self.log_path + f'{task_name}_reward_code_v{version_number}.md', reward_code)
+        save_string_to_file(self.log_path + f"{task['Name']}/sample_{version_number}/" + "reward_code.md", reward_code)
         # If previous reward code is given, new reward is sum of previous and current reward
         if previous_reward_code is not None:
             reward_code_summary = self.add_rewards(previous_reward_code, reward_code)

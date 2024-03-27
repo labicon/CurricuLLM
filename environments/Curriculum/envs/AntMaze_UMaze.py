@@ -268,8 +268,6 @@ class AntMazeEnv(MazeEnv, EzPickle):
             **kwargs,
         )
 
-        self.task = None
-
     def reset(self, *, seed: Optional[int] = None, **kwargs):
         super().reset(seed=seed, **kwargs)
 
@@ -289,13 +287,12 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
         reward_main = self.compute_reward(obs["achieved_goal"], self.goal, info)
         reward, reward_dict = self.compute_reward_curriculum()
-        reward_dict["reward_main"] = reward_main
+        reward_dict["main"] = reward_main
+        reward_dict["task"] = reward
 
         terminated = self.compute_terminated(obs["achieved_goal"], self.goal, info)
         truncated = self.compute_truncated(obs["achieved_goal"], self.goal, info)
         info["success"] = bool(np.linalg.norm(obs["achieved_goal"] - self.goal) <= 0.45)
-        info["reward_main"] = reward_main
-        info["reward_task"] = reward
         info["reward_dict"] = reward_dict
 
         if self.render_mode == "human":
@@ -308,7 +305,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
     def _get_obs(self, ant_obs: np.ndarray) -> Dict[str, np.ndarray]:
         achieved_goal = ant_obs[:2]
-        observation = ant_obs#[2:]
+        observation = ant_obs[2:]
 
         return {
             "observation": observation.copy(),

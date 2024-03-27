@@ -1,4 +1,0 @@
-Task 1 
-Name: Align End Effector with Block
-Description: make [End effector xyz position] as [Block xyz position]
-Reason: This task will help the agent learn how to maneuver the end effector to the exact position of the block, which is a critical skill for pushing the block effectively towards the goal.

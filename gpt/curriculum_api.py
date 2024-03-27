@@ -22,6 +22,8 @@ class CurriculumAPI:
 
         tasks_string = gpt_interaction(self.client, GPT_MODEL, initial_system, initial_user)
 
+        # Ensure the directory exists and write the curriculum to a file
+        os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
         with open(self.log_path + 'curriculum.md', 'w') as file:
             file.write(tasks_string)
 

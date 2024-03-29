@@ -17,6 +17,7 @@ class Curriculum_Module:
         self.best_reward_code_list = []
         self.best_model_idx_list = []
         self.current_reward_code_list = []
+        self.num_cpu = 8
         
     def generate_curriculum(self):
         # Generate curriculum and return list of dictionaries with task details
@@ -38,7 +39,7 @@ class Curriculum_Module:
             for sample_num in range(5):
                 try:
                     env_id = f"Curriculum/{self.env_name}-v{sample_num}"
-                    eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(4)])
+                    eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
                     task_name = task['Name']
                     model_path = self.logger_path + f"{task_name}/sample_{sample_num}/final_model.zip"
                     model = SAC.load(model_path)
@@ -90,9 +91,8 @@ class Curriculum_Module:
         self.current_reward_code_list.append(reward_code)
 
         # Create the vectorized environment
-        num_cpu = 8
-        training_env = SubprocVecEnv([make_env(env_id, i) for i in range(num_cpu)])
-        eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(num_cpu)])
+        training_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
 
         # Create the callback
         eval_callback = CurriculumEvalCallback(eval_env, 

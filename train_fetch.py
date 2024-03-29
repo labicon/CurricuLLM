@@ -52,7 +52,7 @@ class Curriculum_Module:
                         obs_trajectory.append(obs['observation'][0])
                         goal_trajectory.append(obs['desired_goal'][0])
 
-                    statistics.append(analyze_trajectory_ant(obs_trajectory, goal_trajectory))
+                    statistics.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
                 except Exception as e:
                     print(f"Error in evaluating task {task['Name']} sample {sample_num}")
                     print(e)

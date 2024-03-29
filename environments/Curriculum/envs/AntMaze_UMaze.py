@@ -305,7 +305,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
     def _get_obs(self, ant_obs: np.ndarray) -> Dict[str, np.ndarray]:
         achieved_goal = ant_obs[:2]
-        observation = ant_obs[2:]
+        observation = ant_obs#[2:]
 
         return {
             "observation": observation.copy(),

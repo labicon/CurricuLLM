@@ -140,7 +140,7 @@ def compute_reward_curriculum(self):
             total_reward += reward
             total_reward_dict.update(reward_dict)
         else:
-            print(f"Function {function_name} not found.")
+            raise NameError(f"Function {function_name} not found.")
     return total_reward, total_reward_dict"""
         return reward_code
 

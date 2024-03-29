@@ -194,7 +194,7 @@ class CurriculumEvalCallback(EventCallback):
                 for key, value in reward_dict.items():
                     sum_of_squares[key] += (value - mean_reward_dict[key]) ** 2
 
-            std_reward_dict = {key: np.sqrt(value / len(episode_rewards_dict)) for key, value in sums.items()}
+            std_reward_dict = {key: np.sqrt(value / len(episode_rewards_dict)) for key, value in sum_of_squares.items()}
 
             if self.verbose >= 1:
                 print("Task: ", self.task)

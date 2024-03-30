@@ -10,7 +10,7 @@ from stable_baselines3.common.logger import configure
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
 
 from utils.train_utils import *
-from train_ant import Curriculum_Module
+from train_fetch import Curriculum_Module
 
 if __name__ == "__main__":
     env_name = "Fetch_Push"

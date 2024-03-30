@@ -62,11 +62,11 @@ class Curriculum_Module:
                     continue
             
             # Asl LLM to choose the best model
-            best_sample_idx = self.gpt_api.feedback(self.env_name, task['Name'], statistics)
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
             if best_sample_idx is None:
                 print("Statistics Analysis error. Try again.")
                 while best_sample_idx is None:
-                    best_sample_idx = self.gpt_api.feedback(self.env_name, task['Name'], statistics)
+                    best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
 
             self.best_model_idx_list.append(best_sample_idx)
             # Update best reward code list
@@ -110,7 +110,7 @@ class Curriculum_Module:
             pre_tuned_model_path = self.logger_path + previous_task + f"/sample_{self.best_model_idx_list[-1]}/final_model.zip"
             model = SAC.load(pre_tuned_model_path)
 
-        model.learn(total_timesteps=5_000_000, callback=eval_callback)
+        model.learn(total_timesteps=1_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task_name}/sample_{sample_num}/final_model.zip")
 
         del model, training_env, eval_env, eval_callback

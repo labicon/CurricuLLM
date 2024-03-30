@@ -61,11 +61,11 @@ class Curriculum_Module:
                     continue
             
             # Asl LLM to choose the best model
-            best_sample_idx = self.gpt_api.feedback(self.env_name, task['Name'], statistics)
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
             if best_sample_idx is None:
                 print("Statistics Analysis error. Try again.")
                 while best_sample_idx is None:
-                    best_sample_idx = self.gpt_api.feedback(self.env_name, task['Name'], statistics)
+                    best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
 
             self.best_model_idx_list.append(best_sample_idx)
             # Update best reward code list

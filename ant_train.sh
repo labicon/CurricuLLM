@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name:
-#SBATCH --job-name=kanghyun_fetch
+#SBATCH --job-name=kanghyun_ant
 #
 # Account:
 #SBATCH --account=fc_icon
@@ -24,7 +24,7 @@
 #SBATCH --gres=gpu:GTX2080TI:2
 #
 # Wall clock limit:
-#SBATCH --time=20:00:00
+#SBATCH --time=24:00:00
 #
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=kanghyun.ryu@berkeley.edu
@@ -34,5 +34,6 @@ module load python/3.10.10
 module load cuda/11.2
 module load cudnn/8.1.1
 
-xvfb-run -s "-screen 0 1400x900x24" python visualize_policy.py
+python ./ant_main.py
+
 

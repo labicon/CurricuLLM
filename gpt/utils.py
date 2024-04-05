@@ -17,13 +17,18 @@ def get_client():
     return client
     
 def gpt_interaction(client, gpt_model, system_string, user_string):
-    completion = client.chat.completions.create(
-        model=gpt_model,
-        messages=[
-        {"role": "system", "content": system_string},
-        {"role": "user", "content": user_string}
-        ]
-    )
+    trial = 0
+    completion = None
+    
+    while completion is None and trial < 5:
+        completion = client.chat.completions.create(
+            model=gpt_model,
+            messages=[
+            {"role": "system", "content": system_string},
+            {"role": "user", "content": user_string}
+            ]
+        )
+        trial += 1
 
     print(completion.choices[0].message.content)
 

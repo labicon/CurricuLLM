@@ -295,3 +295,114 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
     def goal_position(self):
         return self.goal.copy()
+
+    def compute_reward_0(self):
+        # Constants
+        position_weight = 1.0
+        
+        # Calculating the difference in end effector and block positions
+        end_effector_pos = self.end_effector_position()
+        block_pos = self.block_position()
+        position_diff = np.linalg.norm(end_effector_pos - block_pos)
+        
+        # Defining the reward component based on the position difference
+        position_reward = -position_diff * position_weight
+        
+        # Total reward is a sum of all individual components
+        reward = position_reward
+        
+        # Dictionary for individual reward components
+        reward_dict = {
+            "position_reward": position_reward
+        }
+        
+        return reward, reward_dict
+    
+    def compute_reward_1(self):
+        # Define the goal height for end effector
+        goal_height = 0.42
+    
+        # Extract the current z position of the end effector from the environment
+        end_effector_pos = self.end_effector_position()
+        z_height_effector = end_effector_pos[2]
+    
+        # Calculate the difference between the current height and the goal height
+        height_error = np.linalg.norm(z_height_effector - goal_height)
+    
+        # Define a weight for the height matching component of the reward
+        height_match_weight = 10.0
+    
+        # Compute the reward component for matching the height
+        height_match_reward = -height_match_weight * height_error
+    
+        # Total reward is simply the height match reward in this task
+        reward = height_match_reward
+    
+        # Prepare the reward components dictionary
+        reward_dict = {
+            "height_match_reward": height_match_reward,
+        }
+    
+        return reward, reward_dict
+    
+    def compute_reward_2(self):
+        # Extracting the relevant observations from the environment
+        block_rel_vel = self.block_relative_linear_velocity()
+    
+        # Reward component calculations
+        # We aim to minimize the magnitude of the block's relative linear velocity to align it with the end effector's velocity.
+        align_vel_reward = -np.linalg.norm(block_rel_vel)  # Using L2 norm to quantify discrepancy
+        align_vel_weight = 1.0  # Weight for aligning velocities
+    
+        # Total reward calculation
+        reward = align_vel_weight * np.tanh(align_vel_reward)
+    
+        # Constructing the reward dictionary for detailed insights
+        reward_dict = {
+            "align_vel_reward": align_vel_reward,
+            "weighted_align_vel_reward": align_vel_weight * align_vel_reward
+        }
+    
+        return reward, reward_dict
+    
+    def compute_reward_3(self):
+        # Extract positions
+        block_pos = self.block_position()
+        goal_pos = self.goal_position()
+        
+        # Calculate distance from block to goal
+        distance_to_goal = np.linalg.norm(block_pos - goal_pos)
+    
+        # Reward Components
+        # Minimize block distance to goal position. The closer the block is to the goal, the higher the reward.
+        block_to_goal_distance_reward_weight = -1.0  # Negative to minimize distance
+        block_to_goal_distance_reward = block_to_goal_distance_reward_weight * distance_to_goal
+    
+        # Total reward is the sum of all components
+        reward = block_to_goal_distance_reward
+    
+        # Dictionary of individual reward components
+        reward_dict = {
+            "block_to_goal_distance_reward": block_to_goal_distance_reward,
+        }
+    
+        return reward, reward_dict
+    
+    # Function to loop through compute_reward_X functions and sum their outputs
+    def compute_reward_curriculum(self):
+        total_reward = 0
+        total_reward_dict = {}
+        n = 3
+        for i in range(n + 1):  # Including n, hence n + 1
+            # Construct the function name based on i
+            function_name = f'compute_reward_{i}'
+            # Get the function by name and call it
+            function = getattr(self, function_name, None)
+            if function:
+                # Call the function and add its return value to the total sum
+                reward, reward_dict = function()
+                total_reward += reward
+                total_reward_dict.update(reward_dict)
+            else:
+                raise NameError(f"Function {function_name} not found.")
+        return total_reward, total_reward_dict

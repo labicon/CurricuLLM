@@ -34,5 +34,6 @@ module load python/3.10.10
 module load cuda/11.2
 module load cudnn/8.1.1
 
-xvfb-run -s "-screen 0 1400x900x24" python visualize_policy.py
+python ./fetch_main.py
+
 

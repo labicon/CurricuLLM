@@ -10,7 +10,7 @@ MODEL_XML_PATH = os.path.join("fetch", "push.xml")
 
 
 class MujocoPyFetchPushEnv(MujocoPyFetchEnv, EzPickle):
-    def __init__(self, reward_type="dense", **kwargs):
+    def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
             "robot0:slide1": 0.48,
@@ -163,7 +163,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     * v1: the environment depends on `mujoco_py` which is no longer maintained.
     """
 
-    def __init__(self, reward_type="dense", **kwargs):
+    def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
             "robot0:slide1": 0.48,
@@ -295,3 +295,85 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
     def goal_position(self):
         return self.goal.copy()
+
+    def compute_reward_0(self):
+        # Extract necessary environment observations
+        end_effector_pos = self.end_effector_position()
+        block_pos = self.block_position()
+    
+        # Compute distance between end_effector and block
+        distance = np.linalg.norm(end_effector_pos - block_pos)
+    
+        # Reward components
+        distance_reward_weight = -1.0  # Weight for the distance reward component. The sign is negative to minimize distance
+        distance_reward = distance_reward_weight * np.tanh(distance)  # Using tanh to normalize the distance reward component
+        
+        # Compute the total reward
+        total_reward = distance_reward
+    
+        # Organizing the reward components into a dictionary
+        reward_dict = {
+            "distance_reward": distance_reward,
+        }
+    
+        return total_reward, reward_dict
+    
+    def compute_reward_1(self):
+        # Calculate Block's relative linear velocity
+        block_relative_linear_velocity = self.block_relative_linear_velocity()
+        # Define the weight for the velocity minimization objective
+        weight_velocity_minimization = 1.0
+    
+        # Reward component for minimizing the block's relative linear velocity
+        reward_block_velocity_minimization = -np.linalg.norm(block_relative_linear_velocity) * weight_velocity_minimization
+    
+        # Total Reward Calculation
+        reward = reward_block_velocity_minimization
+        
+        # Dictionary for individual reward components
+        reward_dict = {
+            "reward_block_velocity_minimization": reward_block_velocity_minimization
+        }
+        
+        return reward, reward_dict
+    
+    def compute_reward_2(self):
+        # Weighting parameters for each reward component
+        distance_weight = 1.0
+    
+        # Compute the distance between the block position and the goal position
+        block_pos = self.block_position()
+        goal_pos = self.goal_position()
+        distance_to_goal = np.linalg.norm(block_pos - goal_pos)
+    
+        # Compute reward components
+        distance_reward = -distance_weight * distance_to_goal
+    
+        # Total reward
+        reward = distance_reward
+    
+        # Reward components dictionary
+        reward_dict = {
+            "distance_to_goal": distance_reward,
+        }
+    
+        return reward, reward_dict
+    
+    # Function to loop through compute_reward_X functions and sum their outputs
+    def compute_reward_curriculum(self):
+        total_reward = 0
+        total_reward_dict = {}
+        n = 2
+        for i in range(n + 1):  # Including n, hence n + 1
+            # Construct the function name based on i
+            function_name = f'compute_reward_{i}'
+            # Get the function by name and call it
+            function = getattr(self, function_name, None)
+            if function:
+                # Call the function and add its return value to the total sum
+                reward, reward_dict = function()
+                total_reward += reward
+                total_reward_dict.update(reward_dict)
+            else:
+                raise NameError(f"Function {function_name} not found.")
+        return total_reward, total_reward_dict

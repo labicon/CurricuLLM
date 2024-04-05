@@ -1,4 +1,6 @@
 import numpy as np
+import gc
+import torch
 
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
@@ -17,7 +19,8 @@ class Curriculum_Module:
         self.best_reward_code_list = []
         self.best_model_idx_list = []
         self.current_reward_code_list = []
-        self.num_cpu = 8
+        self.num_cpu = 16
+        self.num_samples = 3
         
     def generate_curriculum(self):
         # Generate curriculum and return list of dictionaries with task details
@@ -26,7 +29,7 @@ class Curriculum_Module:
 
     def train_curriculum(self):
         for curriculum_idx in range(self.curriculum_length):
-            for sample_num in range(5):
+            for sample_num in range(self.num_samples):
                 task = self.curriculum_info[curriculum_idx]
                 try:
                     self.train_single(curriculum_idx, task, sample_num)
@@ -36,12 +39,11 @@ class Curriculum_Module:
                     continue
             # Evaluate the trained models
             statistics = []
-            for sample_num in range(5):
+            for sample_num in range(self.num_samples):
                 try:
                     env_id = f"Curriculum/{self.env_name}-v{sample_num}"
                     eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
-                    task_name = task['Name']
-                    model_path = self.logger_path + f"{task_name}/sample_{sample_num}/final_model.zip"
+                    model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
                     model = SAC.load(model_path)
                     
                     # Get trajectory
@@ -63,26 +65,28 @@ class Curriculum_Module:
             
             # Asl LLM to choose the best model
             best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
-            if best_sample_idx is None:
+            trial = 1
+            while best_sample_idx is None:
                 print("Statistics Analysis error. Try again.")
-                while best_sample_idx is None:
-                    best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
+                trial += 1
+                if trial == 5:
+                    best_sample_idx = 0
 
             self.best_model_idx_list.append(best_sample_idx)
             # Update best reward code list
             self.best_reward_code_list.append(self.current_reward_code_list[best_sample_idx])
-            self.current_reward_code_list = []
 
-        # Save the best reward code list
-        with open(self.logger_path + "best_reward_code_list.txt", "w") as file:
-            for code in self.best_reward_code_list:
-                file.write(code + "\n\n")
+            # Save the best reward code list
+            with open(self.logger_path + f"{task['Name']}/best_reward_code.txt", "w") as file:
+                file.write(self.current_reward_code_list[best_sample_idx])
+                
+            self.current_reward_code_list = []
 
 
     def train_single(self, curriculum_idx, task, sample_num):
         # Create the environment
         env_id = f"Curriculum/{self.env_name}-v{sample_num}"
-        task_name = task['Name']
 
         # Update env code
         reward_code = self.gpt_api.update_env_code(self.env_path, task, 
@@ -96,8 +100,8 @@ class Curriculum_Module:
 
         # Create the callback
         eval_callback = CurriculumEvalCallback(eval_env, 
-                                            log_path=self.logger_path + f"{task_name}/sample_{sample_num}", 
-                                            best_model_save_path=self.logger_path + f"{task_name}/sample_{sample_num}", 
+                                            log_path=self.logger_path + f"{task['Name']}/sample_{sample_num}", 
+                                            best_model_save_path=self.logger_path + f"{task['Name']}/sample_{sample_num}", 
                                             eval_freq=1000, 
                                             deterministic=True, render=False, warn=False)
         
@@ -107,13 +111,19 @@ class Curriculum_Module:
                         verbose=1)
         else:
             previous_task = self.curriculum_info[curriculum_idx - 1]['Name']
-            pre_tuned_model_path = self.logger_path + previous_task + f"/sample_{self.best_model_idx_list[-1]}/final_model.zip"
+            pre_tuned_model_path = self.logger_path + previous_task + f"/sample_{self.best_model_idx_list[-1]}/final_model"
             model = SAC.load(pre_tuned_model_path)
+            model.set_env(training_env)
 
-        model.learn(total_timesteps=1_000_000, callback=eval_callback)
-        model.save(self.logger_path + f"{task_name}/sample_{sample_num}/final_model.zip")
+        if curriculum_idx == self.curriculum_length - 1:
+            model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        else:
+            model.learn(total_timesteps=500_000, callback=eval_callback)
+        model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
 
 def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations

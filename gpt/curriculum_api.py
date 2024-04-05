@@ -164,6 +164,11 @@ def compute_reward_curriculum(self):
         feedback_user = feedback_user + "\n" + feedback_statistics
 
         gpt_answer = gpt_interaction(self.client, GPT_MODEL, feedback_system, feedback_user)
+        
+        # Ensure the directory exists and write the curriculum to a file
+        os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
+        with open(self.log_path + task['Name'] + '.md', 'w') as file:
+            file.write(gpt_answer)
 
         decision = gpt_answer.split('\n')[0]
         print("For task " + task['Name'] + ", GPT decided " + decision) 

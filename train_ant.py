@@ -1,6 +1,7 @@
 import numpy as np
 import gc
 import torch
+import re
 
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
@@ -8,6 +9,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
 from utils.train_utils import *
 from gpt.curriculum_api import CurriculumAPI
+from gpt.utils import file_to_string
 
 class Curriculum_Module:
     def __init__(self, env_name, env_path, logger_path):
@@ -167,3 +169,121 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
     statistics["goal_distance_std"] = np.std(goal_distance, axis=0)
 
     return statistics
+
+
+class Reward_Addition_Module:
+    def __init__(self, env_name, env_path, logger_path):
+        self.env_name = env_name
+        self.env_path = env_path
+        self.logger_path = logger_path
+        self.best_reward_code_list = []
+        self.num_cpu = 16
+        self.num_samples = 3
+        
+    def extract_curriculum(self):
+        # extract curriculum and return list of dictionaries with task details
+        curriculum_txt = file_to_string(self.logger_path + "curriculum.md")
+        # Split the string into individual task sections
+        task_sections = re.split(r'\n\n(?=Task)', curriculum_txt)
+
+        # Function to extract details from each task section
+        def extract_task_details(task_section):
+
+            details = {}
+            lines = task_section.split('\n')
+            for line in lines:
+                if line.startswith('Task'):
+                    details['Task'] = line.split(' ')[1]
+                elif line.startswith('Name:'):
+                    details['Name'] = line.split(': ')[1]
+                elif line.startswith('Description:'):
+                    details['Description'] = line.split(': ')[1]
+                elif line.startswith('Reason:'):
+                    details['Reason'] = ': '.join(line.split(': ')[1:])
+            return details
+
+        # Extract details for all tasks
+        self.curriculum_info = [extract_task_details(section) for section in task_sections]
+        self.curriculum_length = len(self.curriculum_info)
+
+    def update_env_code(self):
+        # Extract reward code from best_reward_code.txt
+        for task in self.curriculum_info:
+            best_reward_code = file_to_string(self.logger_path + f"{task['Name']}/best_reward_code.txt")
+            self.best_reward_code_list.append(best_reward_code)
+
+        reward_code_summary = self.add_rewards(self.best_reward_code_list)
+
+        with open(self.env_path, 'r') as file:
+            original_code = file.read()
+
+        # Append the new code block to the original code
+        # Indent the code block with 4 spaces to the beginning of each line
+        reward_code_summary = '\n'.join('    ' + line for line in reward_code_summary.splitlines())
+        new_code = original_code + '\n\n' + reward_code_summary
+
+        # Save as a new file with specific version number
+        new_file_path = self.env_path.replace('.py', f'_v0.py')
+        with open(new_file_path, 'w') as file:
+            file.write(new_code)
+
+        print(f"Updated environment code saved to {new_file_path}")
+
+    def add_rewards(self, reward_code_list: list):
+        # Find the length of the previous code block
+        n_previous_code = len(reward_code_list)
+        for idx, code in enumerate(reward_code_list):
+            reward_code_list[idx] = code.replace("compute_reward_curriculum(", f"compute_reward_{idx}(")
+
+        reward_code = ""
+        for code in reward_code_list:
+            reward_code += code + "\n\n"
+        reward_code += """# Function to loop through compute_reward_X functions and sum their outputs
+def compute_reward_curriculum(self):
+    total_reward = 0
+    total_reward_dict = {}
+    """ + f"n = {n_previous_code}" + """
+    for i in range(n + 1):  # Including n, hence n + 1
+        # Construct the function name based on i
+        function_name = f'compute_reward_{i}'
+        # Get the function by name and call it
+        function = getattr(self, function_name, None)
+        if function:
+            # Call the function and add its return value to the total sum
+            reward, reward_dict = function()
+            total_reward += reward
+            total_reward_dict.update(reward_dict)
+        else:
+            raise NameError(f"Function {function_name} not found.")
+    return total_reward, total_reward_dict"""
+        return reward_code
+
+    def train_with_reward_addition(self):
+        self.extract_curriculum()
+        self.update_env_code()
+
+        curriculum_idx = self.curriculum_length - 1
+
+        # Create the environment
+        env_id = f"Curriculum/{self.env_name}-v0"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = CurriculumEvalCallback(eval_env, 
+                                            log_path=self.logger_path + "reward_addition/", 
+                                            best_model_save_path=self.logger_path + "reward_addition/", 
+                                            eval_freq=1000, 
+                                            deterministic=True, render=False, warn=False)
+        
+        model = SAC("MultiInputPolicy",
+                    training_env,
+                    verbose=1)
+        model.learn(total_timesteps=12_000_000, callback=eval_callback)
+        model.save(self.logger_path + f"reward_addition/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory

@@ -8,7 +8,7 @@ from train_ant import Curriculum_Module, Reward_Addition_Module
 if __name__ == "__main__":
     env_name = "AntMaze_UMaze"
     env_path = "./environments/Curriculum/envs/AntMaze_UMaze.py"
-    logger_path = "./logs/AntMaze_UMaze_3/"
+    logger_path = "./logs/AntMaze_UMaze_6/"
 
     # Curriculum experiments
     curriculum_module = Curriculum_Module(env_name, env_path, logger_path)

@@ -24,7 +24,7 @@
 #SBATCH --gres=gpu:GTX2080TI:2
 #
 # Wall clock limit:
-#SBATCH --time=24:00:00
+#SBATCH --time=36:00:00
 #
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=kanghyun.ryu@berkeley.edu

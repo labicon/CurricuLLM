@@ -233,7 +233,7 @@ class Reward_Addition_Module:
 
     def add_rewards(self, reward_code_list: list):
         # Find the length of the previous code block
-        n_previous_code = len(reward_code_list)
+        n_previous_code = len(reward_code_list) - 1
         for idx, code in enumerate(reward_code_list):
             reward_code_list[idx] = code.replace("compute_reward_curriculum(", f"compute_reward_{idx}(")
 

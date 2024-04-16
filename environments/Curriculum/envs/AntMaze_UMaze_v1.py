@@ -364,100 +364,127 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return distance
 
     def compute_reward_0(self):
-        # Extract the required observations
         ant_obs = self.get_ant_obs()
+        # Retrieve the torso's velocity
         velocity = self.torso_velocity(ant_obs)
+        # We are interested in the magnitute of the velocity vector in the xy plane
+        velocity_magnitude = np.linalg.norm(velocity)
         
-        # Reward components
-        velocity_reward_weight = 1.0
-        velocity_reward = np.tanh(np.linalg.norm(velocity))
+        # Define a weighting parameter for velocity's magnitude contribution to the total reward
+        velocity_weight = 1.0
         
-        # Total reward calculation
-        total_reward = velocity_reward_weight * velocity_reward
+        # Use tanh to ensure the reward for speed stays between -1 and 1, maximizing the variable
+        reward_velocity = velocity_weight * np.tanh(velocity_magnitude)
         
-        # Individual reward components dictionary
+        # Assemble our reward dictionary for detailed diagnostics
         reward_dict = {
-            'velocity_reward': velocity_reward
+            'reward_velocity': reward_velocity,
         }
+        
+        # Total reward is the sum of all individual rewards. Currently, we have only one component
+        total_reward = reward_velocity
         
         return total_reward, reward_dict
     
+    import numpy as np
+    
     def compute_reward_1(self):
+        # Extract torso orientation from the observation
         ant_obs = self.get_ant_obs()
-        desired_orientation = np.array([1.0, 0.0, 0.0, 0.0])
+        torso_orientation = self.torso_orientation(ant_obs)
         
-        # Extract the actual orientation from the observation
-        actual_orientation = self.torso_orientation(ant_obs)
+        # Define the target orientation
+        target_orientation = np.array([1.0, 0.0, 0.0, 0.0])
         
-        # Calculate the L2 norm difference between the actual and desired orientation
-        orientation_diff = np.linalg.norm(actual_orientation - desired_orientation)
+        # Calculate L2 norm difference for orientation stabilization
+        orientation_error = np.linalg.norm(torso_orientation - target_orientation)
         
-        # Define the weight parameter for the orientation difference component of the reward
-        orientation_weight = -5.0
+        # Weight for the orientation error
+        orientation_weight = -10.0
         
-        # Apply the weight parameter
-        orientation_reward = orientation_weight * orientation_diff
+        # Calculate the weight adjusted reward component for maintaining orientation
+        orientation_reward = orientation_weight * orientation_error
         
-        # Assembling the reward dictionary
+        # Total reward is the sum of all individual rewards
+        reward = orientation_reward
+        
+        # Dictionary of individual reward components
         reward_dict = {
             'orientation_reward': orientation_reward,
         }
         
-        # Calculate the total reward
-        total_reward = sum(reward_dict.values())
-    
-        return total_reward, reward_dict
+        return reward, reward_dict
     
     def compute_reward_2(self):
+        # Constants
+        angular_velocity_weight = 1.0
+    
+        # Observation
         ant_obs = self.get_ant_obs()
-        goal_distance = self.goal_distance(ant_obs)
-        orientation = self.torso_orientation(ant_obs)
-        desired_orientation = np.array([1.0, 0.0, 0.0, 0.0])
     
-        # Weights for different components of the reward
-        weight_distance = -1.0  # Negative to penalize greater distances
-        weight_orientation = -0.1  # Less negative as primary objective is minimization of distance, not orientation
-        
-        # L2 norm to minimize the distance to the goal
-        distance_reward = np.linalg.norm(goal_distance)
-        
-        # Using L2 norm to guide the robot to achieve the desired orientation
-        orientation_reward = np.linalg.norm(orientation - desired_orientation)
+        # Reward components
+        angular_velocity = self.torso_angular_velocity(ant_obs)
+        angular_velocity_magnitude = np.linalg.norm(angular_velocity)
     
-        # Applying weights
-        total_reward = (weight_distance * distance_reward) + (weight_orientation * orientation_reward)
+        # Minimize the magnitude of angular velocity
+        reward_angular_velocity = -np.tanh(angular_velocity_magnitude) * angular_velocity_weight
     
+        # Total reward
+        reward = reward_angular_velocity
+    
+        # Reward components dictionary
         reward_dict = {
-            'distance_reward': weight_distance * distance_reward,
-            'orientation_reward': weight_orientation * orientation_reward
+            'angular_velocity': reward_angular_velocity
         }
     
-        return total_reward, reward_dict
+        return reward, reward_dict
     
     def compute_reward_3(self):
+        # Calculate distance to goal
         ant_obs = self.get_ant_obs()
-        goal_distance = self.goal_distance(ant_obs)
-        desired_goal_distance = 0.45
-    
-        # Reward Components
-        goal_distance_reward_weight = -1.0
-        goal_distance_reward = goal_distance_reward_weight * np.linalg.norm(goal_distance - desired_goal_distance)
+        distance_to_goal = self.goal_distance(ant_obs)
         
-        # Combine all reward components
-        reward = goal_distance_reward
+        # Weighting parameter for distance to goal reward component
+        weight_distance_to_goal = -1.0  # We want to minimize distance, hence negative weight
         
-        # Create a dictionary for individual reward components for ease of tracking and debugging
+        # Calculate the reward for distance to goal
+        # Smaller distance yields higher reward
+        reward_distance_to_goal = weight_distance_to_goal * np.tanh(distance_to_goal)
+        
+        # Total reward is the sum of individual components
+        total_reward = reward_distance_to_goal
+        
+        # Dictionary of individual reward components
         reward_dict = {
-            'goal_distance_reward': goal_distance_reward,
+            'distance_to_goal': reward_distance_to_goal,
         }
         
+        return total_reward, reward_dict
+    
+    def compute_reward_4(self):
+        ant_obs = self.get_ant_obs()
+        goal_distance = self.goal_distance(ant_obs)
+    
+        # Reward Components
+        target_distance_value = 0.45
+        distance_weight = 10.0
+        distance_reward = -distance_weight * np.linalg.norm(goal_distance - target_distance_value)
+    
+        # Aggregate reward
+        reward = distance_reward
+        
+        # Reward dictionary for detailed tracking
+        reward_dict = {
+            'distance_reward': distance_reward,
+        }
+    
         return reward, reward_dict
     
     # Function to loop through compute_reward_X functions and sum their outputs
     def compute_reward_curriculum(self):
         total_reward = 0
         total_reward_dict = {}
-        n = 3
+        n = 4
         for i in range(n + 1):  # Including n, hence n + 1
             # Construct the function name based on i
             function_name = f'compute_reward_{i}'

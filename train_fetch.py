@@ -3,7 +3,8 @@ import gc
 import torch
 import re
 
-from stable_baselines3 import PPO, SAC
+from stable_baselines3 import PPO, SAC, HerReplayBuffer
+from stable_baselines3.her.goal_selection_strategy import GoalSelectionStrategy
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
@@ -29,7 +30,8 @@ class Curriculum_Module:
         self.curriculum_info = self.gpt_api.generate_curriculum()
         self.curriculum_length = len(self.curriculum_info)
 
-    def train_curriculum(self):
+    def train_curriculum(self, seed=0):
+        self.seed = seed
         for curriculum_idx in range(self.curriculum_length):
             for sample_num in range(self.num_samples):
                 task = self.curriculum_info[curriculum_idx]
@@ -98,8 +100,8 @@ class Curriculum_Module:
         self.current_reward_code_list.append(reward_code)
 
         # Create the vectorized environment
-        training_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
-        eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
 
         # Create the callback
         eval_callback = CurriculumEvalCallback(eval_env, 
@@ -260,7 +262,8 @@ def compute_reward_curriculum(self):
     return total_reward, total_reward_dict"""
         return reward_code
 
-    def train_with_reward_addition(self):
+    def train_with_reward_addition(self, seed=0):
+        self.seed = seed
         self.extract_curriculum()
         self.update_env_code()
 
@@ -270,8 +273,8 @@ def compute_reward_curriculum(self):
         env_id = f"Curriculum/{self.env_name}-v0"
 
         # Create the vectorized environment
-        training_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
-        eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
 
         # Create the callback
         eval_callback = CurriculumEvalCallback(eval_env, 
@@ -289,3 +292,45 @@ def compute_reward_curriculum(self):
         del model, training_env, eval_env, eval_callback
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
+
+class HER_Module:
+    def __init__(self, env_name, env_path, logger_path):
+        self.env_name = env_name
+        self.env_path = env_path
+        self.logger_path = logger_path
+        self.num_cpu = 16
+
+    def train_with_her(self, seed=0):
+        self.seed = seed
+        goal_selection_strategy = GoalSelectionStrategy.FUTURE
+
+        # Create the environment
+        env_id = f"{self.env_name}-v4"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = CurriculumEvalCallback(eval_env, 
+                                            log_path=self.logger_path + "her/", 
+                                            best_model_save_path=self.logger_path + "her/", 
+                                            eval_freq=1000, 
+                                            deterministic=True, render=False, warn=False)
+        
+        model = SAC("MultiInputPolicy",
+                    training_env,
+                    verbose=1,
+                    replay_buffer_class=HerReplayBuffer,
+                    # Parameters for HER
+                    replay_buffer_kwargs=dict(
+                        n_sampled_goal=4,
+                        goal_selection_strategy=goal_selection_strategy,
+                    ))
+        
+        model.learn(total_timesteps=12_000_000, callback=eval_callback)
+        model.save(self.logger_path + "her/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()

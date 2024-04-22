@@ -9,7 +9,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.callbacks import EvalCallback
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
-from evaluation.evalcallback_ant import AntEvalCallback as EvalCallback
+from evaluation.evalcallback_success import SuccessEvalCallback as EvalCallback
 from utils.train_utils import *
 from gpt.curriculum_api import CurriculumAPI
 from gpt.utils import file_to_string

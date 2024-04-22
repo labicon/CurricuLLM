@@ -294,32 +294,42 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
         # compute the sparse reward variant first
         goal_distance = float(np.linalg.norm(obj_pos - target_pos))
         goal_achieved = goal_distance < 0.1
-        reward = 10.0 if goal_achieved else -0.1
+        reward_main = 10.0 if goal_achieved else -0.1
 
         # override reward if not sparse reward
         if not self.sparse_reward:
-            reward = 0.1 * np.linalg.norm(palm_pos - obj_pos)  # take hand to object
+            reward_main = 0.1 * np.linalg.norm(palm_pos - obj_pos)  # take hand to object
             if obj_pos[2] > 0.04:  # if object off the table
-                reward += 1.0  # bonus for lifting the object
-                reward += -0.5 * np.linalg.norm(
+                reward_main += 1.0  # bonus for lifting the object
+                reward_main += -0.5 * np.linalg.norm(
                     palm_pos - target_pos
                 )  # make hand go to target
-                reward += -0.5 * np.linalg.norm(
+                reward_main += -0.5 * np.linalg.norm(
                     obj_pos - target_pos
                 )  # make object go to target
 
             # bonus for object close to target
             if goal_distance < 0.1:
-                reward += 10.0
+                reward_main += 10.0
 
             # bonus for object "very" close to target
             if goal_distance < 0.05:
-                reward += 20.0
+                reward_main += 20.0
 
         if self.render_mode == "human":
             self.render()
 
-        return obs, reward, False, False, dict(success=goal_achieved)
+        reward, reward_dict = self.compute_reward_curriculum()
+
+        reward_dict["main"] = reward_main
+        reward_dict["task"] = reward
+
+        info = {
+            "success": goal_achieved,
+            "reward_dict": reward_dict,
+        }
+
+        return obs, reward, False, False, info
 
     def _get_obs(self):
         # qpos for hand

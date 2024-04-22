@@ -12,6 +12,7 @@ This project is covered by the Apache 2.0 License.
 
 from os import path
 from typing import Optional
+import sys
 
 import numpy as np
 from gymnasium import spaces
@@ -194,6 +195,9 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
         xml_file_path = path.join(
             path.dirname(sys.modules[AdroitHandPenEnv.__module__].__file__), 
             "../assets/adroit_hand/adroit_relocate.xml"
+        )
+        observation_space = spaces.Box(
+            low=-np.inf, high=np.inf, shape=(39,), dtype=np.float64
         )
 
         MujocoEnv.__init__(
@@ -422,7 +426,7 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
         # Angular position of MCP(metacarpophalangeal, knuckle) joint of the forefinger
         # Horizontal and Vertical
         obs = self._get_obs()
-        mcp_angular_forefinger = obs[9:10]
+        mcp_angular_forefinger = obs[8:10]
 
         return mcp_angular_forefinger
 

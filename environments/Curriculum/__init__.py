@@ -61,7 +61,7 @@ register(
 )
 
 register(
-     id=f"Curriculum/AdroitHandRelocate-v1",
+     id=f"Curriculum/AdroitHandRelocate-v0",
      entry_point="Curriculum.envs.AdroitHandRelocate_v0:AdroitHandRelocateEnv",
      max_episode_steps=200,
 )

@@ -6,6 +6,7 @@ import re
 from stable_baselines3 import PPO, SAC, HerReplayBuffer
 from stable_baselines3.her.goal_selection_strategy import GoalSelectionStrategy
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+from stable_baselines3.common.callbacks import EvalCallback
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
 from utils.train_utils import *
@@ -305,21 +306,22 @@ class HER_Module:
         goal_selection_strategy = GoalSelectionStrategy.FUTURE
 
         # Create the environment
-        env_id = f"{self.env_name}-v4"
+        env_id = f"{self.env_name}-v2"
 
         # Create the vectorized environment
         training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
         eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
 
         # Create the callback
-        eval_callback = CurriculumEvalCallback(eval_env, 
-                                            log_path=self.logger_path + "her/", 
-                                            best_model_save_path=self.logger_path + "her/", 
-                                            eval_freq=1000, 
-                                            deterministic=True, render=False, warn=False)
+        eval_callback = EvalCallback(eval_env, 
+                                    log_path=self.logger_path + "her/", 
+                                    best_model_save_path=self.logger_path + "her/", 
+                                    eval_freq=1000, 
+                                    deterministic=True, render=False, warn=False)
         
         model = SAC("MultiInputPolicy",
                     training_env,
+                    learning_starts = self.num_cpu * 100,
                     verbose=1,
                     replay_buffer_class=HerReplayBuffer,
                     # Parameters for HER

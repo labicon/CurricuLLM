@@ -11,7 +11,7 @@ The variables you can use to describe the curriculum includes
 (5) goal_position: Desired goal position in xyz coordinate 
 
 In the original task, the task is marked as success if a distance between block position and goal position is less than 0.05.
+Therefore, original task can be described as minimizing the distance between block position and goal position.
 
 Since the block is placed on a table, it has a fixed height of z = 0.42.
 Also, goal position is also on a table, therefore, having a height of z = 0.42, while xy position is initialized randomly.
-End effector is initialized in [1.34, 0.75, 0.55]

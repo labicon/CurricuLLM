@@ -31,31 +31,52 @@ register(
 )
 
 register(
-     id="Curriculum/Fetch_Push-v0",
-     entry_point="Curriculum.envs.Fetch_Push_v0:MujocoFetchPushEnv",
+     id="Curriculum/FetchPush-v0",
+     entry_point="Curriculum.envs.FetchPush_v0:MujocoFetchPushEnv",
      max_episode_steps=50,
 )
 
 register(
-     id="Curriculum/Fetch_Push-v1",
-     entry_point="Curriculum.envs.Fetch_Push_v1:MujocoFetchPushEnv",
+     id="Curriculum/FetchPush-v1",
+     entry_point="Curriculum.envs.FetchPush_v1:MujocoFetchPushEnv",
      max_episode_steps=50,
 )
 
 register(
-     id="Curriculum/Fetch_Push-v2",
-     entry_point="Curriculum.envs.Fetch_Push_v2:MujocoFetchPushEnv",
+     id="Curriculum/FetchPush-v2",
+     entry_point="Curriculum.envs.FetchPush_v2:MujocoFetchPushEnv",
      max_episode_steps=50,
 )
 
 register(
-     id="Curriculum/Fetch_Push-v3",
-     entry_point="Curriculum.envs.Fetch_Push_v3:MujocoFetchPushEnv",
+     id="Curriculum/FetchPush-v3",
+     entry_point="Curriculum.envs.FetchPush_v3:MujocoFetchPushEnv",
      max_episode_steps=50,
 )
 
 register(
-     id="Curriculum/Fetch_Push-v4",
-     entry_point="Curriculum.envs.Fetch_Push_v4:MujocoFetchPushEnv",
+     id="Curriculum/FetchPush-v4",
+     entry_point="Curriculum.envs.FetchPush_v4:MujocoFetchPushEnv",
      max_episode_steps=50,
+)
+
+register(
+     id=f"AdroitHandRelocate-v1",
+     entry_point="Curriculum.envs.AdrointHandRelocate_v0:AdroitHandRelocateEnv",
+     max_episode_steps=200,
+     kwargs=kwargs,
+)
+
+register(
+     id=f"AdroitHandRelocate-v1",
+     entry_point="Curriculum.envs.AdrointHandRelocate_v1:AdroitHandRelocateEnv",
+     max_episode_steps=200,
+     kwargs=kwargs,
+)
+
+register(
+     id=f"AdroitHandRelocate-v2",
+     entry_point="Curriculum.envs.AdrointHandRelocate_v2:AdroitHandRelocateEnv",
+     max_episode_steps=200,
+     kwargs=kwargs,
 )

@@ -1,11 +1,11 @@
 from typing import Any, Callable, Dict, List, Optional, Union
+from collections import defaultdict
 import gymnasium as gym
 import os
 import numpy as np
 import pandas as pd
 import warnings
 from collections import deque
-from evaluation.evaluation import curriculum_evaluate_policy
 
 try:
     from tqdm import TqdmExperimentalWarning
@@ -18,10 +18,11 @@ except ImportError:
     # if the progress bar is used
     tqdm = None
 
+from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import BaseCallback, EventCallback
 from stable_baselines3.common.vec_env import DummyVecEnv, VecEnv, sync_envs_normalization
 
-class CurriculumEvalCallback(EventCallback):
+class AntEvalCallback(EventCallback):
     """
     Callback for evaluating an agent.
 
@@ -62,9 +63,6 @@ class CurriculumEvalCallback(EventCallback):
         render: bool = False,
         verbose: int = 1,
         warn: bool = True,
-        task: Optional[str] = None,
-        task_list: Optional[List[str]] = None,
-        task_threshold: Optional[Dict[str, float]] = None,
     ):
         super().__init__(callback_after_eval, verbose=verbose)
 
@@ -77,17 +75,13 @@ class CurriculumEvalCallback(EventCallback):
         self.eval_freq = eval_freq
         self.best_mean_reward = -np.inf
         self.last_mean_reward = -np.inf
-        self.recent_task_rewards = deque([0]*10, maxlen=10)
         self.deterministic = deterministic
         self.render = render
         self.warn = warn
-        self.task = task
-        self.task_list = task_list
-        self.task_threshold = task_threshold
 
         # Convert to VecEnv for consistency
         if not isinstance(eval_env, VecEnv):
-            eval_env = DummyVecEnv([lambda: eval_env])
+            eval_env = DummyVecEnv([lambda: eval_env])  # type: ignore[list-item, return-value]
 
         self.eval_env = eval_env
         self.best_model_save_path = best_model_save_path
@@ -95,14 +89,12 @@ class CurriculumEvalCallback(EventCallback):
         if log_path is not None:
             log_path = os.path.join(log_path, "evaluations")
         self.log_path = log_path
-        self.evaluations_results_main = []
-        self.evaluations_results_task = []
-        self.evaluations_timesteps = []
-        self.evaluations_length = []
-        self.evaluations_tasks = []
+        self.evaluations_results: List[List[float]] = []
+        self.evaluations_timesteps: List[int] = []
+        self.evaluations_length: List[List[int]] = []
         # For computing success rate
-        self._is_success_buffer = []
-        self.evaluations_successes = []
+        self._is_success_buffer: List[bool] = []
+        self.evaluations_successes: List[List[bool]] = []
 
     def _init_callback(self) -> None:
         # Does not work in some corner cases, where the wrapper is not the same
@@ -131,13 +123,12 @@ class CurriculumEvalCallback(EventCallback):
         info = locals_["info"]
 
         if locals_["done"]:
-            maybe_is_success = info.get("is_success")
+            maybe_is_success = info.get("success")
             if maybe_is_success is not None:
                 self._is_success_buffer.append(maybe_is_success)
 
-    def _on_step(self) -> (bool, bool):
+    def _on_step(self) -> bool:
         continue_training = True
-        task_finished = False
 
         if self.eval_freq > 0 and self.n_calls % self.eval_freq == 0:
             # Sync training and eval env if there is VecNormalize
@@ -154,7 +145,7 @@ class CurriculumEvalCallback(EventCallback):
             # Reset success rate buffer
             self._is_success_buffer = []
 
-            episode_rewards_main, episode_rewards_task, episode_lengths = curriculum_evaluate_policy(
+            episode_rewards, episode_lengths = evaluate_policy(
                 self.model,
                 self.eval_env,
                 n_eval_episodes=self.n_eval_episodes,
@@ -166,11 +157,11 @@ class CurriculumEvalCallback(EventCallback):
             )
 
             if self.log_path is not None:
+                assert isinstance(episode_rewards, list)
+                assert isinstance(episode_lengths, list)
                 self.evaluations_timesteps.append(self.num_timesteps)
-                self.evaluations_results_main.append(episode_rewards_main)
-                self.evaluations_results_task.append(episode_rewards_task)
+                self.evaluations_results.append(episode_rewards)
                 self.evaluations_length.append(episode_lengths)
-                self.evaluations_tasks.append(self.task)
 
                 kwargs = {}
                 # Save success log if present
@@ -181,35 +172,21 @@ class CurriculumEvalCallback(EventCallback):
                 np.savez(
                     self.log_path,
                     timesteps=self.evaluations_timesteps,
-                    results_main=self.evaluations_results_main,
-                    results_task=self.evaluations_results_task,
-                    task=self.evaluations_tasks,
+                    results=self.evaluations_results,
                     ep_lengths=self.evaluations_length,
                     **kwargs,
                 )
 
-            mean_reward_main, std_reward_main = np.mean(episode_rewards_main), np.std(episode_rewards_main)
-            mean_reward_task, std_reward_task = np.mean(episode_rewards_task), np.std(episode_rewards_task)
+            mean_reward, std_reward = np.mean(episode_rewards), np.std(episode_rewards)
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
-            self.last_mean_reward_main = mean_reward_main
-            self.last_mean_reward_task = mean_reward_task
-            self.recent_task_rewards.append(mean_reward_task)
+            self.last_mean_reward = float(mean_reward)
 
             if self.verbose >= 1:
-                print("Task: ", self.task)
-                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_task={mean_reward_task:.2f} +/- {std_reward_task:.2f}")
-                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_main={mean_reward_main:.2f} +/- {std_reward_main:.2f}")
+                print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward={mean_reward:.2f} +/- {std_reward:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
             # Add to current Logger
-            self.logger.record("eval/mean_reward_main", float(mean_reward_main))
-            self.logger.record("eval/mean_reward_task", float(mean_reward_task))
-            task_mean_recent = sum(self.recent_task_rewards) / len(self.recent_task_rewards)
-            self.logger.record("eval/mean_reward_task_recent", float(task_mean_recent))
+            self.logger.record("eval/mean_reward", float(mean_reward))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
-            if self.task is not None:
-                self.logger.record("eval/current_task", self.task)
-            else:
-                self.logger.record("eval/current_task", "None")
 
             if len(self._is_success_buffer) > 0:
                 success_rate = np.mean(self._is_success_buffer)
@@ -221,12 +198,12 @@ class CurriculumEvalCallback(EventCallback):
             self.logger.record("time/total_timesteps", self.num_timesteps, exclude="tensorboard")
             self.logger.dump(self.num_timesteps)
 
-            if mean_reward_main > self.best_mean_reward:
+            if mean_reward > self.best_mean_reward:
                 if self.verbose >= 1:
                     print("New best mean reward!")
                 if self.best_model_save_path is not None:
                     self.model.save(os.path.join(self.best_model_save_path, "best_model"))
-                self.best_mean_reward = mean_reward_main
+                self.best_mean_reward = float(mean_reward)
                 # Trigger callback on new best model, if needed
                 if self.callback_on_new_best is not None:
                     continue_training = self.callback_on_new_best.on_step()
@@ -235,15 +212,7 @@ class CurriculumEvalCallback(EventCallback):
             if self.callback is not None:
                 continue_training = continue_training and self._on_event()
 
-            # Average over the last 10 evaluations
-            
-            if self.task is not None:
-                if task_mean_recent > self.task_threshold[self.task]:
-                    print("Task threshold reached!")
-                    continue_training = False
-                    task_finished = True
-
-        return continue_training, task_finished
+        return continue_training
 
     def update_child_locals(self, locals_: Dict[str, Any]) -> None:
         """
@@ -254,9 +223,5 @@ class CurriculumEvalCallback(EventCallback):
         if self.callback:
             self.callback.update_locals(locals_)
 
-    def change_current_task(self, task):
-        if not (task in self.task_list) and task is not None:
-            raise ValueError("Task not in task list!")
-        
-        self.task = task
-        self.recent_task_rewards = deque([0]*10, maxlen=10)
+    def get_training_info(self):
+        return self.evaluations_results, self.evaluations_successes

@@ -62,18 +62,18 @@ register(
 
 register(
      id=f"AdroitHandRelocate-v1",
-     entry_point="Curriculum.envs.AdrointHandRelocate_v0:AdroitHandRelocateEnv",
+     entry_point="Curriculum.envs.AdroitHandRelocate_v0:AdroitHandRelocateEnv",
      max_episode_steps=200,
 )
 
 register(
      id=f"AdroitHandRelocate-v1",
-     entry_point="Curriculum.envs.AdrointHandRelocate_v1:AdroitHandRelocateEnv",
+     entry_point="Curriculum.envs.AdroitHandRelocate_v1:AdroitHandRelocateEnv",
      max_episode_steps=200,
 )
 
 register(
      id=f"AdroitHandRelocate-v2",
-     entry_point="Curriculum.envs.AdrointHandRelocate_v2:AdroitHandRelocateEnv",
+     entry_point="Curriculum.envs.AdroitHandRelocate_v2:AdroitHandRelocateEnv",
      max_episode_steps=200,
 )

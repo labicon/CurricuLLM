@@ -128,7 +128,7 @@ class CurriculumEvalCallback(EventCallback):
         info = locals_["info"]
 
         if locals_["done"]:
-            maybe_is_success = info.get("is_success")
+            maybe_is_success = info.get("success")
             if maybe_is_success is not None:
                 self._is_success_buffer.append(maybe_is_success)
 
@@ -150,7 +150,7 @@ class CurriculumEvalCallback(EventCallback):
             # Reset success rate buffer
             self._is_success_buffer = []
 
-            episode_rewards_dict, episode_lengths, episode_success = curriculum_evaluate_policy_feedback(
+            episode_rewards_dict, episode_lengths, _ = curriculum_evaluate_policy_feedback(
                 self.model,
                 self.eval_env,
                 n_eval_episodes=self.n_eval_episodes,
@@ -166,8 +166,13 @@ class CurriculumEvalCallback(EventCallback):
                 self.evaluations_timesteps.append(self.num_timesteps)
                 self.evaluations_results_dict.append(episode_rewards_dict)
                 self.evaluations_length.append(episode_lengths)
-                self.evaluations_successes.append(episode_success)
                 self.evaluations_tasks.append(self.task)
+                
+                kwargs = {}
+                # Save success log if present
+                if len(self._is_success_buffer) > 0:
+                    self.evaluations_successes.append(self._is_success_buffer)
+                    kwargs = dict(successes=self.evaluations_successes)
 
                 np.savez(
                     self.log_path,
@@ -175,11 +180,10 @@ class CurriculumEvalCallback(EventCallback):
                     results_dict=self.evaluations_results_dict,
                     task=self.evaluations_tasks,
                     ep_lengths=self.evaluations_length,
-                    successes=self.evaluations_successes,
+                    **kwargs,
                 )
 
             mean_ep_length, std_ep_length = np.mean(episode_lengths), np.std(episode_lengths)
-            mean_success, std_success = np.mean(episode_success), np.std(episode_success)
 
             # Calculate the mean and std of each reward component
             sums = defaultdict(float)
@@ -201,12 +205,16 @@ class CurriculumEvalCallback(EventCallback):
                 print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_task={mean_reward_dict['task']:.2f} +/- {std_reward_dict['task']:.2f}")
                 print(f"Eval num_timesteps={self.num_timesteps}, " f"episode_reward_main={mean_reward_dict['main']:.2f} +/- {std_reward_dict['main']:.2f}")
                 print(f"Episode length: {mean_ep_length:.2f} +/- {std_ep_length:.2f}")
-                print(f"Success rate: {mean_success:.2f} +/- {std_success:.2f}")
+            
+            if len(self._is_success_buffer) > 0:
+                success_rate = np.mean(self._is_success_buffer)
+                if self.verbose >= 1:
+                    print(f"Success rate: {100 * success_rate:.2f}%")
+                self.logger.record("eval/success_rate", success_rate)
             # Add to current Logger
             self.logger.record("eval/mean_reward_main", float(mean_reward_dict["main"]))
             self.logger.record("eval/mean_reward_task", float(mean_reward_dict["task"]))
             self.logger.record("eval/mean_ep_length", mean_ep_length)
-            self.logger.record("eval/success_rate", mean_success)
 
             for key, value in mean_reward_dict.items():
                 self.logger.record(f"eval/{key}", value)

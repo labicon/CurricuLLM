@@ -3,13 +3,11 @@ import gc
 import torch
 import re
 
-from stable_baselines3 import PPO, SAC, HerReplayBuffer
-from stable_baselines3.her.goal_selection_strategy import GoalSelectionStrategy
+from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.callbacks import EvalCallback
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
-from evaluation.evalcallback_ant import AntEvalCallback as EvalCallback
 from utils.train_utils import *
 from gpt.curriculum_api import CurriculumAPI
 from gpt.utils import file_to_string
@@ -32,7 +30,7 @@ class Curriculum_Module:
         self.curriculum_info = self.gpt_api.generate_curriculum()
         self.curriculum_length = len(self.curriculum_info)
 
-    def train_curriculum(self, seed = 0):
+    def train_curriculum(self, seed=0):
         self.seed = seed
         for curriculum_idx in range(self.curriculum_length):
             for sample_num in range(self.num_samples):
@@ -56,13 +54,13 @@ class Curriculum_Module:
                     obs = eval_env.reset()
                     obs_trajectory = [obs['observation'][0]]
                     goal_trajectory = [obs['desired_goal'][0]]
-                    for _ in range(1400):
+                    for _ in range(400):
                         action, _ = model.predict(obs, deterministic=True)
                         obs, _, _, _ = eval_env.step(action)
                         obs_trajectory.append(obs['observation'][0])
                         goal_trajectory.append(obs['desired_goal'][0])
 
-                    statistics.append(analyze_trajectory_ant(obs_trajectory, goal_trajectory))
+                    statistics.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
                 except Exception as e:
                     print(f"Error in evaluating task {task['Name']} sample {sample_num}")
                     print(e)
@@ -95,6 +93,7 @@ class Curriculum_Module:
         env_id = f"Curriculum/{self.env_name}-v{sample_num}"
 
         # Update env code
+        
         reward_code = self.gpt_api.update_env_code(self.env_path, task, 
                                      previous_reward_code=self.best_reward_code_list, 
                                      version_number=sample_num)
@@ -112,7 +111,7 @@ class Curriculum_Module:
                                             deterministic=True, render=False, warn=False)
         
         if curriculum_idx == 0:
-            model = SAC("MultiInputPolicy",
+            model = SAC("MlpPolicy",
                         training_env,
                         verbose=1)
         else:
@@ -131,42 +130,78 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
-def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
-    # obs_trajectory: list of observations
-    # Get list of torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, gosl_distance
-    torso_coord = []
-    torso_orientation = []
-    torso_velocity = []
-    torso_angular_velocity = []
-    goal_pos = []
-    goal_distance = []
+def analyze_trajectory_adroit(obs_trajectory, goal_trajectory):
+    '''
+    obs_trajectory: list of observations
+    Get list of variables
+    (1) arm_position: Translation position of the arm in xyz direction
+    (2) arm_angular_position: Angular position of arm
+    (3) wrist_angular_position: Angular position of writst
+    (4) mcp_angular_position_forefinger: Angular position of MCP(metacarpophalangeal, knuckle) joint of the forefinger
+    (5) pip_angular_position_forefinger: Angular position of PIP(proximal interphalangeal, middle) joint of the forefinger
+    (6) dip_angular_position_forefinger: Angular position of DIP(Distal Interphalangeal, tip) joint of the forefinger
+    (7) mcp_angular_position_middlefinger: Angular position of MCP(metacarpophalangeal, knuckle) joint of the middlefinger
+    (8) pip_angular_position_middlefingler: Angular position of PIP(proximal interphalangeal, middle) joint of the middlefinger
+    (9) dip_angular_position_middlefinger: Angular position of DIP(Distal Interphalangeal, tip) joint of the middlefinger
+    (10) mcp_angular_position_ringfinger: Angular position of MCP(metacarpophalangeal, knuckle) joint of the ringfinger
+    (11) pip_angular_position_ringfinger: Angular position of PIP(proximal interphalangeal, middle) joint of the ringfinger
+    (12) dip_angular_position_ringfinger: Angular position of DIP(Distal Interphalangeal, tip) joint of the ringfinger
+    (13) cmc_angular_position_littlefinger: Angular Position of the CMC (carpometacarpal) joint of the little finger
+    (14) mcp_angular_position_littlefinger: Angular position of MCP(metacarpophalangeal, knuckle) joint of the littlefinger
+    (15) pip_angular_position_littlefinger: Angular position of PIP(proximal interphalangeal, middle) joint of the littlefinger
+    (16) dip_angular_position_littlefinger: Angular position of DIP(Distal Interphalangeal, tip) joint of the littlefinger
+    (17) cmc_angular_thumb: Angular position of CMC (carpometacarpal) joint of the thumb
+    (18) mcp_angular_position_thumb: Angular position of MCP(metacarpophalangeal, knuckle) joint of the thumb
+    (19) ip_angular_thumb: Angular position of the IP (Interphalangeal) joint of the thumb
+    (20) positional_difference_ball: xyz positional difference from the palm to the ball, ball_position - palm_position
+    (21) positional_difference_target: xyz positional difference from the palm to the target, target_position - palm_position
+    (22) positional_difference_from_ball_to_target: xyz positional difference from the ball to the target, target_position - ball_position
+    '''
 
-    for obs, goal in zip(obs_trajectory, goal_trajectory):
-        torso_coord.append(obs[0:3])
-        torso_orientation.append(obs[3:7])
-        torso_velocity.append(np.linalg.norm(obs[15:17]))
-        torso_angular_velocity.append(np.linalg.norm(obs[18:21]))
-        goal_pos.append(goal)
-        goal_distance.append(np.linalg.norm(obs[0:2] - goal))
+    arm_position = []
+    arm_angular_position = []
+    wrist_angular_position = []
+    mcp_angular_position_forefinger = []
+    pip_angular_position_forefinger = []
+    dip_angular_position_forefinger = []
+    mcp_angular_position_middlefinger = []
+    pip_angular_position_middlefingler = []
+    dip_angular_position_middlefinger = []
+    mcp_angular_position_ringfinger = []
+    pip_angular_position_ringfinger = []
+    dip_angular_position_ringfinger = []
+    cmc_angular_position_littlefinger = []
+    mcp_angular_position_littlefinger = []
+    pip_angular_position_littlefinger = []
+    dip_angular_position_littlefinger = []
+    cmc_angular_thumb = []
+    mcp_angular_position_thumb = []
+    ip_angular_thumb = []
+    positional_difference_ball = []
+    positional_difference_target = []
+    positional_difference_from_ball_to_target = []
+
+    for obs in obs_trajectory:
+        
 
     # change to np array
-    torso_coord = np.array(torso_coord)
-    torso_orientation = np.array(torso_orientation)
-    torso_velocity = np.array(torso_velocity)
-    torso_angular_velocity = np.array(torso_angular_velocity)
+    end_effector_pos = np.array(end_effector_pos)
+    block_pos = np.array(block_pos)
+    block_velocity = np.array(block_velocity)
+    end_effector_velocity = np.array(end_effector_velocity)
     goal_pos = np.array(goal_pos)
     goal_distance = np.array(goal_distance)
 
     # Calculate mean and std of each variable
     statistics = {}
-    statistics["torso_coord_mean"] = np.mean(torso_coord, axis=0)
-    statistics["torso_coord_std"] = np.std(torso_coord, axis=0)
-    statistics["torso_orientation_mean"] = np.mean(torso_orientation, axis=0)
-    statistics["torso_orientation_std"] = np.std(torso_orientation, axis=0)
-    statistics["torso_velocity_mean"] = np.mean(torso_velocity, axis=0)
-    statistics["torso_velocity_std"] = np.std(torso_velocity, axis=0)
-    statistics["torso_angular_velocity_mean"] = np.mean(torso_angular_velocity, axis=0)
-    statistics["torso_angular_velocity_std"] = np.std(torso_angular_velocity, axis=0)
+    statistics["end_effector_pos_mean"] = np.mean(end_effector_pos, axis=0)
+    statistics["end_effector_pos_std"] = np.std(end_effector_pos, axis=0)
+    statistics["block_pos_mean"] = np.mean(block_pos, axis=0)
+    statistics["block_pos_std"] = np.std(block_pos, axis=0)
+    statistics["block_relative_velocity_mean"] = np.mean(block_velocity, axis=0)
+    statistics["block_relative_velocity_std"] = np.std(block_velocity, axis=0)
+    statistics["end_effector_velocity_mean"] = np.mean(end_effector_velocity, axis=0)
+    statistics["end_effector_velocity_std"] = np.std(end_effector_velocity, axis=0)
     statistics["goal_pos_mean"] = np.mean(goal_pos, axis=0)
     statistics["goal_pos_std"] = np.std(goal_pos, axis=0)
     statistics["goal_distance_mean"] = np.mean(goal_distance, axis=0)
@@ -235,7 +270,7 @@ class Reward_Addition_Module:
 
     def add_rewards(self, reward_code_list: list):
         # Find the length of the previous code block
-        n_previous_code = len(reward_code_list)-1
+        n_previous_code = len(reward_code_list) - 1
         for idx, code in enumerate(reward_code_list):
             reward_code_list[idx] = code.replace("compute_reward_curriculum(", f"compute_reward_{idx}(")
 
@@ -283,7 +318,7 @@ def compute_reward_curriculum(self):
                                             eval_freq=1000, 
                                             deterministic=True, render=False, warn=False)
         
-        model = SAC("MultiInputPolicy",
+        model = SAC("MlpPolicy",
                     training_env,
                     verbose=1)
         model.learn(total_timesteps=12_000_000, callback=eval_callback)
@@ -292,46 +327,3 @@ def compute_reward_curriculum(self):
         del model, training_env, eval_env, eval_callback
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
-
-class HER_Module:
-    def __init__(self, env_name, env_path, logger_path):
-        self.env_name = env_name
-        self.env_path = env_path
-        self.logger_path = logger_path
-        self.num_cpu = 16
-
-    def train_with_her(self, seed=0):
-        self.seed = seed
-        goal_selection_strategy = GoalSelectionStrategy.FUTURE
-
-        # Create the environment
-        env_id = f"{self.env_name}-v4"
-
-        # Create the vectorized environment
-        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-
-        # Create the callback
-        eval_callback = EvalCallback(eval_env, 
-                                    log_path=self.logger_path + "her/", 
-                                    best_model_save_path=self.logger_path + "her/", 
-                                    eval_freq=1000, 
-                                    deterministic=True, render=False, warn=False)
-        
-        model = SAC("MultiInputPolicy",
-                    training_env,
-                    learning_starts=self.num_cpu * 1000,
-                    replay_buffer_class=HerReplayBuffer,
-                    # Parameters for HER
-                    replay_buffer_kwargs=dict(
-                        n_sampled_goal=4,
-                        goal_selection_strategy=goal_selection_strategy,
-                    ),
-                    verbose=1)
-        
-        model.learn(total_timesteps=12_000_000, callback=eval_callback)
-        model.save(self.logger_path + "her/final_model.zip")
-
-        del model, training_env, eval_env, eval_callback
-        gc.collect()
-        torch.cuda.empty_cache() # Free up unused memory

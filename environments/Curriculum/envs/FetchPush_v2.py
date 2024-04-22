@@ -10,7 +10,7 @@ MODEL_XML_PATH = os.path.join("fetch", "push.xml")
 
 
 class MujocoPyFetchPushEnv(MujocoPyFetchEnv, EzPickle):
-    def __init__(self, reward_type="dense", **kwargs):
+    def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
             "robot0:slide1": 0.48,
@@ -163,7 +163,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     * v1: the environment depends on `mujoco_py` which is no longer maintained.
     """
 
-    def __init__(self, reward_type="dense", **kwargs):
+    def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
             "robot0:slide1": 0.48,
@@ -297,128 +297,135 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
         return self.goal.copy()
 
     def compute_reward_0(self):
-        # Fixed points above the table to control the end effector to reach
-        target_points = np.array([
-            [1.25, 0.53, 0.55],  # Point 1
-            [1.30, 0.50, 0.60],  # Point 2
-            [1.20, 0.60, 0.60],  # Point 3
-        ])
+        # Define weights for different components of the reward
+        weight_alignment = 1.0
+    
+        # Fixed point on the table (not occupied by the block) for alignment
+        # This value should be chosen such that it does not coincide with the block's initial or target positions.
+        # Assuming the fixed point as [1.1, 0.5, 0.42] for the sake of example.
+        fixed_point = np.array([1.1, 0.5, 0.42])
         
-        # Get current end effector position
+        # Getting end effector's position
         end_effector_pos = self.end_effector_position()
     
-        # Initialize total reward
-        total_reward = 0
+        # Calculate the Euclidean distance (L2 norm) between end effector and fixed point
+        alignment_error = np.linalg.norm(end_effector_pos - fixed_point)
     
-        # Reward component dictionary
-        reward_components = {}
+        # Reward for aligning end effector with the fixed point. 
+        # The reward increases as the end effector gets closer to the fixed point.
+        # Using -alignment_error because we want to minimize this distance (higher reward for smaller distance)
+        reward_alignment = -weight_alignment * alignment_error
     
-        # Iterate through each target point and calculate the reward component for reaching it
-        for i, point in enumerate(target_points):
-            # Calculate the distance to the target point
-            distance_to_point = np.linalg.norm(end_effector_pos - point)
+        # Total Reward: Currently focusing on alignment only
+        total_reward = reward_alignment
     
-            # Convert distance into a negative reward (we want to minimize distance)
-            reward = -distance_to_point  # The closer to the point, the higher (less negative) the reward
+        # Dictionary containing individual components of the reward
+        reward_dict = {
+            "reward_alignment": reward_alignment,
+        }
     
-            # Add weighted reward to total reward
-            weight = 1 / len(target_points)  # Distribute weights equally among target points
-            weighted_reward = weight * reward
-            total_reward += weighted_reward
-    
-            # Add to reward components dictionary
-            reward_key = f"distance_to_point_{i+1}"
-            reward_components[reward_key] = weighted_reward
-    
-        return total_reward, reward_components
+        return total_reward, reward_dict
     
     def compute_reward_1(self):
-        # Extract necessary positions
+        # Constants for reward computation
+        distance_weight = -1.0  # Weight for distance between end effector and block
+        
+        # Getting necessary observations
         end_effector_pos = self.end_effector_position()
         block_pos = self.block_position()
-    
-        # Define the goal z position for the end effector
-        goal_z_pos = 0.55
         
-        # Compute the Euclidean distance between the end effector and the block (ignoring z component)
-        distance_to_block = np.linalg.norm(end_effector_pos[:2] - block_pos[:2])
+        # Compute distance between end effector and block
+        distance = np.linalg.norm(end_effector_pos - block_pos)
         
-        # Compute the deviation of the end effector's z position from the goal z position
-        deviation_from_goal_z = np.linalg.norm(end_effector_pos[2] - goal_z_pos)
+        # Reward for minimizing the distance
+        distance_reward = distance_weight * distance
         
-        # Define reward weights
-        distance_weight = -1.0  # Weight for the distance to block reward component
-        z_deviation_weight = -0.5  # Weight for the z position deviation reward component
+        # Total reward computation
+        reward = distance_reward
         
-        # Calculate individual weighted reward components
-        distance_reward = distance_weight * np.tanh(distance_to_block)
-        z_deviation_reward = z_deviation_weight * np.tanh(deviation_from_goal_z)
-        
-        # Calculate total reward
-        reward = distance_reward + z_deviation_reward
-        
-        # Define a dictionary for individual reward components
+        # Dictionary for individual component rewards
         reward_dict = {
-            'distance_to_block': distance_reward,
-            'z_deviation': z_deviation_reward
+            'distance_reward': distance_reward,
         }
         
         return reward, reward_dict
     
     def compute_reward_2(self):
-        block_vel_relative = self.block_relative_linear_velocity()
-        velocity_matching_weight = 1.0
-    
-        # Minimize the relative velocity to achieve synchronization
-        reward_velocity_matching = -np.linalg.norm(block_vel_relative) * velocity_matching_weight
-    
-        # Total reward is the sum of all individual rewards
-        reward = reward_velocity_matching
-    
-        # Organize individual reward components for diagnostics
-        reward_dict = {
-            'reward_velocity_matching': reward_velocity_matching,
+        # Extract relevant positions and velocities from the environment
+        end_effector_pos = self.end_effector_position()
+        block_pos = self.block_position()
+        end_effector_vel = self.end_effector_linear_velocity()
+        
+        # Constants
+        velocity_maintain_weight = 1.0
+        alignment_maximize_weight = 1.0
+        
+        # Calculate the L2 norm of the end_effector velocity to encourage it to be zero
+        velocity_maintain_reward = -np.linalg.norm(end_effector_vel) * velocity_maintain_weight
+        
+        # Calculate the alignment by taking the negative L2 norm between end_effector and block positions (only x and y)
+        # We remove the z component by creating a copy of the positions with z set to 0
+        alignment_maximize_reward = -np.linalg.norm(end_effector_pos[:2] - block_pos[:2]) * alignment_maximize_weight
+        
+        # Calculate total reward by summing individual rewards
+        total_reward = velocity_maintain_reward + alignment_maximize_reward
+        
+        # Create a dictionary to hold the individual components of the reward for debugging and analysis
+        reward_components = {
+            "velocity_maintain_reward": velocity_maintain_reward,
+            "alignment_maximize_reward": alignment_maximize_reward
         }
-    
-        return reward, reward_dict
+        
+        # Return the total reward and the dictionary of reward components
+        return total_reward, reward_components
     
     def compute_reward_3(self):
-        # Initialize reward
-        reward = 0
-        reward_dict = {}
+        block_relative_velocity = self.block_relative_linear_velocity()
+        velocity_reward_weight = 1.0  # Weight for the velocity term in the reward function
+    
+        # Calculate reward components
+        # We want to maximize the relative velocity of the block, indicating effective pushing.
+        # np.linalg.norm provides the magnitude of the velocity vector.
+        # np.tanh ensures the reward doesn't grow unbounded and remains within [-1, 1].
+        velocity_reward = np.tanh(np.linalg.norm(block_relative_velocity))
+    
+        # Compile the total reward and detailed reward components in a dictionary for clarity
+        total_reward = velocity_reward_weight * velocity_reward
+        reward_components = {
+            "velocity_reward": velocity_reward,
+        }
+    
+        return total_reward, reward_components
+    
+    def compute_reward_4(self):
+        # Constants
+        distance_weight = 1.0  # Weight for the distance component of the reward
         
-        # Fetch environment attributes
-        block_pos = self.block_position()
-        goal_pos = self.goal_position()
-        end_effector_pos = self.end_effector_position()
-    
-        # Reward components weights
-        distance_to_goal_weight = -1.0
-        end_effector_height_weight = -1.0
-    
-        # Calculate distance between block and goal
+        # Observations
+        block_pos = self.block_position()  # Get the block's position
+        goal_pos = self.goal_position()  # Get the goal's position
+        
+        # Computes the L2 norm (euclidean distance) between the block and the goal position
         distance_to_goal = np.linalg.norm(block_pos - goal_pos)
         
-        # Maintain end effector height at 0.55, only consider the z component
-        end_effector_height_error = np.linalg.norm(end_effector_pos[2] - 0.55)
+        # Reward components
+        distance_reward = -distance_weight * distance_to_goal  # We want to minimize the distance
         
-        # Apply reward transformations and weightings
-        # Penalize the distance to the goal position
-        reward_dict['distance_to_goal'] = distance_to_goal_weight * distance_to_goal
+        # Total reward
+        reward = distance_reward
         
-        # Penalize deviation from desired end effector height (z = 0.55)
-        reward_dict['end_effector_height_error'] = end_effector_height_weight * end_effector_height_error
-    
-        # Sum the rewards
-        reward = sum(reward_dict.values())
-    
+        # Dictionary containing each reward component
+        reward_dict = {
+            'distance_to_goal': distance_reward,
+        }
+        
         return reward, reward_dict
     
     # Function to loop through compute_reward_X functions and sum their outputs
     def compute_reward_curriculum(self):
         total_reward = 0
         total_reward_dict = {}
-        n = 3
+        n = 4
         for i in range(n + 1):  # Including n, hence n + 1
             # Construct the function name based on i
             function_name = f'compute_reward_{i}'

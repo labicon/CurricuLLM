@@ -51,16 +51,14 @@ class Curriculum_Module:
                     model = SAC.load(model_path)
                     
                     # Get trajectory
-                    obs = eval_env.reset()
-                    obs_trajectory = [obs['observation'][0]]
-                    goal_trajectory = [obs['desired_goal'][0]]
+                    obs, _ = eval_env.reset()
+                    obs_trajectory = [obs]
                     for _ in range(400):
                         action, _ = model.predict(obs, deterministic=True)
                         obs, _, _, _ = eval_env.step(action)
-                        obs_trajectory.append(obs['observation'][0])
-                        goal_trajectory.append(obs['desired_goal'][0])
+                        obs_trajectory.append(obs)
 
-                    statistics.append(analyze_trajectory_adroit(obs_trajectory, goal_trajectory))
+                    statistics.append(analyze_trajectory_adroit(obs_trajectory))
                 except Exception as e:
                     print(f"Error in evaluating task {task['Name']} sample {sample_num}")
                     print(e)
@@ -130,7 +128,7 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
-def analyze_trajectory_adroit(obs_trajectory, goal_trajectory):
+def analyze_trajectory_adroit(obs_trajectory):
     '''
     obs_trajectory: list of observations
     Get list of variables

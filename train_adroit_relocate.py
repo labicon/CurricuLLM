@@ -13,7 +13,7 @@ from gpt.curriculum_api import CurriculumAPI
 from gpt.utils import file_to_string
 
 class Curriculum_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.prompt_path = "./gpt/prompt/"
@@ -24,6 +24,7 @@ class Curriculum_Module:
         self.current_reward_code_list = []
         self.num_cpu = 16
         self.num_samples = 3
+        self.seed = seed
         
     def generate_curriculum(self):
         # Generate curriculum and return list of dictionaries with task details
@@ -123,6 +124,30 @@ class Curriculum_Module:
         else:
             model.learn(total_timesteps=1_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
+
+    def load_and_retrain(self, model_path, sample_num):
+        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = CurriculumEvalCallback(eval_env,
+                                                log_path= model_path + "additional_training/",
+                                                best_model_save_path= model_path + "additional_training/",
+                                                eval_freq=1000,
+                                                deterministic=True, render=False, warn=False)
+        
+        model = SAC.load(model_path + "/final_model.zip")
+        model.set_env(training_env)
+
+        model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        model.save(model_path + "additional_training/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
         gc.collect()
@@ -425,7 +450,7 @@ class SAC_Module:
                     training_env,
                     verbose=1)
         model.learn(total_timesteps=12_000_000, callback=eval_callback)
-        model.save(self.logger_path + "final_model.zip")
+        model.save(self.logger_path + "sac/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
         gc.collect()

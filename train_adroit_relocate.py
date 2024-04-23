@@ -51,12 +51,12 @@ class Curriculum_Module:
                     model = SAC.load(model_path)
                     
                     # Get trajectory
-                    obs, _ = eval_env.reset()
-                    obs_trajectory = [obs]
+                    obs = eval_env.reset()
+                    obs_trajectory = [obs[0]]
                     for _ in range(400):
                         action, _ = model.predict(obs, deterministic=True)
                         obs, _, _, _ = eval_env.step(action)
-                        obs_trajectory.append(obs)
+                        obs_trajectory.append(obs[0])
 
                     statistics.append(analyze_trajectory_adroit(obs_trajectory))
                 except Exception as e:

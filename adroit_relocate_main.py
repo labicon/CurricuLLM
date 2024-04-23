@@ -13,13 +13,13 @@ if __name__ == "__main__":
     logger_path = f"./logs/Adroit_Relocate_{seed}/"
 
     # Curriculum experiments
-    # curriculum_module = Curriculum_Module(env_name, env_path, logger_path)
-    # curriculum_module.generate_curriculum()
-    # curriculum_module.train_curriculum(seed=seed)
+    curriculum_module = Curriculum_Module(env_name, env_path, logger_path)
+    curriculum_module.generate_curriculum()
+    curriculum_module.train_curriculum(seed=seed)
 
-    # del curriculum_module
-    # gc.collect()
-    # torch.cuda.empty_cache()
+    del curriculum_module
+    gc.collect()
+    torch.cuda.empty_cache()
 
     # # Reward addition experiments
     # reward_addition_module = Reward_Addition_Module(env_name, env_path, logger_path)
@@ -29,10 +29,10 @@ if __name__ == "__main__":
     # gc.collect()
     # torch.cuda.empty_cache()
 
-    # SAC Experiments
-    sac_module = SAC_Module(env_name, env_path, logger_path)
-    sac_module.train_sac(seed=seed)
+    # # SAC Experiments
+    # sac_module = SAC_Module(env_name, env_path, logger_path)
+    # sac_module.train_sac(seed=seed)
 
-    del sac_module
-    gc.collect()
-    torch.cuda.empty_cache()
+    # del sac_module
+    # gc.collect()
+    # torch.cuda.empty_cache()

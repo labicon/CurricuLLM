@@ -29,5 +29,6 @@ The variables you can use to describe the curriculum includes
 In the original task, the task is marked as success if a distance between target and ball is less than 0.1.
 Therefore, the original task can be described as minimizing the positional_difference_from_ball_to_target.
 
-The ball is set randomly over the table at reset. The ranges of the uniform distribution from which the position is samples are `[-0.15,0.15]` for the `x` coordinate, and `[-0.15,0.3]` got the `y` coordinate.
+The ball is set randomly over the table at reset. While table height is z = 0.0, center of ball has height z = 0.035 because of its own size.
 The target position is also sampled from uniform distributions with ranges `[-0.2,0.2]` for the `x` coordinate, `[-0.2,0.2]` for the `y` coordinate, and `[0.15,0.35]` for the `z` coordinate.
+However, we don't know the exact target position. We only have relative positional difference of target relative to the ball or the palm. 

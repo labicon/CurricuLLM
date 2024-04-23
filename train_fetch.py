@@ -344,14 +344,14 @@ def compute_reward_curriculum(self):
         torch.cuda.empty_cache()  # Free up unused memory
 
 class HER_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.logger_path = logger_path
         self.num_cpu = 16
-
-    def train_with_her(self, seed=0):
         self.seed = seed
+
+    def train_with_her(self):
         goal_selection_strategy = GoalSelectionStrategy.FUTURE
 
         # Create the environment

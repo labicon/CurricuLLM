@@ -13,7 +13,7 @@ if __name__ == "__main__":
     logger_path = f"./logs/Fetch/Push_{seed}/"
 
     # # Curriculum experiments
-    # curriculum_module = Curriculum_Module(env_name, env_path, logger_path)
+    # curriculum_module = Curriculum_Module(env_name, env_path, logger_path, seed)
     # curriculum_module.generate_curriculum()
     # curriculum_module.train_curriculum()
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     torch.cuda.empty_cache()
 
     # # HER experiments
-    # her_module = HER_Module(env_name, env_path, logger_path)
+    # her_module = HER_Module(env_name, env_path, logger_path, seed)
     # her_module.train_with_her()
 
     # del her_module

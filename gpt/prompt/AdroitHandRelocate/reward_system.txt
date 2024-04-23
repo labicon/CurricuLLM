@@ -9,7 +9,7 @@ As an example, the reward function format should be:
 def compute_reward_curriculum(self):
 ...
 return reward, reward_dict
-The code output should be formatted as a python code string: "‘‘‘python ... ‘‘‘".
+The code output should be formatted as a python code string: ‘‘‘python ... ‘‘‘.
 
 Some helpful tips for writing the reward function code:
 (1) If you want to get scalar value of some array, use np.linalg.norm(array)

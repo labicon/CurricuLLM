@@ -14,7 +14,7 @@ from gpt.curriculum_api import CurriculumAPI
 from gpt.utils import file_to_string
 
 class Curriculum_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.prompt_path = "./gpt/prompt/"
@@ -25,14 +25,14 @@ class Curriculum_Module:
         self.current_reward_code_list = []
         self.num_cpu = 16
         self.num_samples = 3
+        self.seed = seed
         
     def generate_curriculum(self):
         # Generate curriculum and return list of dictionaries with task details
         self.curriculum_info = self.gpt_api.generate_curriculum()
         self.curriculum_length = len(self.curriculum_info)
 
-    def train_curriculum(self, seed=0):
-        self.seed = seed
+    def train_curriculum(self):
         for curriculum_idx in range(self.curriculum_length):
             for sample_num in range(self.num_samples):
                 task = self.curriculum_info[curriculum_idx]
@@ -131,6 +131,30 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
+    def load_and_retrain(self, model_path, sample_num):
+        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = CurriculumEvalCallback(eval_env,
+                                                log_path= model_path + "additional_training/",
+                                                best_model_save_path= model_path + "additional_training/",
+                                                eval_freq=1000,
+                                                deterministic=True, render=False, warn=False)
+        
+        model = SAC.load(model_path + "/final_model.zip")
+        model.set_env(training_env)
+
+        model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        model.save(model_path + "additional_training/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
+
 def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations
     # Get list of end effector position, block position, relative block linear velocity, end effector velocity, goal_pos, gosl_distance
@@ -177,13 +201,14 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
 
 
 class Reward_Addition_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.logger_path = logger_path
         self.best_reward_code_list = []
         self.num_cpu = 16
         self.num_samples = 3
+        self.seed = seed
         
     def extract_curriculum(self):
         # extract curriculum and return list of dictionaries with task details
@@ -263,12 +288,9 @@ def compute_reward_curriculum(self):
     return total_reward, total_reward_dict"""
         return reward_code
 
-    def train_with_reward_addition(self, seed=0):
-        self.seed = seed
+    def train_with_reward_addition(self):
         self.extract_curriculum()
         self.update_env_code()
-
-        curriculum_idx = self.curriculum_length - 1
 
         # Create the environment
         env_id = f"Curriculum/{self.env_name}-v0"
@@ -294,15 +316,42 @@ def compute_reward_curriculum(self):
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
+    def load_and_retrain(self, model_path):
+        self.extract_curriculum()
+        self.update_env_code()
+
+        env_id = f"Curriculum/{self.env_name}-v0"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = CurriculumEvalCallback(eval_env,
+                                                log_path= model_path + "additional_training/",
+                                                best_model_save_path= model_path + "additional_training/",
+                                                eval_freq=1000,
+                                                deterministic=True, render=False, warn=False)
+        
+        model = SAC.load(model_path + "/final_model.zip")
+        model.set_env(training_env)
+
+        model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        model.save(model_path + "additional_training/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
+
 class HER_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.logger_path = logger_path
         self.num_cpu = 16
-
-    def train_with_her(self, seed=0):
         self.seed = seed
+
+    def train_with_her(self):
         goal_selection_strategy = GoalSelectionStrategy.FUTURE
 
         # Create the environment

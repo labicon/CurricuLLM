@@ -22,8 +22,8 @@ if __name__ == "__main__":
     torch.cuda.empty_cache()
 
     # # Reward addition experiments
-    # reward_addition_module = Reward_Addition_Module(env_name, env_path, logger_path)
-    # reward_addition_module.train_with_reward_addition(seed=seed)
+    # reward_addition_module = Reward_Addition_Module(env_name, env_path, logger_path, seed)
+    # reward_addition_module.train_with_reward_addition()
 
     # del reward_addition_module
     # gc.collect()

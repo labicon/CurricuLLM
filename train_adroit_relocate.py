@@ -31,8 +31,7 @@ class Curriculum_Module:
         self.curriculum_info = self.gpt_api.generate_curriculum()
         self.curriculum_length = len(self.curriculum_info)
 
-    def train_curriculum(self, seed=0):
-        self.seed = seed
+    def train_curriculum(self):
         for curriculum_idx in range(self.curriculum_length):
             for sample_num in range(self.num_samples):
                 task = self.curriculum_info[curriculum_idx]
@@ -305,13 +304,14 @@ def analyze_trajectory_adroit(obs_trajectory):
 
 
 class Reward_Addition_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.logger_path = logger_path
         self.best_reward_code_list = []
         self.num_cpu = 16
         self.num_samples = 3
+        self.seed = seed
         
     def extract_curriculum(self):
         # extract curriculum and return list of dictionaries with task details
@@ -391,12 +391,9 @@ def compute_reward_curriculum(self):
     return total_reward, total_reward_dict"""
         return reward_code
 
-    def train_with_reward_addition(self, seed=0):
-        self.seed = seed
+    def train_with_reward_addition(self):
         self.extract_curriculum()
         self.update_env_code()
-
-        curriculum_idx = self.curriculum_length - 1
 
         # Create the environment
         env_id = f"Curriculum/{self.env_name}-v0"
@@ -423,15 +420,15 @@ def compute_reward_curriculum(self):
         torch.cuda.empty_cache()  # Free up unused memory
 
 class SAC_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.logger_path = logger_path
         self.num_cpu = 16
         self.num_samples = 3
-
-    def train_sac(self, seed=0):
         self.seed = seed
+
+    def train_sac(self):
         # Create the environment
         env_id = f"{self.env_name}-v1"
 

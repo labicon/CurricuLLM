@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 import gymnasium as gym
 from typing import Any, Callable, Dict, Optional, Type, Union

@@ -15,7 +15,7 @@ from gpt.curriculum_api import CurriculumAPI
 from gpt.utils import file_to_string
 
 class Curriculum_Module:
-    def __init__(self, env_name, env_path, logger_path):
+    def __init__(self, env_name, env_path, logger_path, seed=0):
         self.env_name = env_name
         self.env_path = env_path
         self.prompt_path = "./gpt/prompt/"
@@ -26,6 +26,7 @@ class Curriculum_Module:
         self.current_reward_code_list = []
         self.num_cpu = 16
         self.num_samples = 3
+        self.seed = seed
         
     def generate_curriculum(self):
         # Generate curriculum and return list of dictionaries with task details

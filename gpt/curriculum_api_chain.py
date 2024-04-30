@@ -48,11 +48,14 @@ class CurriculumAPI:
 
         # Extract details for all tasks
         tasks_details = [extract_task_details(section) for section in task_sections]
+        self.tasks_details = tasks_details
 
         # Return list of dictionaries with task details
         return tasks_details
 
-    def generate_rewards(self, task_detail):
+    def generate_rewards(self, curriculum_idx, reward_code_history):
+        task_detail = self.tasks_details[curriculum_idx]
+
         reward_system = file_to_string(self.prompt_path + self.env + '/reward_system.txt')
         reward_user = file_to_string(self.prompt_path + self.env + '/reward_user.txt')
 
@@ -60,6 +63,19 @@ class CurriculumAPI:
         reward_user = reward_user.replace('<<Task_Name>>', task_detail['Name'])
         reward_user = reward_user.replace('<<Task_Description>>', task_detail['Description'])
         reward_user = reward_user.replace('<<Task_Reason>>', task_detail['Reason'])
+
+        # Add previous task and reward information
+        if curriculum_idx > 0:
+            for i in range(curriculum_idx):
+                task_history_details = self.tasks_details[i]
+                reward_code = reward_code_history[i]
+                reward_history = file_to_string(self.prompt_path + self.env + '/reward_history.txt')
+                reward_history = reward_history.replace('<<Task_Name>>', task_history_details['Name'])
+                reward_history = reward_history.replace('<<Task_Description>>', task_history_details['Description'])
+                reward_history = reward_history.replace('<<Task_Reason>>', task_history_details['Reason'])
+                reward_history = reward_history.replace('<<Task_Code>>', reward_code)
+
+                reward_user = reward_user + "\n" + reward_history
 
         # Get reward function from GPT
         reward_answer = gpt_interaction(self.client, GPT_MODEL, reward_system, reward_user)
@@ -75,33 +91,28 @@ class CurriculumAPI:
             print("No code block found.")
         return None
 	
-    def update_env_code(self, env_code_path, task, previous_reward_code=None, version_number=0):
+    def update_env_code(self, env_code_path, curriculum_idx, previous_reward_code=None, version_number=0):
         # Created environment with task and save as version = env_version
         # First, generate reward code from given task info
         reward_code = None
         max_attempt = 5
         attempt = 0
+        task = self.tasks_details[curriculum_idx]
         while reward_code is None and attempt < max_attempt:
-            reward_code = self.generate_rewards(task)
+            reward_code = self.generate_rewards(curriculum_idx, previous_reward_code)
             attempt += 1
             if reward_code is None:
                 print("Failed to generate reward code. Retrying...")
 
         # Save the reward code
         save_string_to_file(self.log_path + f"{task['Name']}/sample_{version_number}/" + "reward_code.md", reward_code)
-        # If previous reward code is given, new reward is sum of previous and current reward
-        if previous_reward_code is not None:
-            reward_code_summary = self.add_rewards(previous_reward_code, reward_code)
-        else:
-            reward_code_summary = reward_code
 
         with open(env_code_path, 'r') as file:
             original_code = file.read()
 
-        # Append the new code block to the original code
         # Indent the code block with 4 spaces to the beginning of each line
-        reward_code_summary = '\n'.join('    ' + line for line in reward_code_summary.splitlines())
-        new_code = original_code + '\n\n' + reward_code_summary
+        reward_code = '\n'.join('    ' + line for line in reward_code.splitlines())
+        new_code = original_code + '\n\n' + reward_code
 
         # Save as a new file with specific version number
         new_file_path = env_code_path.replace('.py', f'_v{version_number}.py')
@@ -112,39 +123,7 @@ class CurriculumAPI:
 
         return reward_code
 
-    def add_rewards(self, reward_code_list: list, current_reward_code):
-        # Find the length of the previous code block
-        n_previous_code = len(reward_code_list)
-        for idx, code in enumerate(reward_code_list):
-            reward_code_list[idx] = code.replace("compute_reward_curriculum(", f"compute_reward_{idx}(")
-
-        new_code = current_reward_code.replace("compute_reward_curriculum(", f"compute_reward_{n_previous_code}(")
-        new_code_list = reward_code_list + [new_code]
-
-        reward_code = ""
-        for code in new_code_list:
-            reward_code += code + "\n\n"
-        reward_code += """# Function to loop through compute_reward_X functions and sum their outputs
-def compute_reward_curriculum(self):
-    total_reward = 0
-    total_reward_dict = {}
-    """ + f"n = {n_previous_code}" + """
-    for i in range(n + 1):  # Including n, hence n + 1
-        # Construct the function name based on i
-        function_name = f'compute_reward_{i}'
-        # Get the function by name and call it
-        function = getattr(self, function_name, None)
-        if function:
-            # Call the function and add its return value to the total sum
-            reward, reward_dict = function()
-            total_reward += reward
-            total_reward_dict.update(reward_dict)
-        else:
-            raise NameError(f"Function {function_name} not found.")
-    return total_reward, total_reward_dict"""
-        return reward_code
-
-    def feedback(self, env_name, task, statistics):
+    def feedback(self, env_name, task, curriculum_idx, statistics):
         feedback_system = file_to_string(self.prompt_path + env_name + '/feedback_system.txt')
         feedback_user = file_to_string(self.prompt_path + env_name + '/feedback_user.txt')
 
@@ -152,6 +131,17 @@ def compute_reward_curriculum(self):
         feedback_user = feedback_user.replace('<<Task_Name>>', task['Name'])
         feedback_user = feedback_user.replace('<<Task_Description>>', task['Description'])
         feedback_user = feedback_user.replace('<<Task_Reason>>', task['Reason'])
+
+        # Add previous task information
+        if curriculum_idx > 0:
+            for i in range(curriculum_idx):
+                task_history_details = self.tasks_details[i]
+                feedback_history = file_to_string(self.prompt_path + env_name + '/feedback_history.txt')
+                feedback_history = feedback_history.replace('<<Task_Name>>', task_history_details['Name'])
+                feedback_history = feedback_history.replace('<<Task_Description>>', task_history_details['Description'])
+                feedback_history = feedback_history.replace('<<Task_Reason>>', task_history_details['Reason'])
+
+                feedback_user = feedback_user + "\n" + feedback_history
 
         # Statistics to string
         feedback_statistics = ""

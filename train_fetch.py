@@ -10,7 +10,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
 from utils.train_utils import *
-from gpt.curriculum_api import CurriculumAPI
+from gpt.curriculum_api_chain import CurriculumAPI
 from gpt.utils import file_to_string
 
 class Curriculum_Module:
@@ -69,11 +69,11 @@ class Curriculum_Module:
                     continue
             
             # Asl LLM to choose the best model
-            best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
             trial = 1
             while best_sample_idx is None:
                 print("Statistics Analysis error. Try again.")
-                best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
                 trial += 1
                 if trial == 5:
                     best_sample_idx = 0
@@ -95,7 +95,7 @@ class Curriculum_Module:
 
         # Update env code
         
-        reward_code = self.gpt_api.update_env_code(self.env_path, task, 
+        reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx, 
                                      previous_reward_code=self.best_reward_code_list, 
                                      version_number=sample_num)
         self.current_reward_code_list.append(reward_code)

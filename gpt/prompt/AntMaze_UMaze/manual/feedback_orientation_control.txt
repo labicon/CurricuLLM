@@ -1,4 +1,0 @@
-Task 2 Name
-Orientation Control
-Task 2 Description
-Maintain torso_orientation as a value of [1.0, 0.0, 0.0, 0.0]

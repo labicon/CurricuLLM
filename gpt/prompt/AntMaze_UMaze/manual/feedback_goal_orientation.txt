@@ -1,4 +1,0 @@
-Task 3 
-Goal Orientation
-Task 3 
-Minimize goal_distance

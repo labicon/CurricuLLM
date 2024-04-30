@@ -50,7 +50,7 @@ class Curriculum_Module:
                     env_id = f"Curriculum/{self.env_name}-v{sample_num}"
                     eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
                     model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
-                    model = SAC.load(model_path)
+                    model = PPO.load(model_path)
                     
                     # Get trajectory
                     obs = eval_env.reset()
@@ -70,11 +70,11 @@ class Curriculum_Module:
                     continue
             
             # Asl LLM to choose the best model
-            best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
             trial = 1
             while best_sample_idx is None:
                 print("Statistics Analysis error. Try again.")
-                best_sample_idx = self.gpt_api.feedback(self.env_name, task, statistics)
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
                 trial += 1
                 if trial == 5:
                     best_sample_idx = 0
@@ -95,7 +95,7 @@ class Curriculum_Module:
         env_id = f"Curriculum/{self.env_name}-v{sample_num}"
 
         # Update env code
-        reward_code = self.gpt_api.update_env_code(self.env_path, task, 
+        reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx,
                                      previous_reward_code=self.best_reward_code_list, 
                                      version_number=sample_num)
         self.current_reward_code_list.append(reward_code)
@@ -112,19 +112,19 @@ class Curriculum_Module:
                                             deterministic=True, render=False, warn=False)
         
         if curriculum_idx == 0:
-            model = SAC("MultiInputPolicy",
+            model = PPO("MultiInputPolicy",
                         training_env,
                         verbose=1)
         else:
             previous_task = self.curriculum_info[curriculum_idx - 1]['Name']
             pre_tuned_model_path = self.logger_path + previous_task + f"/sample_{self.best_model_idx_list[-1]}/final_model"
-            model = SAC.load(pre_tuned_model_path)
+            model = PPO.load(pre_tuned_model_path)
             model.set_env(training_env)
 
         if curriculum_idx == self.curriculum_length - 1:
             model.learn(total_timesteps=10_000_000, callback=eval_callback)
         else:
-            model.learn(total_timesteps=500_000, callback=eval_callback)
+            model.learn(total_timesteps=1_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 
         del model, training_env, eval_env, eval_callback

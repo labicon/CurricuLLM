@@ -6,16 +6,16 @@ from utils.train_utils import *
 from train_adroit_relocate import Curriculum_Module, Reward_Addition_Module, SAC_Module
 
 if __name__ == "__main__":
-    seed = 1
+    seed = 13
     
     env_name = "AdroitHandRelocate"
     env_path = "./environments/Curriculum/envs/AdroitHandRelocate.py"
     logger_path = f"./logs/Adroit_Relocate_{seed}/"
 
     # Curriculum experiments
-    curriculum_module = Curriculum_Module(env_name, env_path, logger_path)
+    curriculum_module = Curriculum_Module(env_name, env_path, logger_path, seed)
     curriculum_module.generate_curriculum()
-    curriculum_module.train_curriculum(seed=seed)
+    curriculum_module.train_curriculum()
 
     del curriculum_module
     gc.collect()

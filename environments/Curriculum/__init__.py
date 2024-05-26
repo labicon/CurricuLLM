@@ -1,6 +1,24 @@
 from gymnasium.envs.registration import register
 
 register(
+     id="Curriculum/Walker2d-v0",
+     entry_point="Curriculum.envs.Walker2d_v0:Walker2dEnv",
+     max_episode_steps=1000,
+)
+
+register(
+     id="Curriculum/Walker2d-v1",
+     entry_point="Curriculum.envs.Walker2d_v1:Walker2dEnv",
+     max_episode_steps=1000,
+)
+
+register(
+     id="Curriculum/Walker2d-v2",
+     entry_point="Curriculum.envs.Walker2d_v2:Walker2dEnv",
+     max_episode_steps=1000,
+)
+
+register(
      id="Curriculum/AntMaze_UMaze-v0",
      entry_point="Curriculum.envs.AntMaze_UMaze_v0:AntMazeEnv",
      max_episode_steps=700,
@@ -49,14 +67,20 @@ register(
 )
 
 register(
-     id="Curriculum/FetchPush-v3",
-     entry_point="Curriculum.envs.FetchPush_v3:MujocoFetchPushEnv",
+     id="Curriculum/FetchPickAndPlace-v0",
+     entry_point="Curriculum.envs.FetchPickAndPlace_v0:MujocoFetchPickAndPlaceEnv",
      max_episode_steps=50,
 )
 
 register(
-     id="Curriculum/FetchPush-v4",
-     entry_point="Curriculum.envs.FetchPush_v4:MujocoFetchPushEnv",
+     id="Curriculum/FetchPickAndPlace-v1",
+     entry_point="Curriculum.envs.FetchPickAndPlace_v1:MujocoFetchPickAndPlaceEnv",
+     max_episode_steps=50,
+)
+
+register(
+     id="Curriculum/FetchPickAndPlace-v2",
+     entry_point="Curriculum.envs.FetchPickAndPlace_v2:MujocoFetchPickAndPlaceEnv",
      max_episode_steps=50,
 )
 

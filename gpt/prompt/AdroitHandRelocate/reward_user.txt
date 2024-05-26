@@ -17,6 +17,7 @@ This project is covered by the Apache 2.0 License.
 
 from os import path
 from typing import Optional
+import sys
 
 import numpy as np
 from gymnasium import spaces
@@ -200,6 +201,9 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
             path.dirname(sys.modules[AdroitHandPenEnv.__module__].__file__), 
             "../assets/adroit_hand/adroit_relocate.xml"
         )
+        observation_space = spaces.Box(
+            low=-np.inf, high=np.inf, shape=(39,), dtype=np.float64
+        )
 
         MujocoEnv.__init__(
             self,
@@ -295,32 +299,42 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
         # compute the sparse reward variant first
         goal_distance = float(np.linalg.norm(obj_pos - target_pos))
         goal_achieved = goal_distance < 0.1
-        reward = 10.0 if goal_achieved else -0.1
+        reward_main = 10.0 if goal_achieved else -0.1
 
         # override reward if not sparse reward
         if not self.sparse_reward:
-            reward = 0.1 * np.linalg.norm(palm_pos - obj_pos)  # take hand to object
+            reward_main = 0.1 * np.linalg.norm(palm_pos - obj_pos)  # take hand to object
             if obj_pos[2] > 0.04:  # if object off the table
-                reward += 1.0  # bonus for lifting the object
-                reward += -0.5 * np.linalg.norm(
+                reward_main += 1.0  # bonus for lifting the object
+                reward_main += -0.5 * np.linalg.norm(
                     palm_pos - target_pos
                 )  # make hand go to target
-                reward += -0.5 * np.linalg.norm(
+                reward_main += -0.5 * np.linalg.norm(
                     obj_pos - target_pos
                 )  # make object go to target
 
             # bonus for object close to target
             if goal_distance < 0.1:
-                reward += 10.0
+                reward_main += 10.0
 
             # bonus for object "very" close to target
             if goal_distance < 0.05:
-                reward += 20.0
+                reward_main += 20.0
 
         if self.render_mode == "human":
             self.render()
 
-        return obs, reward, False, False, dict(success=goal_achieved)
+        reward, reward_dict = self.compute_reward_curriculum()
+
+        reward_dict["main"] = reward_main
+        reward_dict["task"] = reward
+
+        info = {
+            "success": goal_achieved,
+            "reward_dict": reward_dict,
+        }
+
+        return obs, reward, False, False, info
 
     def _get_obs(self):
         # qpos for hand
@@ -423,123 +437,40 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
 
         return wrist_angular
 
-    def mcp_angular_position_forefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the forefinger
-        # Horizontal and Vertical
+    def angular_position_forefinger(self):
+        # Angular position of joint of the forefinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        mcp_angular_forefinger = obs[9:10]
+        angular_forefinger = obs[8:12]
 
-        return mcp_angular_forefinger
+        return angular_forefinger
 
-    def pip_angular_position_forefinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the forefinger
+    def angular_position_middlefinger(self):
+        # Angular position of joint of the middlefinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        pip_angular_forefinger = obs[10]
+        angular_middle = obs[12:16]
 
-        return pip_angular_forefinger
+        return angular_middle
 
-    def dip_angular_position_forefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the forefinger
+    def angular_position_ringfinger(self):
+        # Angular position of joint of the ringfinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        dip_angular_forefinger = obs[11]
+        angular_ringfinger = obs[16:20]
 
-        return dip_angular_forefinger
+        return angular_ringfinger
 
-    def mcp_angular_position_middlefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the middlefinger
-        # Horizontal and Vertical
+    def angular_position_littlefinger(self):
+        # Angular position of joint of the littlefinger joints in the order of CMC (carpometacarpal) joint, horizontal MCP(metacarpophalangeal, knuckle) joint, vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        mcp_angular_middle = obs[12:14]
+        angular_littlefinger = obs[20:25]
 
-        return mcp_angular_middle
+        return angular_littlefinger
 
-    def pip_angular_position_middlefingler(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the middlefinger
+    def angular_thumb(self):
+        # Angular position of the thumb joints in the order of Horizontal CMC (carpometacarpal) joint, Vertical CMC (carpometacarpal) joint, horizontal MCP(metacarpophalangeal, knuckle) joint, vertical MCP(metacarpophalangeal, knuckle) joint, IP (Interphalangeal) joint
         obs = self._get_obs()
-        pip_angular_middlefinger = obs[14]
+        angular_thumb = obs[25:30]
 
-        return pip_angular_middlefinger
-
-    def dip_angular_position_middlefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the middlefinger
-        obs = self._get_obs()
-        dip_angular_middlefinger = obs[15]
-
-        return dip_angular_middlefinger
-
-    def mcp_angular_position_ringfinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the ringfinger
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_ringfinger = obs[16:18]
-
-        return mcp_angular_ringfinger
-
-    def pip_angular_position_ringfinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the ringfinger
-        obs = self._get_obs()
-        pip_angular_ringfinger = obs[18]
-
-        return pip_angular_ringfinger
-
-    def dip_angular_position_ringfinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the ringfinger
-        obs = self._get_obs()
-        dip_angular_ringfinger = obs[19]
-
-        return dip_angular_ringfinger
-
-    def cmc_angular_position_littlefinger(self):
-        # Angular Position of the CMC (carpometacarpal) joint of the little finger
-        obs = self._get_obs()
-        cmc_angular_littlefinger = obs[20]
-
-        return cmc_angular_littlefinger
-
-    def mcp_angular_position_littlefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the littlefinger
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_littlefinger = obs[21:23]
-
-        return mcp_angular_littlefinger
-
-    def pip_angular_position_littlefinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the littlefinger
-        obs = self._get_obs()
-        pip_angular_littlefinger = obs[23]
-
-        return pip_angular_littlefinger
-
-    def dip_angular_position_littlefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the littlefinger
-        obs = self._get_obs()
-        dip_angular_littlefinger = obs[24]
-
-        return dip_angular_littlefinger
-
-    def cmc_angular_thumb(self):
-        # Angular position of CMC (carpometacarpal) joint of the thumb
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        cmc_angular_thumb = obs[25:27]
-
-        return cmc_angular_thumb
-
-    def mcp_angular_position_thumb(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the thumb
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_thumb = obs[27:29]
-
-        return mcp_angular_thumb
-
-    def ip_angular_thumb(self):
-        # Angular position of the IP (Interphalangeal) joint of the thumb
-        obs = self._get_obs()
-        ip_angular_thumb = obs[29]
-
-        return ip_angular_thumb
+        return angular_thumb
 
     def positional_difference_ball(self):
         # Get xyz positional difference from the palm to the ball
@@ -568,6 +499,7 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
 
 The ball is set randomly over the table at reset. The ranges of the uniform distribution from which the position is samples are `[-0.15,0.15]` for the `x` coordinate, and `[-0.15,0.3]` got the `y` coordinate.
 The target position is also sampled from uniform distributions with ranges `[-0.2,0.2]` for the `x` coordinate, `[-0.2,0.2]` for the `y` coordinate, and `[0.15,0.35]` for the `z` coordinate.
+All joints values are initialized as zeros, which is unfolded hand.
 
 Generate a reward function code for
 Task Name: <<Task_Name>>

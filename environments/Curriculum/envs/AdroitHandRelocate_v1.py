@@ -432,123 +432,40 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
 
         return wrist_angular
 
-    def mcp_angular_position_forefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the forefinger
-        # Horizontal and Vertical
+    def angular_position_forefinger(self):
+        # Angular position of joint of the forefinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        mcp_angular_forefinger = obs[8:10]
+        angular_forefinger = obs[8:12]
 
-        return mcp_angular_forefinger
+        return angular_forefinger
 
-    def pip_angular_position_forefinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the forefinger
+    def angular_position_middlefinger(self):
+        # Angular position of joint of the middlefinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        pip_angular_forefinger = obs[10]
+        angular_middle = obs[12:16]
 
-        return pip_angular_forefinger
+        return angular_middle
 
-    def dip_angular_position_forefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the forefinger
+    def angular_position_ringfinger(self):
+        # Angular position of joint of the ringfinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        dip_angular_forefinger = obs[11]
+        angular_ringfinger = obs[16:20]
 
-        return dip_angular_forefinger
+        return angular_ringfinger
 
-    def mcp_angular_position_middlefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the middlefinger
-        # Horizontal and Vertical
+    def angular_position_littlefinger(self):
+        # Angular position of joint of the littlefinger joints in the order of CMC (carpometacarpal) joint, horizontal MCP(metacarpophalangeal, knuckle) joint, vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        mcp_angular_middle = obs[12:14]
+        angular_littlefinger = obs[20:25]
 
-        return mcp_angular_middle
-
-    def pip_angular_position_middlefingler(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the middlefinger
-        obs = self._get_obs()
-        pip_angular_middlefinger = obs[14]
-
-        return pip_angular_middlefinger
-
-    def dip_angular_position_middlefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the middlefinger
-        obs = self._get_obs()
-        dip_angular_middlefinger = obs[15]
-
-        return dip_angular_middlefinger
-
-    def mcp_angular_position_ringfinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the ringfinger
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_ringfinger = obs[16:18]
-
-        return mcp_angular_ringfinger
-
-    def pip_angular_position_ringfinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the ringfinger
-        obs = self._get_obs()
-        pip_angular_ringfinger = obs[18]
-
-        return pip_angular_ringfinger
-
-    def dip_angular_position_ringfinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the ringfinger
-        obs = self._get_obs()
-        dip_angular_ringfinger = obs[19]
-
-        return dip_angular_ringfinger
-
-    def cmc_angular_position_littlefinger(self):
-        # Angular Position of the CMC (carpometacarpal) joint of the little finger
-        obs = self._get_obs()
-        cmc_angular_littlefinger = obs[20]
-
-        return cmc_angular_littlefinger
-
-    def mcp_angular_position_littlefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the littlefinger
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_littlefinger = obs[21:23]
-
-        return mcp_angular_littlefinger
-
-    def pip_angular_position_littlefinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the littlefinger
-        obs = self._get_obs()
-        pip_angular_littlefinger = obs[23]
-
-        return pip_angular_littlefinger
-
-    def dip_angular_position_littlefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the littlefinger
-        obs = self._get_obs()
-        dip_angular_littlefinger = obs[24]
-
-        return dip_angular_littlefinger
+        return angular_littlefinger
 
     def cmc_angular_thumb(self):
-        # Angular position of CMC (carpometacarpal) joint of the thumb
-        # Horizontal and Vertical
+        # Angular position of the thumb joints in the order of Horizontal CMC (carpometacarpal) joint, Vertical CMC (carpometacarpal) joint, horizontal MCP(metacarpophalangeal, knuckle) joint, vertical MCP(metacarpophalangeal, knuckle) joint, IP (Interphalangeal) joint
         obs = self._get_obs()
-        cmc_angular_thumb = obs[25:27]
+        angular_thumb = obs[25:30]
 
-        return cmc_angular_thumb
-
-    def mcp_angular_position_thumb(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the thumb
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_thumb = obs[27:29]
-
-        return mcp_angular_thumb
-
-    def ip_angular_thumb(self):
-        # Angular position of the IP (Interphalangeal) joint of the thumb
-        obs = self._get_obs()
-        ip_angular_thumb = obs[29]
-
-        return ip_angular_thumb
+        return angular_thumb
 
     def positional_difference_ball(self):
         # Get xyz positional difference from the palm to the ball
@@ -574,95 +491,25 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
 
         return ball_target_postional_difference
 
-    def compute_reward_0(self):
-        # We define our reward components here
-        positional_difference_ball = self.positional_difference_ball()
-        distance_to_ball = np.linalg.norm(positional_difference_ball)
-        
-        # Reward component to minimize the distance to the ball
-        reward_distance_to_ball = -np.tanh(distance_to_ball)
-        reward_weight_distance_to_ball = 1.0  # Weight for this component
-        
-        # Total reward
-        reward = reward_weight_distance_to_ball * reward_distance_to_ball
-        
-        # Dictionary of reward components for potential debugging and analysis
-        reward_dict = {
-            'distance_to_ball': reward_distance_to_ball
-        }
-        
-        return reward, reward_dict
-    
-    def compute_reward_1(self):
-        # Getting positional difference between palm and ball
-        positional_difference_ball = self.positional_difference_ball()
-        # Calculating the norm of positional difference for magnitude
-        ball_distance_penalty = np.linalg.norm(positional_difference_ball)
-    
-        # Penalty for being further from the ball encourages closer positioning
-        positional_difference_penalty_weight = -1.0
-        total_reward = positional_difference_penalty_weight * ball_distance_penalty
-    
-        # Dictionary for individual reward components
-        reward_dict = {
-            "positional_difference_ball_penalty": positional_difference_penalty_weight * ball_distance_penalty,
-        }
-    
-        return total_reward, reward_dict
-    
-    def compute_reward_2(self):
-        # Extract the positional difference of the palm to the target
-        positional_difference_target = self.positional_difference_target()
-        
-        # Reward components
-        target_approach_weight = -1.0  # Encourage decreasing the distance to the target
-        target_approach_reward = np.linalg.norm(positional_difference_target)
-        
-        # Total reward calculation
-        total_reward = target_approach_weight * target_approach_reward
-        
-        # Construct the reward dictionary
-        reward_dict = {
-            'target_approach_reward': target_approach_reward,
-        }
-        
-        return total_reward, reward_dict
-    
-    def compute_reward_3(self):
-        # Compute the positional difference from the ball to the target
-        ball_target_difference = self.positional_difference_from_ball_to_target()
-        # Calculate the L2 norm (Euclidean distance) to measure how far the ball is from the target
-        ball_to_target_distance = np.linalg.norm(ball_target_difference)
-        
-        # Define a negative reward for the distance, as we want to minimize this distance
-        distance_reward_weight = -1.0
-        distance_reward = distance_reward_weight * ball_to_target_distance
-        
-        # Compile the rewards into a total reward
-        reward = distance_reward
-        
-        # Construct a dictionary of reward components for analysis and debugging
-        reward_dict = {
-            'distance_reward': distance_reward
-        }
-    
-        return reward, reward_dict
-    
-    # Function to loop through compute_reward_X functions and sum their outputs
     def compute_reward_curriculum(self):
-        total_reward = 0
-        total_reward_dict = {}
-        n = 3
-        for i in range(n + 1):  # Including n, hence n + 1
-            # Construct the function name based on i
-            function_name = f'compute_reward_{i}'
-            # Get the function by name and call it
-            function = getattr(self, function_name, None)
-            if function:
-                # Call the function and add its return value to the total sum
-                reward, reward_dict = function()
-                total_reward += reward
-                total_reward_dict.update(reward_dict)
-            else:
-                raise NameError(f"Function {function_name} not found.")
-        return total_reward, total_reward_dict
+        # Define weighting parameters for reward components
+        positional_difference_ball_weight = 0.3  # Previously learned task, so less weight
+        positional_difference_target_weight = 0.3  # Previous task, so less weight
+        positional_difference_ball_to_target_weight = 1.0  # Current main task (Precision Grasp and Place), so higher weight
+    
+        # Compute L2 norms for positional differences
+        positional_difference_ball_norm = np.linalg.norm(self.positional_difference_ball())
+        positional_difference_target_norm = np.linalg.norm(self.positional_difference_target())
+        positional_difference_ball_to_target_norm = np.linalg.norm(self.positional_difference_from_ball_to_target())
+    
+        # Calculate individual weighted reward components
+        reward_components = {
+            "position_to_ball": -positional_difference_ball_weight * np.tanh(positional_difference_ball_norm),  # Reward for positioning arm close to the ball
+            "position_to_target": -positional_difference_target_weight * np.tanh(positional_difference_target_norm),  # Reward for positioning arm close to the target
+            "ball_to_target_precision": -positional_difference_ball_to_target_weight * np.tanh(positional_difference_ball_to_target_norm)  # Main reward component focusing on minimizing the distance from the ball to the target
+        }
+    
+        # Calculate total reward by summing up individual components
+        total_reward = sum(reward_components.values())
+    
+        return total_reward, reward_components

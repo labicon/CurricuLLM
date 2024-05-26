@@ -432,123 +432,40 @@ class AdroitHandRelocateEnv(MujocoEnv, EzPickle):
 
         return wrist_angular
 
-    def mcp_angular_position_forefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the forefinger
-        # Horizontal and Vertical
+    def angular_position_forefinger(self):
+        # Angular position of joint of the forefinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        mcp_angular_forefinger = obs[8:10]
+        angular_forefinger = obs[8:12]
 
-        return mcp_angular_forefinger
+        return angular_forefinger
 
-    def pip_angular_position_forefinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the forefinger
+    def angular_position_middlefinger(self):
+        # Angular position of joint of the middlefinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        pip_angular_forefinger = obs[10]
+        angular_middle = obs[12:16]
 
-        return pip_angular_forefinger
+        return angular_middle
 
-    def dip_angular_position_forefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the forefinger
+    def angular_position_ringfinger(self):
+        # Angular position of joint of the ringfinger joints in the order of horizontal MCP(metacarpophalangeal, knuckle) joint, and vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        dip_angular_forefinger = obs[11]
+        angular_ringfinger = obs[16:20]
 
-        return dip_angular_forefinger
+        return angular_ringfinger
 
-    def mcp_angular_position_middlefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the middlefinger
-        # Horizontal and Vertical
+    def angular_position_littlefinger(self):
+        # Angular position of joint of the littlefinger joints in the order of CMC (carpometacarpal) joint, horizontal MCP(metacarpophalangeal, knuckle) joint, vertical MCP(metacarpophalangeal, knuckle) joint, PIP(proximal interphalangeal, middle), DIP(Distal Interphalangeal, tip)
         obs = self._get_obs()
-        mcp_angular_middle = obs[12:14]
+        angular_littlefinger = obs[20:25]
 
-        return mcp_angular_middle
-
-    def pip_angular_position_middlefingler(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the middlefinger
-        obs = self._get_obs()
-        pip_angular_middlefinger = obs[14]
-
-        return pip_angular_middlefinger
-
-    def dip_angular_position_middlefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the middlefinger
-        obs = self._get_obs()
-        dip_angular_middlefinger = obs[15]
-
-        return dip_angular_middlefinger
-
-    def mcp_angular_position_ringfinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the ringfinger
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_ringfinger = obs[16:18]
-
-        return mcp_angular_ringfinger
-
-    def pip_angular_position_ringfinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the ringfinger
-        obs = self._get_obs()
-        pip_angular_ringfinger = obs[18]
-
-        return pip_angular_ringfinger
-
-    def dip_angular_position_ringfinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the ringfinger
-        obs = self._get_obs()
-        dip_angular_ringfinger = obs[19]
-
-        return dip_angular_ringfinger
-
-    def cmc_angular_position_littlefinger(self):
-        # Angular Position of the CMC (carpometacarpal) joint of the little finger
-        obs = self._get_obs()
-        cmc_angular_littlefinger = obs[20]
-
-        return cmc_angular_littlefinger
-
-    def mcp_angular_position_littlefinger(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the littlefinger
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_littlefinger = obs[21:23]
-
-        return mcp_angular_littlefinger
-
-    def pip_angular_position_littlefinger(self):
-        # Angular position of PIP(proximal interphalangeal, middle) joint of the littlefinger
-        obs = self._get_obs()
-        pip_angular_littlefinger = obs[23]
-
-        return pip_angular_littlefinger
-
-    def dip_angular_position_littlefinger(self):
-        # Angular position of DIP(Distal Interphalangeal, tip) joint of the littlefinger
-        obs = self._get_obs()
-        dip_angular_littlefinger = obs[24]
-
-        return dip_angular_littlefinger
+        return angular_littlefinger
 
     def cmc_angular_thumb(self):
-        # Angular position of CMC (carpometacarpal) joint of the thumb
-        # Horizontal and Vertical
+        # Angular position of the thumb joints in the order of Horizontal CMC (carpometacarpal) joint, Vertical CMC (carpometacarpal) joint, horizontal MCP(metacarpophalangeal, knuckle) joint, vertical MCP(metacarpophalangeal, knuckle) joint, IP (Interphalangeal) joint
         obs = self._get_obs()
-        cmc_angular_thumb = obs[25:27]
+        angular_thumb = obs[25:30]
 
-        return cmc_angular_thumb
-
-    def mcp_angular_position_thumb(self):
-        # Angular position of MCP(metacarpophalangeal, knuckle) joint of the thumb
-        # Horizontal and Vertical
-        obs = self._get_obs()
-        mcp_angular_thumb = obs[27:29]
-
-        return mcp_angular_thumb
-
-    def ip_angular_thumb(self):
-        # Angular position of the IP (Interphalangeal) joint of the thumb
-        obs = self._get_obs()
-        ip_angular_thumb = obs[29]
-
-        return ip_angular_thumb
+        return angular_thumb
 
     def positional_difference_ball(self):
         # Get xyz positional difference from the palm to the ball

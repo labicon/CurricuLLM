@@ -9,7 +9,6 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.callbacks import EvalCallback
 
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
-from evaluation.evalcallback_success import SuccessEvalCallback as EvalCallback
 from utils.train_utils import *
 from gpt.curriculum_api_chain import CurriculumAPI
 from gpt.utils import file_to_string
@@ -56,13 +55,17 @@ class Curriculum_Module:
                     obs = eval_env.reset()
                     obs_trajectory = [obs['observation'][0]]
                     goal_trajectory = [obs['desired_goal'][0]]
-                    for _ in range(1400):
+                    for _ in range(500):
                         action, _ = model.predict(obs, deterministic=True)
                         obs, _, _, _ = eval_env.step(action)
                         obs_trajectory.append(obs['observation'][0])
                         goal_trajectory.append(obs['desired_goal'][0])
 
-                    statistics.append(analyze_trajectory_ant(obs_trajectory, goal_trajectory))
+                    statistics.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
+                    
+                    del eval_env, model
+                    gc.collect()
+                    torch.cuda.empty_cache()  # Free up unused memory
                 except Exception as e:
                     print(f"Error in evaluating task {task['Name']} sample {sample_num}")
                     print(e)
@@ -95,7 +98,8 @@ class Curriculum_Module:
         env_id = f"Curriculum/{self.env_name}-v{sample_num}"
 
         # Update env code
-        reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx,
+        
+        reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx, 
                                      previous_reward_code=self.best_reward_code_list, 
                                      version_number=sample_num)
         self.current_reward_code_list.append(reward_code)
@@ -124,49 +128,79 @@ class Curriculum_Module:
         if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
             model.learn(total_timesteps=10_000_000, callback=eval_callback)
         else:
-            model.learn(total_timesteps=1_000_000, callback=eval_callback)
+            model.learn(total_timesteps=2_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
-def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
+    def load_and_retrain(self, model_path, sample_num):
+        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = CurriculumEvalCallback(eval_env,
+                                                log_path= model_path + "additional_training/",
+                                                best_model_save_path= model_path + "additional_training/",
+                                                eval_freq=1000,
+                                                deterministic=True, render=False, warn=False)
+        
+        model = SAC.load(model_path + "/final_model.zip")
+        model.set_env(training_env)
+
+        model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        model.save(model_path + "additional_training/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
+
+def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations
-    # Get list of torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, gosl_distance
-    torso_coord = []
-    torso_orientation = []
-    torso_velocity = []
-    torso_angular_velocity = []
+    # Get list of end effector position, block position, relative block linear velocity, end effector velocity, goal_pos, gosl_distance
+
+    end_effector_pos = []
+    block_pos = []
+    gripper_distance = []
+    block_velocity = []
+    end_effector_velocity = []
     goal_pos = []
     goal_distance = []
 
     for obs, goal in zip(obs_trajectory, goal_trajectory):
-        torso_coord.append(obs[0:3])
-        torso_orientation.append(obs[3:7])
-        torso_velocity.append(np.linalg.norm(obs[15:17]))
-        torso_angular_velocity.append(np.linalg.norm(obs[18:21]))
+        end_effector_pos.append(obs[0:3])
+        block_pos.append(obs[3:6])
+        gripper_distance.append(abs(obs[9] - obs[10]))
+        block_velocity.append(obs[15:18])
+        end_effector_velocity.append(obs[20:23])
         goal_pos.append(goal)
-        goal_distance.append(np.linalg.norm(obs[0:2] - goal))
+        goal_distance.append(np.linalg.norm(obs[3:6] - goal))
 
     # change to np array
-    torso_coord = np.array(torso_coord)
-    torso_orientation = np.array(torso_orientation)
-    torso_velocity = np.array(torso_velocity)
-    torso_angular_velocity = np.array(torso_angular_velocity)
+    end_effector_pos = np.array(end_effector_pos)
+    block_pos = np.array(block_pos)
+    gripper_distance = np.array(gripper_distance)
+    block_velocity = np.array(block_velocity)
+    end_effector_velocity = np.array(end_effector_velocity)
     goal_pos = np.array(goal_pos)
     goal_distance = np.array(goal_distance)
 
     # Calculate mean and std of each variable
     statistics = {}
-    statistics["torso_coord_mean"] = np.mean(torso_coord, axis=0)
-    statistics["torso_coord_std"] = np.std(torso_coord, axis=0)
-    statistics["torso_orientation_mean"] = np.mean(torso_orientation, axis=0)
-    statistics["torso_orientation_std"] = np.std(torso_orientation, axis=0)
-    statistics["torso_velocity_mean"] = np.mean(torso_velocity, axis=0)
-    statistics["torso_velocity_std"] = np.std(torso_velocity, axis=0)
-    statistics["torso_angular_velocity_mean"] = np.mean(torso_angular_velocity, axis=0)
-    statistics["torso_angular_velocity_std"] = np.std(torso_angular_velocity, axis=0)
+    statistics["end_effector_pos_mean"] = np.mean(end_effector_pos, axis=0)
+    statistics["end_effector_pos_std"] = np.std(end_effector_pos, axis=0)
+    statistics["block_pos_mean"] = np.mean(block_pos, axis=0)
+    statistics["block_pos_std"] = np.std(block_pos, axis=0)
+    statistics["gripper_distance_mean"] = np.mean(gripper_distance, axis=0)
+    statistics["gripper_distance_std"] = np.std(gripper_distance, axis=0)
+    statistics["block_relative_velocity_mean"] = np.mean(block_velocity, axis=0)
+    statistics["block_relative_velocity_std"] = np.std(block_velocity, axis=0)
+    statistics["end_effector_velocity_mean"] = np.mean(end_effector_velocity, axis=0)
+    statistics["end_effector_velocity_std"] = np.std(end_effector_velocity, axis=0)
     statistics["goal_pos_mean"] = np.mean(goal_pos, axis=0)
     statistics["goal_pos_std"] = np.std(goal_pos, axis=0)
     statistics["goal_distance_mean"] = np.mean(goal_distance, axis=0)
@@ -251,7 +285,7 @@ class Reward_Addition_Module:
         model = SAC("MultiInputPolicy",
                     training_env,
                     verbose=1)
-        model.learn(total_timesteps=15_000_000, callback=eval_callback)
+        model.learn(total_timesteps=10_000_000, callback=eval_callback)
         model.save(self.logger_path + f"reward_addition/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
@@ -297,7 +331,7 @@ class HER_Module:
         goal_selection_strategy = GoalSelectionStrategy.FUTURE
 
         # Create the environment
-        env_id = f"{self.env_name}-v4"
+        env_id = f"{self.env_name}-v2"
 
         # Create the vectorized environment
         training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
@@ -312,18 +346,18 @@ class HER_Module:
         
         model = SAC("MultiInputPolicy",
                     training_env,
-                    learning_starts=self.num_cpu * 1000,
+                    learning_starts = self.num_cpu * 100,
+                    verbose=1,
                     replay_buffer_class=HerReplayBuffer,
                     # Parameters for HER
                     replay_buffer_kwargs=dict(
                         n_sampled_goal=4,
                         goal_selection_strategy=goal_selection_strategy,
-                    ),
-                    verbose=1)
+                    ))
         
-        model.learn(total_timesteps=12_000_000, callback=eval_callback)
+        model.learn(total_timesteps=13_000_000, callback=eval_callback)
         model.save(self.logger_path + "her/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
         gc.collect()
-        torch.cuda.empty_cache() # Free up unused memory
+        torch.cuda.empty_cache()

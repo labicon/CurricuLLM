@@ -109,7 +109,6 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
 Since the block is placed on a table, it has a fixed height of z = 0.42.
 Also, goal position is also on a table, therefore, having a height of z = 0.42, while xy position is initialized randomly.
-End effector is initialized in [1.34, 0.75, 0.55]
 
 Generate a reward function code for
 Task Name: <<Task_Name>>

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name:
-#SBATCH --job-name=kanghyun_adroit_relocate
+#SBATCH --job-name=kanghyun_fetch
 #
 # Account:
 #SBATCH --account=fc_icon
@@ -24,7 +24,7 @@
 #SBATCH --gres=gpu:GTX2080TI:4
 #
 # Wall clock limit:
-#SBATCH --time=48:00:00
+#SBATCH --time=36:00:00
 #
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=kanghyun.ryu@berkeley.edu
@@ -34,6 +34,6 @@ module load python/3.10.10
 module load cuda/11.2
 module load cudnn/8.1.1
 
-python ./adroit_relocate_main.py
+python ./fetch_push_main.py
 
 

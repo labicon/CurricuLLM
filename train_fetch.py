@@ -121,10 +121,10 @@ class Curriculum_Module:
             model = SAC.load(pre_tuned_model_path)
             model.set_env(training_env)
 
-        if curriculum_idx == self.curriculum_length - 1:
+        if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
             model.learn(total_timesteps=10_000_000, callback=eval_callback)
         else:
-            model.learn(total_timesteps=500_000, callback=eval_callback)
+            model.learn(total_timesteps=1_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
@@ -161,6 +161,7 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
 
     end_effector_pos = []
     block_pos = []
+    gripper_distance = []
     block_velocity = []
     end_effector_velocity = []
     goal_pos = []
@@ -169,6 +170,7 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     for obs, goal in zip(obs_trajectory, goal_trajectory):
         end_effector_pos.append(obs[0:3])
         block_pos.append(obs[3:6])
+        gripper_distance.append(abs(obs[9] - obs[10]))
         block_velocity.append(obs[15:18])
         end_effector_velocity.append(obs[20:23])
         goal_pos.append(goal)
@@ -177,6 +179,7 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     # change to np array
     end_effector_pos = np.array(end_effector_pos)
     block_pos = np.array(block_pos)
+    gripper_distance = np.array(gripper_distance)
     block_velocity = np.array(block_velocity)
     end_effector_velocity = np.array(end_effector_velocity)
     goal_pos = np.array(goal_pos)
@@ -188,6 +191,8 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     statistics["end_effector_pos_std"] = np.std(end_effector_pos, axis=0)
     statistics["block_pos_mean"] = np.mean(block_pos, axis=0)
     statistics["block_pos_std"] = np.std(block_pos, axis=0)
+    statistics["gripper_distance_mean"] = np.mean(gripper_distance, axis=0)
+    statistics["gripper_distance_std"] = np.std(gripper_distance, axis=0)
     statistics["block_relative_velocity_mean"] = np.mean(block_velocity, axis=0)
     statistics["block_relative_velocity_std"] = np.std(block_velocity, axis=0)
     statistics["end_effector_velocity_mean"] = np.mean(end_effector_velocity, axis=0)
@@ -238,18 +243,14 @@ class Reward_Addition_Module:
 
     def update_env_code(self):
         # Extract reward code from best_reward_code.txt
-        for task in self.curriculum_info:
-            best_reward_code = file_to_string(self.logger_path + f"{task['Name']}/best_reward_code.txt")
-            self.best_reward_code_list.append(best_reward_code)
-
-        reward_code_summary = self.add_rewards(self.best_reward_code_list)
+        final_task = self.curriculum_info[-1]
+        reward_code_summary = file_to_string(self.logger_path + f"{final_task['Name']}/best_reward_code.txt")
 
         with open(self.env_path, 'r') as file:
             original_code = file.read()
 
         # Append the new code block to the original code
-        # Indent the code block with 4 spaces to the beginning of each line
-        reward_code_summary = '\n'.join('    ' + line for line in reward_code_summary.splitlines())
+        reward_code_summary = '\n'.join(line for line in reward_code_summary.splitlines())
         new_code = original_code + '\n\n' + reward_code_summary
 
         # Save as a new file with specific version number
@@ -258,35 +259,6 @@ class Reward_Addition_Module:
             file.write(new_code)
 
         print(f"Updated environment code saved to {new_file_path}")
-
-    def add_rewards(self, reward_code_list: list):
-        # Find the length of the previous code block
-        n_previous_code = len(reward_code_list) - 1
-        for idx, code in enumerate(reward_code_list):
-            reward_code_list[idx] = code.replace("compute_reward_curriculum(", f"compute_reward_{idx}(")
-
-        reward_code = ""
-        for code in reward_code_list:
-            reward_code += code + "\n\n"
-        reward_code += """# Function to loop through compute_reward_X functions and sum their outputs
-def compute_reward_curriculum(self):
-    total_reward = 0
-    total_reward_dict = {}
-    """ + f"n = {n_previous_code}" + """
-    for i in range(n + 1):  # Including n, hence n + 1
-        # Construct the function name based on i
-        function_name = f'compute_reward_{i}'
-        # Get the function by name and call it
-        function = getattr(self, function_name, None)
-        if function:
-            # Call the function and add its return value to the total sum
-            reward, reward_dict = function()
-            total_reward += reward
-            total_reward_dict.update(reward_dict)
-        else:
-            raise NameError(f"Function {function_name} not found.")
-    return total_reward, total_reward_dict"""
-        return reward_code
 
     def train_with_reward_addition(self):
         self.extract_curriculum()
@@ -309,7 +281,7 @@ def compute_reward_curriculum(self):
         model = SAC("MultiInputPolicy",
                     training_env,
                     verbose=1)
-        model.learn(total_timesteps=12_000_000, callback=eval_callback)
+        model.learn(total_timesteps=10_000_000, callback=eval_callback)
         model.save(self.logger_path + f"reward_addition/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
@@ -336,7 +308,7 @@ def compute_reward_curriculum(self):
         model = SAC.load(model_path + "/final_model.zip")
         model.set_env(training_env)
 
-        model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        model.learn(total_timesteps=15_000_000, callback=eval_callback)
         model.save(model_path + "additional_training/final_model.zip")
 
         del model, training_env, eval_env, eval_callback
@@ -379,7 +351,7 @@ class HER_Module:
                         goal_selection_strategy=goal_selection_strategy,
                     ))
         
-        model.learn(total_timesteps=12_000_000, callback=eval_callback)
+        model.learn(total_timesteps=13_000_000, callback=eval_callback)
         model.save(self.logger_path + "her/final_model.zip")
 
         del model, training_env, eval_env, eval_callback

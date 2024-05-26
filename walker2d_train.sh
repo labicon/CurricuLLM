@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name:
-#SBATCH --job-name=kanghyun_fetch
+#SBATCH --job-name=kanghyun_walker
 #
 # Account:
 #SBATCH --account=fc_icon
@@ -34,6 +34,6 @@ module load python/3.10.10
 module load cuda/11.2
 module load cudnn/8.1.1
 
-python ./fetch_main.py
+python ./walker2d_main.py
 
 

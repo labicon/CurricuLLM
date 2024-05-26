@@ -3,13 +3,12 @@ from typing import Dict, List, Optional, Union, Tuple
 import numpy as np
 
 from gymnasium.utils.ezpickle import EzPickle
+
 from gymnasium_robotics.envs.fetch import MujocoFetchEnv, MujocoPyFetchEnv
 
-# Ensure we get the path separator correct on windows
-MODEL_XML_PATH = os.path.join("fetch", "push.xml")
+MODEL_XML_PATH = os.path.join("fetch", "pick_and_place.xml")
 
-
-class MujocoPyFetchPushEnv(MujocoPyFetchEnv, EzPickle):
+class MujocoPyFetchPickAndPlaceEnv(MujocoPyFetchEnv, EzPickle):
     def __init__(self, reward_type="sparse", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
@@ -21,10 +20,10 @@ class MujocoPyFetchPushEnv(MujocoPyFetchEnv, EzPickle):
             self,
             model_path=MODEL_XML_PATH,
             has_object=True,
-            block_gripper=True,
+            block_gripper=False,
             n_substeps=20,
-            gripper_extra_height=0.0,
-            target_in_the_air=False,
+            gripper_extra_height=0.2,
+            target_in_the_air=True,
             target_offset=0.0,
             obj_range=0.15,
             target_range=0.15,
@@ -35,15 +34,14 @@ class MujocoPyFetchPushEnv(MujocoPyFetchEnv, EzPickle):
         )
         EzPickle.__init__(self, reward_type=reward_type, **kwargs)
 
-
-class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
+class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
     """
     ## Description
 
     This environment was introduced in ["Multi-Goal Reinforcement Learning: Challenging Robotics Environments and Request for Research"](https://arxiv.org/abs/1802.09464).
 
-    The task in the environment is for a manipulator to move a block to a target position on top of a table by pushing with its gripper. The robot is a 7-DoF [Fetch Mobile Manipulator](https://fetchrobotics.com/) with a two-fingered parallel gripper.
-    The robot is controlled by small displacements of the gripper in Cartesian coordinates and the inverse kinematics are computed internally by the MuJoCo framework. The gripper is locked in a closed configuration in order to perform the push task.
+    The task in the environment is for a manipulator to move a block to a target position on top of a table or in mid-air. The robot is a 7-DoF [Fetch Mobile Manipulator](https://fetchrobotics.com/) with a two-fingered parallel gripper.
+    The robot is controlled by small displacements of the gripper in Cartesian coordinates and the inverse kinematics are computed internally by the MuJoCo framework. The gripper can be opened or closed in order to perform the graspping operation of pick and place.
     The task is also continuing which means that the robot has to maintain the block in the target position for an indefinite period of time.
 
     The control frequency of the robot is of `f = 25 Hz`. This is achieved by applying the same action in 20 subsequent simulator step (with a time step of `dt = 0.002 s`) before returning the control to the robot.
@@ -57,12 +55,12 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     | 0   | Displacement of the end effector in the x direction dx | -1          | 1           | robot0:mocap                                                    | hinge | position (m) |
     | 1   | Displacement of the end effector in the y direction dy | -1          | 1           | robot0:mocap                                                    | hinge | position (m) |
     | 2   | Displacement of the end effector in the z direction dz | -1          | 1           | robot0:mocap                                                    | hinge | position (m) |
-    | 3   | -                                                      | -1          | 1           | -                                                               | hinge | position (m) |
+    | 3   | Positional displacement per timestep of each finger of the gripper  | -1          | 1           | robot0:r_gripper_finger_joint and robot0:l_gripper_finger_joint | hinge | position (m) |
 
     ## Observation Space
 
     The observation is a `goal-aware observation space`. It consists of a dictionary with information about the robot's end effector state and goal. The kinematics observations are derived from Mujoco bodies known as [sites](https://mujoco.readthedocs.io/en/latest/XMLreference.html?highlight=site#body-site) attached to the body of interest such as the block or the end effector.
-    Also to take into account the temporal influence of the step time, velocity values are multiplied by the step time dt=number_of_sub_steps*sub_step_time. The dictionary consists of the following 3 keys:
+    Only the observations from the gripper fingers are derived from joints. Also to take into account the temporal influence of the step time, velocity values are multiplied by the step time dt=number_of_sub_steps*sub_step_time. The dictionary consists of the following 3 keys:
 
     * `observation`: its value is an `ndarray` of shape `(25,)`. It consists of kinematic information of the block object and gripper. The elements of the array correspond to the following:
 
@@ -94,7 +92,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     | 23  | Right gripper finger linear velocity                                                                                                  | -Inf   | Inf    |-                                      | robot0:r_gripper_finger_joint          | hinge    | velocity (m/s)           |
     | 24  | Left gripper finger linear velocity                                                                                                   | -Inf   | Inf    |-                                      | robot0:l_gripper_finger_joint          | hinge    | velocity (m/s)           |
 
-    * `desired_goal`: this key represents the final goal to be achieved. In this environment it is a 3-dimensional `ndarray`, `(3,)`, that consists of the three cartesian coordinates of the desired final block position `[x,y,z]`. In order for the robot to perform a push trajectory, the goal position can only be placed on top of the table. The elements of the array are the following:
+    * `desired_goal`: this key represents the final goal to be achieved. In this environment it is a 3-dimensional `ndarray`, `(3,)`, that consists of the three cartesian coordinates of the desired final block position `[x,y,z]`. In order for the robot to perform a pick and place trajectory, the goal position can be elevated over the table or on top of the table. The elements of the array are the following:
 
     | Num | Observation                                                                                                                           | Min    | Max    | Site Name (in corresponding XML file) |Unit          |
     |-----|---------------------------------------------------------------------------------------------------------------------------------------|--------|--------|---------------------------------------|--------------|
@@ -117,7 +115,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     - *sparse*: the returned reward can have two values: `-1` if the block hasn't reached its final target position, and `0` if the block is in the final target position (the block is considered to have reached the goal if the Euclidean distance between both is lower than 0.05 m).
     - *dense*: the returned reward is the negative Euclidean distance between the achieved goal position and the desired goal.
 
-    To initialize this environment with one of the mentioned reward functions the type of reward must be specified in the id string when the environment is initialized. For `sparse` reward the id is the default of the environment, `FetchPush-v2`. However, for `dense` reward the id must be modified to `FetchPush-v2` and initialized as follows:
+    To initialize this environment with one of the mentioned reward functions the type of reward must be specified in the id string when the environment is initialized. For `sparse` reward the id is the default of the environment, `FetchPickAndPlace-v2`. However, for `dense` reward the id must be modified to `FetchPickAndPlaceDense-v2` and initialized as follows:
 
     ```python
     import gymnasium as gym
@@ -125,7 +123,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
     gym.register_envs(gymnasium_robotics)
 
-    env = gym.make('FetchPushDense-v2')
+    env = gym.make('FetchPickAndPlaceDense-v2')
     ```
 
     ## Starting State
@@ -135,7 +133,8 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     The block's position has a fixed height of `(z) = [0.42] m ` (on top of the table). The initial `(x,y)` position of the block is the gripper's x and y coordinates plus an offset sampled from a uniform distribution with a range of `[-0.15, 0.15] m`. Offset samples are generated until the 2-dimensional Euclidean distance from the gripper to the block is greater than `0.1 m`.
     The initial orientation of the block is the same as for the gripper, `(w,x,y,z) = [1.0, 0.0, 1.0, 0.0]`.
 
-    Finally the target position where the robot has to move the block is generated. The target can be in mid-air or over the table. The random target is also generated by adding an offset to the initial grippers position `(x,y)` sampled from a uniform distribution with a range of `[-0.15, 0.15] m`. The height of the target is initialized at `(z) = [0.42] m ` on the table.
+    Finally the target position where the robot has to move the block is generated. The target can be in mid-air or over the table. The random target is also generated by adding an offset to the initial grippers position `(x,y)` sampled from a uniform distribution with a range of `[-0.15, 0.15] m`.
+    The height of the target is initialized at `(z) = [0.42] m ` and an offset is added to it sampled from another uniform distribution with a range of `[0, 0.45] m`.
 
 
     ## Episode End
@@ -145,8 +144,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
     ## Arguments
 
-    To increase/decrease the maximum number of timesteps before the episode is `truncated` the `max_episode_steps` argument can be set at initialization.
-    The default value is 50. For example, to increase the total number of timesteps to 100 make the environment as follows:
+    To increase/decrease the maximum number of timesteps before the episode is `truncated` the `max_episode_steps` argument can be set at initialization. The default value is 50. For example, to increase the total number of timesteps to 100 make the environment as follows:
 
     ```python
     import gymnasium as gym
@@ -154,7 +152,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
     gym.register_envs(gymnasium_robotics)
 
-    env = gym.make('FetchPush-v2', max_episode_steps=100)
+    env = gym.make('FetchPickAndPlace-v2', max_episode_steps=100)
     ```
 
     ## Version History
@@ -174,10 +172,10 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
             self,
             model_path=MODEL_XML_PATH,
             has_object=True,
-            block_gripper=True,
+            block_gripper=False,
             n_substeps=20,
-            gripper_extra_height=0.0,
-            target_in_the_air=False,
+            gripper_extra_height=0.2,
+            target_in_the_air=True,
             target_offset=0.0,
             obj_range=0.15,
             target_range=0.15,
@@ -263,7 +261,25 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
         return object_pos  
 
+    def gripper_distance(self):
+        (
+            grip_pos,
+            object_pos,
+            object_rel_pos,
+            gripper_state,
+            object_rot,
+            object_velp,
+            object_velr,
+            grip_velp,
+            gripper_vel,
+        ) = self.generate_mujoco_observations()   
+        
+        gripper_distance = abs(gripper_state[0] - gripper_state[1])
+
+        return gripper_distance
+
     def block_relative_linear_velocity(self):
+    # This is realtive velocity, which is block_linear_velocity - end_effector_linear_velocity
         (
             grip_pos,
             object_pos,
@@ -296,87 +312,24 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     def goal_position(self):
         return self.goal.copy()
 
-    def compute_reward_0(self):
-        # Extract necessary environment observations
-        end_effector_pos = self.end_effector_position()
-        block_pos = self.block_position()
-    
-        # Compute distance between end_effector and block
-        distance = np.linalg.norm(end_effector_pos - block_pos)
-    
-        # Reward components
-        distance_reward_weight = -1.0  # Weight for the distance reward component. The sign is negative to minimize distance
-        distance_reward = distance_reward_weight * np.tanh(distance)  # Using tanh to normalize the distance reward component
-        
-        # Compute the total reward
-        total_reward = distance_reward
-    
-        # Organizing the reward components into a dictionary
-        reward_dict = {
-            "distance_reward": distance_reward,
-        }
-    
-        return total_reward, reward_dict
-    
-    def compute_reward_1(self):
-        # Calculate Block's relative linear velocity
-        block_relative_linear_velocity = self.block_relative_linear_velocity()
-        # Define the weight for the velocity minimization objective
-        weight_velocity_minimization = 1.0
-    
-        # Reward component for minimizing the block's relative linear velocity
-        reward_block_velocity_minimization = -np.linalg.norm(block_relative_linear_velocity) * weight_velocity_minimization
-    
-        # Total Reward Calculation
-        reward = reward_block_velocity_minimization
-        
-        # Dictionary for individual reward components
-        reward_dict = {
-            "reward_block_velocity_minimization": reward_block_velocity_minimization
-        }
-        
-        return reward, reward_dict
-    
-    def compute_reward_2(self):
-        # Extracting necessary environment observations for computing rewards
-        block_position = self.block_position()
-        goal_position = self.goal_position()
-    
-        # Reward component calculations
-        # 1. Distance between block and goal - we want to minimize this distance
-        block_to_goal_distance = np.linalg.norm(block_position - goal_position)
-    
-        # 2. Transform the distance into a reward component using negative to make it a "cost" to minimize
-        block_to_goal_distance_reward = -block_to_goal_distance
-        
-        # Reward dictionary for detailed breakdown (good for debugging or understanding agent's performance)
-        reward_dict = {
-            'block_to_goal_distance_reward': block_to_goal_distance_reward,
-        }
-    
-        # Weighting parameters for each reward component
-        distance_weight = 1.0  # You can adjust weights to prioritize certain aspects over others
-    
-        # Total reward calculation
-        reward = (distance_weight * block_to_goal_distance_reward)
-    
-        return reward, reward_dict
-    
-    # Function to loop through compute_reward_X functions and sum their outputs
     def compute_reward_curriculum(self):
-        total_reward = 0
-        total_reward_dict = {}
-        n = 2
-        for i in range(n + 1):  # Including n, hence n + 1
-            # Construct the function name based on i
-            function_name = f'compute_reward_{i}'
-            # Get the function by name and call it
-            function = getattr(self, function_name, None)
-            if function:
-                # Call the function and add its return value to the total sum
-                reward, reward_dict = function()
-                total_reward += reward
-                total_reward_dict.update(reward_dict)
-            else:
-                raise NameError(f"Function {function_name} not found.")
-        return total_reward, total_reward_dict
+        import numpy as np
+    
+        # Extract necessary environmental observations
+        block_pos = self.block_position()
+        goal_pos = self.goal_position()
+    
+        # Calculate distance between block and goal
+        distance_block_to_goal = np.linalg.norm(block_pos - goal_pos)
+    
+        # Check if the block is within the desired threshold from the goal
+        success = distance_block_to_goal < 0.05
+        reward = 0.0 if success else -1.0
+    
+        # Reward components for insight into what's being optimized
+        reward_dict = {
+            'distance_block_to_goal': distance_block_to_goal,
+            'success': success
+        }
+    
+        return reward, reward_dict

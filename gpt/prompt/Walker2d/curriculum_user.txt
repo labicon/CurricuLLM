@@ -1,0 +1,20 @@
+This environment is Walker2d environment
+The walker is a two-dimensional two-legged figure that consist of seven main body parts - a single torso at the top (with the two legs splitting after the torso), two thighs in the middle below the torso, two legs in the bottom below the thighs, and two feet attached to the legs on which the entire body rests. 
+The original task is to walk in the forward(+x) direction by applying torques on the six hinges connecting the seven body parts.
+
+The variables you can use to describe the curriculum includes
+(1) torso_x_coordinate: x coordinate of the torso body
+(2) torso_z_coordinate: height of Walker2d
+(3) torso_angle: angle of torso
+(4) right_joint_angle: angle of the right thigh joint, right leg joint, and right foot joint
+(5) left_joint_angle: angle of the left thigh joint, left leg joint, and left foot joint
+(6) torso_x_velocity: velocity of the torso in x direction
+(7) torso_z_velocity: velocity of the torso in z direction
+(8) torso_angular_velocity: angular velocity of the torso
+(9) right_angular_velocity: angular velocity of right thigh joint, right leg joint, right foot joint
+(9) left_angular_velocity: angular velocity of left thigh joint, left leg joint, left foot joint
+
+In the original task, the walker is healthy if the z coordinate of the torso is in (0.8, 2), torso angle is in (-1,1).
+Therefore, original task can be described as maximizing torso x velocity while maintaining the walker healthy.
+
+All state are initialized in 0.0, except for torso_z_coordinate which is initialized in 1.25

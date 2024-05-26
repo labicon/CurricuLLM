@@ -363,122 +363,44 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
         return distance
 
-    def compute_reward_0(self):
-        ant_obs = self.get_ant_obs()
-        velocity = self.torso_velocity(ant_obs)
-        velocity_magnitude = np.linalg.norm(velocity)
-    
-        # Reward Component Weights
-        velocity_weight = 1.0  # Emphasize increasing the magnitude of velocity
-    
-        # Reward Components
-        reward_velocity = np.tanh(velocity_magnitude) * velocity_weight
-    
-        # Total Reward
-        reward = reward_velocity
-    
-        reward_dict = {
-            'velocity': reward_velocity,
-        }
-    
-        return reward, reward_dict
-    
-    def compute_reward_1(self):
-        ant_obs = self.get_ant_obs()
-        torso_orientation = self.torso_orientation(ant_obs)
-        desired_orientation = np.array([1.0, 0.0, 0.0, 0.0])
+        def compute_reward_curriculum(self):
+            # Get the observations
+            ant_obs = self.get_ant_obs()
         
-        # Reward component for maintaining the desired orientation
-        orientation_error = np.linalg.norm(torso_orientation - desired_orientation)
-        orientation_reward = -np.tanh(orientation_error)
+            # From previous tasks:
+            # Task: Learning to Move
+            velocity_weight = 0.3  # Adjusted weight to balance curriculum importance
+            torso_velocity = self.torso_velocity(ant_obs)
+            velocity_reward = np.tanh(np.linalg.norm(torso_velocity)) * velocity_weight
         
-        # Weighting parameter for the orientation reward component
-        orientation_weight = 1.0
+            # Task: Orientation Control
+            orientation_weight = 0.3  # Adjusted weight, remains essential but now sharing focus with new and previous tasks
+            torso_orientation = self.torso_orientation(ant_obs)
+            desired_orientation = np.array([1.0, 0.0, 0.0, 0.0])
+            orientation_error = np.linalg.norm(torso_orientation - desired_orientation)
+            orientation_reward = -orientation_error * orientation_weight
         
-        # Total reward calculation
-        total_reward = orientation_reward * orientation_weight
+            # Task: Goal-directed Movement
+            goal_distance_weight = 0.3  # Adjusted weight, still vital but needs to accommodate the focus on original task
+            goal_distance = self.goal_distance(ant_obs)
+            goal_distance_reward = -goal_distance * goal_distance_weight
         
-        # Dictionary of individual reward components
-        reward_dict = {
-            'orientation_reward': orientation_reward,
-        }
-        
-        return total_reward, reward_dict
-    
-    def compute_reward_2(self):
-        # Define weight for each reward component
-        weight_goal_distance = -1.0  # We want to minimize the distance to the goal
-    
-        # Get current ant observation
-        ant_obs = self.get_ant_obs()
-    
-        # Calculate distance to the goal
-        goal_distance = self.goal_distance(ant_obs)
-    
-        # Reward for minimizing the distance to the goal
-        reward_goal_distance = weight_goal_distance * np.tanh(goal_distance)
-    
-        # Total reward is the sum of all individual rewards
-        total_reward = reward_goal_distance
-    
-        # Dictionary of individual reward components
-        reward_dict = {
-            'goal_distance_reward': reward_goal_distance,
-        }
-    
-        return total_reward, reward_dict
-    
-    def compute_reward_3(self):
-        # Extract relevant observation data
-        ant_obs = self.get_ant_obs()
-        goal_distance = self.goal_distance(ant_obs)
-        torso_orientation = self.torso_orientation(ant_obs)
-        torso_velocity = self.torso_velocity(ant_obs)
-        torso_angular_velocity = self.torso_angular_velocity(ant_obs)
-        
-        # Reward component weights
-        goal_distance_weight = 2.0
-        orientation_weight = 1.0
-        velocity_weight = 1.5
-        angular_velocity_weight = 1.0
-        
-        # Compute each component of the reward
-        goal_distance_reward = -np.tanh(goal_distance_weight * np.linalg.norm(goal_distance - 0.45))
-        orientation_reward = np.tanh(orientation_weight * np.linalg.norm(torso_orientation - np.array([1.0, 0.0, 0.0, 0.0])))
-        velocity_reward = -np.tanh(velocity_weight * np.linalg.norm(torso_velocity))
-        angular_velocity_reward = -np.tanh(angular_velocity_weight * np.linalg.norm(torso_angular_velocity))
-        
-        # Total weighted reward
-        reward = goal_distance_weight * goal_distance_reward +\
-                 orientation_weight * orientation_reward +\
-                 velocity_weight * velocity_reward +\
-                 angular_velocity_weight * angular_velocity_reward
-        
-        # Reward dictionary
-        reward_dict = {
-            'goal_distance_reward': goal_distance_reward,
-            'orientation_reward': orientation_reward,
-            'velocity_reward': velocity_reward,
-            'angular_velocity_reward': angular_velocity_reward
-        }
-        
-        return reward, reward_dict
-    
-    # Function to loop through compute_reward_X functions and sum their outputs
-    def compute_reward_curriculum(self):
-        total_reward = 0
-        total_reward_dict = {}
-        n = 3
-        for i in range(n + 1):  # Including n, hence n + 1
-            # Construct the function name based on i
-            function_name = f'compute_reward_{i}'
-            # Get the function by name and call it
-            function = getattr(self, function_name, None)
-            if function:
-                # Call the function and add its return value to the total sum
-                reward, reward_dict = function()
-                total_reward += reward
-                total_reward_dict.update(reward_dict)
+            # Current task: Original Task Reward Function
+            original_task_weight = 3.0  # Higher weight to emphasize the importance of the final task within the curriculum
+            if goal_distance < 0.45:
+                original_task_reward = 1.0 * original_task_weight
             else:
-                raise NameError(f"Function {function_name} not found.")
-        return total_reward, total_reward_dict
+                original_task_reward = 0.0
+                
+            # Reward components dictionary for breakdown and analysis
+            reward_dict = {
+                'velocity_reward': velocity_reward,
+                'orientation_reward': orientation_reward,
+                'goal_distance_reward': goal_distance_reward,
+                'original_task_reward': original_task_reward,
+            }
+        
+            # Total reward calculation
+            reward = sum(reward_dict.values())
+        
+            return reward, reward_dict

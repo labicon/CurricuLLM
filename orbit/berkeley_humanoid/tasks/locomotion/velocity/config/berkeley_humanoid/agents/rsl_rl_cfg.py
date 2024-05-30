@@ -40,7 +40,7 @@ class BerkeleyHumanoidFlatPPORunnerCfg(BerkeleyHumanoidRoughPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
 
-        self.max_iterations = 300
+        self.max_iterations = 15000
         self.experiment_name = "berkeley_humanoid_flat"
         self.policy.actor_hidden_dims = [128, 128, 128]
         self.policy.critic_hidden_dims = [128, 128, 128]

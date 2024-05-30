@@ -20,8 +20,8 @@ INSTALL_REQUIRES = [
 setup(
     # TODO: Change your package naming
     # -----------------------------------------------------------------
-    name="orbit.ext_template",
-    packages=["orbit.ext_template"],
+    name="orbit.berkeley_humanoid",
+    packages=["orbit.berkeley_humanoid"],
     # -----------------------------------------------------------------
     author=EXTENSION_TOML_DATA["package"]["author"],
     maintainer=EXTENSION_TOML_DATA["package"]["maintainer"],

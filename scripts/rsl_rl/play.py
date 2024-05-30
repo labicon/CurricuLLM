@@ -43,7 +43,7 @@ from omni.isaac.orbit_tasks.utils.wrappers.rsl_rl import (
 )
 
 # Import extensions to set up environment tasks
-import orbit.ext_template.tasks  # noqa: F401  TODO: import orbit.<your_extension_name>
+import orbit.berkeley_humanoid.tasks
 
 
 def main():

@@ -19,7 +19,7 @@ from omni.isaac.orbit.terrains import TerrainImporterCfg
 from omni.isaac.orbit.utils import configclass
 from omni.isaac.orbit.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
-import orbit.ext_template.tasks.locomotion.velocity.mdp as mdp
+import orbit.berkeley_humanoid.tasks.locomotion.velocity.mdp as mdp
 
 ##
 # Pre-defined configs

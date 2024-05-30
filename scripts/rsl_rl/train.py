@@ -46,7 +46,7 @@ from omni.isaac.orbit_tasks.utils import get_checkpoint_path, parse_env_cfg
 from omni.isaac.orbit_tasks.utils.wrappers.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlVecEnvWrapper
 
 # Import extensions to set up environment tasks
-import orbit.ext_template.tasks  # noqa: F401  TODO: import orbit.<your_extension_name>
+import orbit.berkeley_humanoid.tasks
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True

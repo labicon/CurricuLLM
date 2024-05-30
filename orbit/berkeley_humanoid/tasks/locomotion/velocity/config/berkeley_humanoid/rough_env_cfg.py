@@ -5,20 +5,17 @@ from orbit.berkeley_humanoid.tasks.locomotion.velocity.velocity_env_cfg import L
 ##
 # Pre-defined configs
 ##
-from omni.isaac.orbit_assets.anymal import ANYMAL_D_CFG  # isort: skip
-
-
+from orbit.berkeley_humanoid.assets.berkeley_humanoid import BERKELEY_HUMANOID_CFG
 @configclass
-class AnymalDRoughEnvCfg(LocomotionVelocityRoughEnvCfg):
+class BerkeleyHumanoidRoughEnvCfg(LocomotionVelocityRoughEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
-        # switch robot to anymal-d
-        self.scene.robot = ANYMAL_D_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = BERKELEY_HUMANOID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
 
 @configclass
-class AnymalDRoughEnvCfg_PLAY(AnymalDRoughEnvCfg):
+class BerkeleyHumanoidRoughEnvCfg_PLAY(BerkeleyHumanoidRoughEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()

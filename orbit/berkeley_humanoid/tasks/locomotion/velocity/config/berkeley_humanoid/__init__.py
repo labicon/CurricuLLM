@@ -17,7 +17,7 @@ gym.register(
 )
 
 gym.register(
-    id="Template-Velocity-Flat-Anymal-D-Play-v0",
+    id="Velocity-Flat-Berkeley-Humanoid-Play-v0",
     entry_point="omni.isaac.orbit.envs:RLTaskEnv",
     disable_env_checker=True,
     kwargs={

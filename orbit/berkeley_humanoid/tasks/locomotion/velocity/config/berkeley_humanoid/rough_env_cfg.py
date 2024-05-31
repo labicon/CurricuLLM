@@ -15,6 +15,7 @@ class BerkeleyHumanoidRoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         super().__post_init__()
         self.scene.robot = BERKELEY_HUMANOID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.rewards.flat_orientation_l2.weight = -1.0
+        self.rewards.dof_pos_limits.weight = -1.0
 
         self.observations.policy.height_scan = None
         self.scene.height_scanner = None

@@ -32,7 +32,7 @@ BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdealPDActuatorCfg(
     joint_names_expr=[".*FFE"],
     effort_limit=10.0,
     velocity_limit=23,
-    stiffness={".*": 1.5},
+    stiffness={".*": 1.0},
     damping={".*": 0.1},
 )
 
@@ -40,7 +40,7 @@ BERKELEY_HUMANOID_FAA_ACTUATOR_CFG = IdealPDActuatorCfg(
     joint_names_expr=[".*FAA"],
     effort_limit=5.0,
     velocity_limit=42,
-    stiffness={".*": 1.5},
+    stiffness={".*": 1.0},
     damping={".*": 0.1},
 )
 

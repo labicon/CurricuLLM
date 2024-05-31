@@ -14,11 +14,8 @@ TRIMESH_TERRAINS_CFG = TerrainGeneratorCfg(
     slope_threshold=0.75,
     use_cache=False,
     sub_terrains={
-        "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
-            proportion=0.5, noise_range=(0.02, 0.10), noise_step=0.02, border_width=0.25
-        ),
-        "hf_pyramid_slope": terrain_gen.HfPyramidSlopedTerrainCfg(
-            proportion=0.5, slope_range=(0.0, 0.4), platform_width=2.0, border_width=0.25
+        "flat": terrain_gen.MeshPlaneTerrainCfg(
+            proportion=1.0,
         ),
     },
 )

@@ -15,7 +15,10 @@ TRIMESH_TERRAINS_CFG = TerrainGeneratorCfg(
     use_cache=False,
     sub_terrains={
         "flat": terrain_gen.MeshPlaneTerrainCfg(
-            proportion=1.0,
+            proportion=0.5,
+        ),
+        "hf_pyramid_slope": terrain_gen.HfPyramidSlopedTerrainCfg(
+            proportion=0.5, slope_range=(0.0, 0.4), platform_width=2.0, border_width=0.25
         ),
     },
 )

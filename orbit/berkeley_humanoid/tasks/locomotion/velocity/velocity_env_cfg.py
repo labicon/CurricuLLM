@@ -161,9 +161,16 @@ class RandomizationCfg:
     )
 
     add_base_mass = RandTerm(
-        func=mdp.add_body_mass,
+        func=mdp.randomize_rigid_body_mass,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="torso"), "mass_range": (-1.0, 1.0)},
+        params={"asset_cfg": SceneEntityCfg("robot", body_names="torso"), "mass_range": (-1.0, 1.0),
+                "operation": "add"},
+    )
+
+    scale_all_links_mass = RandTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=".*"), "mass_range": (0.9, 1.1), "operation": "scale"},
     )
 
     # reset

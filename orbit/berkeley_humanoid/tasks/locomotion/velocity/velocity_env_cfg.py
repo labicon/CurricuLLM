@@ -153,9 +153,9 @@ class RandomizationCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.8, 0.8),
-            "dynamic_friction_range": (0.6, 0.6),
-            "restitution_range": (0.0, 0.0),
+            "static_friction_range": (0.5, 1.25),
+            "dynamic_friction_range": (0.5, 1.25),
+            "restitution_range": (0.0, 0.2),
             "num_buckets": 64,
         },
     )

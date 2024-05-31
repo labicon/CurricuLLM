@@ -6,6 +6,8 @@ from orbit.berkeley_humanoid.tasks.locomotion.velocity.velocity_env_cfg import L
 # Pre-defined configs
 ##
 from orbit.berkeley_humanoid.assets.berkeley_humanoid import BERKELEY_HUMANOID_CFG
+
+
 @configclass
 class BerkeleyHumanoidRoughEnvCfg(LocomotionVelocityRoughEnvCfg):
     def __post_init__(self):

@@ -229,12 +229,12 @@ class RewardsCfg:
     dof_acc_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     feet_air_time = RewTerm(
-        func=mdp.feet_air_time,
+        func=mdp.feet_air_time_positive_biped,
         weight=0.125,
         params={
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"),
             "command_name": "base_velocity",
-            "threshold": 0.5,
+            "threshold": 1.0,
         },
     )
     undesired_contacts = RewTerm(

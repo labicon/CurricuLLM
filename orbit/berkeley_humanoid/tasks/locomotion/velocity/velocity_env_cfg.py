@@ -24,7 +24,7 @@ import orbit.berkeley_humanoid.tasks.locomotion.velocity.mdp as mdp
 ##
 # Pre-defined configs
 ##
-from orbit.berkeley_humanoid.terrains.terrain_generator_cfg import TRIMESH_TERRAINS_CFG
+from orbit.berkeley_humanoid.terrains.terrain_generator_cfg import ROUGH_TERRAINS_CFG
 
 
 ##
@@ -40,8 +40,8 @@ class MySceneCfg(InteractiveSceneCfg):
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator",
-        terrain_generator=TRIMESH_TERRAINS_CFG,
-        max_init_terrain_level=5,
+        terrain_generator=ROUGH_TERRAINS_CFG,
+        max_init_terrain_level=1,
         collision_group=-1,
         physics_material=sim_utils.RigidBodyMaterialCfg(
             friction_combine_mode="multiply",

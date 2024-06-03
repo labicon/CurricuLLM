@@ -235,7 +235,7 @@ class RewardsCfg:
     joint_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-1.0e-5)
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     feet_air_time = RewTerm(
-        func=mdp.feet_air_time_positive_biped,
+        func=mdp.feet_air_time,
         weight=2.0,
         params={
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"),

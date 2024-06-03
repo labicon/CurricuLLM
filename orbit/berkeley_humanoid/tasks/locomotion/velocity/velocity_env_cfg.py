@@ -173,6 +173,28 @@ class RandomizationCfg:
         params={"asset_cfg": SceneEntityCfg("robot", body_names=".*"), "mass_range": (0.9, 1.1), "operation": "scale"},
     )
 
+    add_all_joints_friction = RandTerm(
+        func=mdp.randomize_joint_parameters,
+        mode="startup",
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*"), "friction_range": (0.05, 0.5),
+                "operation": "add"},
+    )
+
+    add_kfe_friction = RandTerm(
+        func=mdp.randomize_joint_parameters,
+        mode="startup",
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*KFE"), "friction_range": (0.0, 0.5),
+                "operation": "add"},
+    )
+
+    add_ffe_friction = RandTerm(
+        func=mdp.randomize_joint_parameters,
+        mode="startup",
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*FFE"), "friction_range": (0.0, 1.5),
+                "operation": "add"},
+    )
+
+
     # reset
     base_external_force_torque = RandTerm(
         func=mdp.apply_external_force_torque,

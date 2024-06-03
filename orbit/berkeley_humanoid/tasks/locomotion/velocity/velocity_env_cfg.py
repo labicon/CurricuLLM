@@ -266,6 +266,14 @@ class RewardsCfg:
             "threshold_max": 0.5,
         },
     )
+    feet_slide = RewTerm(
+        func=mdp.feet_slide,
+        weight=-0.25,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"),
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*faa"),
+        },
+    )
     undesired_contacts = RewTerm(
         func=mdp.undesired_contacts,
         weight=-1.0,

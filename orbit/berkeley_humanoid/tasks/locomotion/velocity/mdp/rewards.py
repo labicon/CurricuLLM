@@ -53,11 +53,3 @@ def feet_air_time_positive_biped(env, command_name: str, threshold_min: float, t
     # no reward for zero command
     reward *= torch.norm(env.command_manager.get_command(command_name)[:, :2], dim=1) > 0.1
     return reward
-
-def hip_pos(env, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
-    # extract the used quantities (to enable type-hinting)
-    asset: Articulation = env.scene[asset_cfg.name]
-    hip_ids = [0,1,2,3,4,5]
-    angle = asset.data.joint_pos[:, hip_ids] - asset.data.default_joint_pos[:, hip_ids]
-    reward = torch.sum(torch.abs(angle), dim=1)
-    return reward

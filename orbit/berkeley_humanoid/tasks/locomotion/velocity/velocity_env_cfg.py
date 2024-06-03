@@ -235,7 +235,6 @@ class RewardsCfg:
     joint_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-1.0e-5)
     joint_deviation_l1 = RewTerm(func=mdp.joint_deviation_l1, weight=-0.05)
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
-    hip_pos = RewTerm(func=mdp.hip_pos, weight=-0.1)
     feet_air_time = RewTerm(
         func=mdp.feet_air_time_positive_biped,
         weight=2.0,
@@ -250,6 +249,11 @@ class RewardsCfg:
         func=mdp.undesired_contacts,
         weight=-1.0,
         params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*hfe"), "threshold": 1.0},
+    )
+    joint_deviation_hip = RewTerm(
+        func=mdp.joint_deviation_l1,
+        weight=-0.1,
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HR", ".*HAA"])},
     )
     # -- optional penalties
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=0.0)

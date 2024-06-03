@@ -167,30 +167,30 @@ class RandomizationCfg:
                 "operation": "add"},
     )
 
-    scale_all_links_mass = RandTerm(
+    scale_all_link_masses = RandTerm(
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
         params={"asset_cfg": SceneEntityCfg("robot", body_names=".*"), "mass_range": (0.9, 1.1), "operation": "scale"},
     )
 
-    add_all_joints_friction = RandTerm(
+    add_all_joint_frictions = RandTerm(
         func=mdp.randomize_joint_parameters,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*"), "friction_range": (0.05, 0.5),
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "friction_range": (0.05, 0.5),
                 "operation": "add"},
     )
 
-    add_kfe_friction = RandTerm(
+    add_kfe_frictions = RandTerm(
         func=mdp.randomize_joint_parameters,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*KFE"), "friction_range": (0.0, 0.5),
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*KFE"]), "friction_range": (0.0, 0.5),
                 "operation": "add"},
     )
 
-    add_ffe_friction = RandTerm(
+    add_ffe_frictions = RandTerm(
         func=mdp.randomize_joint_parameters,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*FFE"), "friction_range": (0.0, 1.5),
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*FFE"]), "friction_range": (0.0, 1.5),
                 "operation": "add"},
     )
 
@@ -310,8 +310,6 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     terrain_levels = CurrTerm(func=mdp.terrain_levels_vel)
-    less_feet_air_time = CurrTerm(func=mdp.modify_reward_weight,
-                                  params={"term_name": "feet_air_time", "weight": 0.25, "num_steps": 1000})
 
 ##
 # Environment configuration

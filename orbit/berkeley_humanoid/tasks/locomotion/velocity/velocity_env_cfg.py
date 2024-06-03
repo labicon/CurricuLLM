@@ -233,7 +233,6 @@ class RewardsCfg:
     lin_vel_z_l2 = RewTerm(func=mdp.lin_vel_z_l2, weight=-2.0)
     ang_vel_xy_l2 = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.05)
     joint_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-1.0e-5)
-    joint_deviation_l1 = RewTerm(func=mdp.joint_deviation_l1, weight=-0.05)
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     feet_air_time = RewTerm(
         func=mdp.feet_air_time_positive_biped,
@@ -276,7 +275,8 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     terrain_levels = CurrTerm(func=mdp.terrain_levels_vel)
-
+    less_feet_air_time = CurrTerm(func=mdp.modify_reward_weight,
+                                  params={"term_name": "feet_air_time", "weight": 0.25, "num_steps": 1000})
 
 ##
 # Environment configuration

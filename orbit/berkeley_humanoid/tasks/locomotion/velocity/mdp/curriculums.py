@@ -118,3 +118,31 @@ def modify_push_force(
             env.event_manager.set_term_cfg('push_robot', term_cfg)
 
     return curr_setting
+
+
+def modify_command_velocity(
+    env: RLTaskEnv, 
+    env_ids: Sequence[int], 
+    term_name: str, 
+    max_velocity: Sequence[float], 
+    interval: int, 
+    starting_step: float = 0.0
+    ):
+
+    command_cfg = env.command_manager.get_term('base_velocity').cfg
+    curr_lin_vel_x = command_cfg.ranges.lin_vel_x
+
+    if env.common_step_counter < starting_step:
+        return curr_lin_vel_x[1]
+    
+    if env.common_step_counter % interval == 0:
+        term_cfg = env.reward_manager.get_term_cfg(term_name)
+        rew = env.reward_manager._episode_sums[term_name][env_ids]
+        if torch.mean(rew) / env.max_episode_length > 0.8 * term_cfg.weight * env.step_dt:
+            curr_lin_vel_x = (
+                np.clip(curr_lin_vel_x[0] - 0.5, max_velocity[0], 0.), 
+                np.clip(curr_lin_vel_x[1] + 0.5, 0., max_velocity[1])
+            )
+            command_cfg.ranges.lin_vel_x = curr_lin_vel_x
+
+    return curr_lin_vel_x[1]

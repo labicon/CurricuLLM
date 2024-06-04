@@ -20,6 +20,7 @@ from omni.isaac.orbit.utils import configclass
 from omni.isaac.orbit.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
 import orbit.berkeley_humanoid.tasks.locomotion.velocity.mdp as mdp
+from orbit.berkeley_humanoid.sensors.contact_foot_height_sensor_cfg import ContactFootHeightSensorCfg
 
 ##
 # Pre-defined configs
@@ -66,7 +67,7 @@ class MySceneCfg(InteractiveSceneCfg):
         debug_vis=False,
         mesh_prim_paths=["/World/ground"],
     )
-    contact_forces = ContactSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3, track_air_time=True)
+    contact_forces = ContactFootHeightSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3, track_air_time=True, track_pose=True)
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
@@ -268,12 +269,13 @@ class RewardsCfg:
     )
     foot_clearance = RewTerm(
         func=mdp.foot_clearance_reward,
-        weight=0.0,
+        weight=0.2,
         params={
             "std": 0.05,
             "tanh_mult": 2.0,
             "target_height": 0.1,
             "asset_cfg": SceneEntityCfg("robot", body_names=".*faa"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"),
         },
     )
     feet_slide = RewTerm(

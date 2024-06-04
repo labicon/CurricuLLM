@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from omni.isaac.orbit.assets import Articulation, RigidObject
 from omni.isaac.orbit.managers import SceneEntityCfg
 from omni.isaac.orbit.sensors import ContactSensor
+from orbit.berkeley_humanoid.sensors.contact_foot_height_sensor import ContactFootHeightSensor
 
 if TYPE_CHECKING:
     from omni.isaac.orbit.envs import RLTaskEnv
@@ -71,10 +72,13 @@ def feet_slide(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg = Scen
     return reward
 
 
-def foot_clearance_reward(env, asset_cfg: SceneEntityCfg, target_height: float, std: float, tanh_mult: float) -> torch.Tensor:
+def foot_clearance_reward(env, asset_cfg: SceneEntityCfg, sensor_cfg: SceneEntityCfg, target_height: float, std: float, tanh_mult: float) -> torch.Tensor:
     """Reward the swinging feet for clearing a specified height off the ground"""
+    contact_sensor: ContactFootHeightSensor = env.scene.sensors[sensor_cfg.name]
+    # compute the reward
+    current_relative_height = contact_sensor.data.current_relative_height[:, sensor_cfg.body_ids]
+    foot_z_target_error = torch.square(current_relative_height - target_height)
     asset: RigidObject = env.scene[asset_cfg.name]
-    foot_z_target_error = torch.square(asset.data.body_pos_w[:, asset_cfg.body_ids, 2] - target_height)
     foot_velocity_tanh = torch.tanh(tanh_mult * torch.norm(asset.data.body_lin_vel_w[:, asset_cfg.body_ids, :2], dim=2))
     reward = foot_z_target_error * foot_velocity_tanh
     return torch.exp(-torch.sum(reward, dim=1) / std)

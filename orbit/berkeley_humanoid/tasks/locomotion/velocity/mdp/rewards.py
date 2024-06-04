@@ -3,6 +3,7 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
+from omni.isaac.orbit.assets import Articulation, RigidObject
 from omni.isaac.orbit.managers import SceneEntityCfg
 from omni.isaac.orbit.sensors import ContactSensor
 
@@ -68,3 +69,12 @@ def feet_slide(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg = Scen
     body_vel = asset.data.body_lin_vel_w[:, asset_cfg.body_ids, :2]
     reward = torch.sum(body_vel.norm(dim=-1) * contacts, dim=1)
     return reward
+
+
+def foot_clearance_reward(env, asset_cfg: SceneEntityCfg, target_height: float, std: float, tanh_mult: float) -> torch.Tensor:
+    """Reward the swinging feet for clearing a specified height off the ground"""
+    asset: RigidObject = env.scene[asset_cfg.name]
+    foot_z_target_error = torch.square(asset.data.body_pos_w[:, asset_cfg.body_ids, 2] - target_height)
+    foot_velocity_tanh = torch.tanh(tanh_mult * torch.norm(asset.data.body_lin_vel_w[:, asset_cfg.body_ids, :2], dim=2))
+    reward = foot_z_target_error * foot_velocity_tanh
+    return torch.exp(-torch.sum(reward, dim=1) / std)

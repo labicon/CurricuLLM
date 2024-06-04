@@ -266,6 +266,16 @@ class RewardsCfg:
             "threshold_max": 0.5,
         },
     )
+    foot_clearance = RewTerm(
+        func=mdp.foot_clearance_reward,
+        weight=0.0,
+        params={
+            "std": 0.05,
+            "tanh_mult": 2.0,
+            "target_height": 0.1,
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*faa"),
+        },
+    )
     feet_slide = RewTerm(
         func=mdp.feet_slide,
         weight=-0.25,

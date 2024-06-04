@@ -124,7 +124,14 @@ class ObservationsCfg:
             noise=Unoise(n_min=-0.05, n_max=0.05),
         )
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.05, n_max=0.05))
+        hip_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.03, n_max=0.03),
+                          params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*HR", ".*HAA", ".*HFE"])})
+        kfe_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.05, n_max=0.05),
+                          params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*KFE"])})
+        ffe_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.08, n_max=0.08),
+                          params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*FFE"])})
+        faa_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.03, n_max=0.03),
+                          params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*FAA"])})
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-1.5, n_max=1.5))
         actions = ObsTerm(func=mdp.last_action)
 

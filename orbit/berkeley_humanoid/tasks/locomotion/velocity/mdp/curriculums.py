@@ -85,10 +85,9 @@ def modify_push_force(
         force: The force of the push.
         num_steps: The number of steps after which the change should be applied.
     """
+    term_cfg = env.event_manager.get_term_cfg('push_robot')
+    curr_setting = term_cfg.params['velocity_range']['x'][1]
     if env.common_step_counter < starting_step:
-        term_cfg = env.event_manager.get_term_cfg('push_robot')
-        # update term settings
-        curr_setting = term_cfg.params['velocity_range']['x'][1]
         return curr_setting
     if env.common_step_counter % interval == 0:
 

@@ -276,7 +276,7 @@ class RewardsCfg:
     )
     foot_clearance = RewTerm(
         func=mdp.foot_clearance_reward,
-        weight=0.2,
+        weight=0.,
         params={
             "std": 0.05,
             "tanh_mult": 2.0,
@@ -329,7 +329,7 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     terrain_levels = CurrTerm(func=mdp.terrain_levels_vel)
-    push_force_levels = CurrTerm(func=mdp.modify_push_force, params={"term_name": "push_robot", "max_force": 1.0, "interval": 1000*24, "starting_step": 5000*24})
+    push_force_levels = CurrTerm(func=mdp.modify_push_force, params={"term_name": "push_robot", "max_velocity": [3.0, 3.0], "interval": 200*24, "starting_step": 5000*24})
 
 ##
 # Environment configuration

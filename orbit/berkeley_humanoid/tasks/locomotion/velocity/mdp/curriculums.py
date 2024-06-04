@@ -72,7 +72,7 @@ def modify_push_force(
         env: RLTaskEnv, 
         env_ids: Sequence[int], 
         term_name: str, 
-        max_force: float, 
+        max_velocity: Sequence[float], 
         interval: int, 
         starting_step: float = 0.0
         ):
@@ -90,13 +90,32 @@ def modify_push_force(
         # update term settings
         curr_setting = term_cfg.params['velocity_range']['x'][1]
         return curr_setting
-    if env.common_step_counter % interval == 0 and torch.sum(env.termination_manager._term_dones["base_contact"]) < env.num_envs / 10:
-        # obtain term settings
-        term_cfg = env.event_manager.get_term_cfg('push_robot')
-        # update term settings
-        curr_setting = term_cfg.params['velocity_range']['x'][1]
-        curr_setting = np.clip(curr_setting + 0.1, 0.0, max_force)
-        term_cfg.params['velocity_range']['x'] = (-curr_setting, curr_setting)
-        term_cfg.params['velocity_range']['y'] = (-curr_setting, curr_setting)
-        env.event_manager.set_term_cfg('push_robot', term_cfg)
+    if env.common_step_counter % interval == 0:
+
+        
+        if torch.sum(env.termination_manager._term_dones["base_contact"]) < torch.sum(env.termination_manager._term_dones["time_out"]) * 2:
+            # obtain term settings
+            term_cfg = env.event_manager.get_term_cfg('push_robot')
+            # update term settings
+            curr_setting = term_cfg.params['velocity_range']['x'][1]
+            curr_setting = np.clip(curr_setting * 1.5, 0.0, max_velocity[0])
+            term_cfg.params['velocity_range']['x'] = (-curr_setting, curr_setting)
+            curr_setting = term_cfg.params['velocity_range']['y'][1]
+            curr_setting = np.clip(curr_setting * 1.5, 0.0, max_velocity[1])
+            term_cfg.params['velocity_range']['y'] = (-curr_setting, curr_setting)
+            env.event_manager.set_term_cfg('push_robot', term_cfg)
+        
+
+        if torch.sum(env.termination_manager._term_dones["base_contact"]) > torch.sum(env.termination_manager._term_dones["time_out"]) / 2:
+            # obtain term settings
+            term_cfg = env.event_manager.get_term_cfg('push_robot')
+            # update term settings
+            curr_setting = term_cfg.params['velocity_range']['x'][1]
+            curr_setting = np.clip(curr_setting - 0.2, 0.0, max_velocity[0])
+            term_cfg.params['velocity_range']['x'] = (-curr_setting, curr_setting)
+            curr_setting = term_cfg.params['velocity_range']['y'][1]
+            curr_setting = np.clip(curr_setting - 0.2, 0.0, max_velocity[1])
+            term_cfg.params['velocity_range']['y'] = (-curr_setting, curr_setting)
+            env.event_manager.set_term_cfg('push_robot', term_cfg)
+
     return curr_setting

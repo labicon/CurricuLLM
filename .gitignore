@@ -2,3 +2,4 @@
 *.egg-info
 logs/
 _orbit*
+wandb/

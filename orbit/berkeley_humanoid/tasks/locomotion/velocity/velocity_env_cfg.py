@@ -329,6 +329,7 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     terrain_levels = CurrTerm(func=mdp.terrain_levels_vel)
+    push_force_levels = CurrTerm(func=mdp.modify_push_force, params={"term_name": "push_robot", "max_force": 1.0, "interval": 1000*24, "starting_step": 5000*24})
 
 ##
 # Environment configuration

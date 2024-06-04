@@ -7,6 +7,7 @@ the curriculum introduced by the function.
 from __future__ import annotations
 
 import torch
+import numpy as np
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
@@ -66,3 +67,36 @@ def modify_reward_weight(env: RLTaskEnv, env_ids: Sequence[int], term_name: str,
         # update term settings
         term_cfg.weight = weight
         env.reward_manager.set_term_cfg(term_name, term_cfg)
+
+def modify_push_force(
+        env: RLTaskEnv, 
+        env_ids: Sequence[int], 
+        term_name: str, 
+        max_force: float, 
+        interval: int, 
+        starting_step: float = 0.0
+        ):
+    """Curriculum that modifies a push force a given number of steps.
+
+    Args:
+        env: The learning environment.
+        env_ids: Not used since all environments are affected.
+        term_name: The name of the reward term.
+        force: The force of the push.
+        num_steps: The number of steps after which the change should be applied.
+    """
+    if env.common_step_counter < starting_step:
+        term_cfg = env.event_manager.get_term_cfg('push_robot')
+        # update term settings
+        curr_setting = term_cfg.params['velocity_range']['x'][1]
+        return curr_setting
+    if env.common_step_counter % interval == 0 and torch.sum(env.termination_manager._term_dones["base_contact"]) < env.num_envs / 10:
+        # obtain term settings
+        term_cfg = env.event_manager.get_term_cfg('push_robot')
+        # update term settings
+        curr_setting = term_cfg.params['velocity_range']['x'][1]
+        curr_setting = np.clip(curr_setting + 0.1, 0.0, max_force)
+        term_cfg.params['velocity_range']['x'] = (-curr_setting, curr_setting)
+        term_cfg.params['velocity_range']['y'] = (-curr_setting, curr_setting)
+        env.event_manager.set_term_cfg('push_robot', term_cfg)
+    return curr_setting

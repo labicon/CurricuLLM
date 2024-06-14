@@ -6,7 +6,7 @@ from orbit.berkeley_humanoid.assets import ORBIT_ASSET_DIR
 
 BERKELEY_HUMANOID_HXX_ACTUATOR_CFG = IdealPDActuatorCfg(
     joint_names_expr=[".*HR", ".*HAA"],
-    effort_limit=10.0,
+    effort_limit=20.0,
     velocity_limit=23,
     stiffness={".*": 10.0},
     damping={".*": 1.5},
@@ -14,7 +14,7 @@ BERKELEY_HUMANOID_HXX_ACTUATOR_CFG = IdealPDActuatorCfg(
 
 BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdealPDActuatorCfg(
     joint_names_expr=[".*HFE"],
-    effort_limit=12.0,
+    effort_limit=30.0,
     velocity_limit=20,
     stiffness={".*": 15.0},
     damping={".*": 1.5},
@@ -22,7 +22,7 @@ BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdealPDActuatorCfg(
 
 BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdealPDActuatorCfg(
     joint_names_expr=[".*KFE"],
-    effort_limit=15.0,
+    effort_limit=30.0,
     velocity_limit=14,
     stiffness={".*": 15.0},
     damping={".*": 1.5},
@@ -30,7 +30,7 @@ BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdealPDActuatorCfg(
 
 BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdealPDActuatorCfg(
     joint_names_expr=[".*FFE"],
-    effort_limit=10.0,
+    effort_limit=20.0,
     velocity_limit=23,
     stiffness={".*": 1.0},
     damping={".*": 0.1},

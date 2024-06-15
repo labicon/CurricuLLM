@@ -5,13 +5,9 @@ import torch
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-import omni.physics.tensors.impl.api as physx
-from pxr import PhysxSchema
+from omni.isaac.lab.utils.math import convert_quat
 
-import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.utils.math import convert_quat
-
-from omni.isaac.orbit.sensors.contact_sensor.contact_sensor import ContactSensor
+from omni.isaac.lab.sensors.contact_sensor.contact_sensor import ContactSensor
 from .contact_foot_height_sensor_data import ContactFootHeightSensorData
 
 if TYPE_CHECKING:

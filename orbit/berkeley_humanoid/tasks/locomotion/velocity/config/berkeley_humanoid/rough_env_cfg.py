@@ -1,4 +1,4 @@
-from omni.isaac.orbit.utils import configclass
+from omni.isaac.lab.utils import configclass
 
 from orbit.berkeley_humanoid.tasks.locomotion.velocity.velocity_env_cfg import LocomotionVelocityRoughEnvCfg
 

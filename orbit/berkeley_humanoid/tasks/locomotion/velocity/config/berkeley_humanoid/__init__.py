@@ -8,7 +8,7 @@ from . import agents, flat_env_cfg, rough_env_cfg
 
 gym.register(
     id="Velocity-Flat-Berkeley-Humanoid-v0",
-    entry_point="omni.isaac.orbit.envs:RLTaskEnv",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env_cfg.BerkeleyHumanoidFlatEnvCfg,
@@ -18,7 +18,7 @@ gym.register(
 
 gym.register(
     id="Velocity-Flat-Berkeley-Humanoid-Play-v0",
-    entry_point="omni.isaac.orbit.envs:RLTaskEnv",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env_cfg.BerkeleyHumanoidFlatEnvCfg_PLAY,
@@ -28,7 +28,7 @@ gym.register(
 
 gym.register(
     id="Velocity-Rough-Berkeley-Humanoid-v0",
-    entry_point="omni.isaac.orbit.envs:RLTaskEnv",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": rough_env_cfg.BerkeleyHumanoidRoughEnvCfg,
@@ -38,7 +38,7 @@ gym.register(
 
 gym.register(
     id="Velocity-Rough-Berkeley-Humanoid-Play-v0",
-    entry_point="omni.isaac.orbit.envs:RLTaskEnv",
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": rough_env_cfg.BerkeleyHumanoidRoughEnvCfg_PLAY,

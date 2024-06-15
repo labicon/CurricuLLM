@@ -3,12 +3,12 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING, Literal
 
-from omni.isaac.orbit.assets import Articulation, RigidObject
-from omni.isaac.orbit.managers import SceneEntityCfg
-from omni.isaac.orbit.envs.mdp.events import _randomize_prop_by_op
+from omni.isaac.lab.assets import Articulation, RigidObject
+from omni.isaac.lab.managers import SceneEntityCfg
+from omni.isaac.lab.envs.mdp.events import _randomize_prop_by_op
 
 if TYPE_CHECKING:
-    from omni.isaac.orbit.envs import BaseEnv
+    from omni.isaac.lab.envs import BaseEnv
 
 
 # Fix randomization of specific joint parameters

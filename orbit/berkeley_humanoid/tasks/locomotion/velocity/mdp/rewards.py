@@ -3,13 +3,13 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
-from omni.isaac.orbit.assets import Articulation, RigidObject
-from omni.isaac.orbit.managers import SceneEntityCfg
-from omni.isaac.orbit.sensors import ContactSensor
+from omni.isaac.lab.assets import Articulation, RigidObject
+from omni.isaac.lab.managers import SceneEntityCfg
+from omni.isaac.lab.sensors import ContactSensor
 from orbit.berkeley_humanoid.sensors.contact_foot_height_sensor import ContactFootHeightSensor
 
 if TYPE_CHECKING:
-    from omni.isaac.orbit.envs import RLTaskEnv
+    from omni.isaac.lab.envs import RLTaskEnv
 
 
 def feet_air_time(env: RLTaskEnv, command_name: str, sensor_cfg: SceneEntityCfg, threshold_min: float,

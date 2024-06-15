@@ -1,6 +1,6 @@
-import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.actuators import IdealPDActuatorCfg
-from omni.isaac.orbit.assets.articulation import ArticulationCfg
+import omni.isaac.lab.sim as sim_utils
+from omni.isaac.lab.actuators import IdealPDActuatorCfg
+from omni.isaac.lab.assets.articulation import ArticulationCfg
 
 from orbit.berkeley_humanoid.assets import ORBIT_ASSET_DIR
 

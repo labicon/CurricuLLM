@@ -3,21 +3,21 @@ from __future__ import annotations
 import math
 from dataclasses import MISSING
 
-import omni.isaac.orbit.sim as sim_utils
-from omni.isaac.orbit.assets import ArticulationCfg, AssetBaseCfg
-from omni.isaac.orbit.envs import RLTaskEnvCfg
-from omni.isaac.orbit.managers import CurriculumTermCfg as CurrTerm
-from omni.isaac.orbit.managers import ObservationGroupCfg as ObsGroup
-from omni.isaac.orbit.managers import ObservationTermCfg as ObsTerm
-from omni.isaac.orbit.managers import RandomizationTermCfg as RandTerm
-from omni.isaac.orbit.managers import RewardTermCfg as RewTerm
-from omni.isaac.orbit.managers import SceneEntityCfg
-from omni.isaac.orbit.managers import TerminationTermCfg as DoneTerm
-from omni.isaac.orbit.scene import InteractiveSceneCfg
-from omni.isaac.orbit.sensors import ContactSensorCfg, RayCasterCfg, patterns
-from omni.isaac.orbit.terrains import TerrainImporterCfg
-from omni.isaac.orbit.utils import configclass
-from omni.isaac.orbit.utils.noise import AdditiveUniformNoiseCfg as Unoise
+import omni.isaac.lab.sim as sim_utils
+from omni.isaac.lab.assets import ArticulationCfg, AssetBaseCfg
+from omni.isaac.lab.envs import ManagerBasedRLEnvCfg
+from omni.isaac.lab.managers import CurriculumTermCfg as CurrTerm
+from omni.isaac.lab.managers import ObservationGroupCfg as ObsGroup
+from omni.isaac.lab.managers import ObservationTermCfg as ObsTerm
+from omni.isaac.lab.managers import RandomizationTermCfg as RandTerm
+from omni.isaac.lab.managers import RewardTermCfg as RewTerm
+from omni.isaac.lab.managers import SceneEntityCfg
+from omni.isaac.lab.managers import TerminationTermCfg as DoneTerm
+from omni.isaac.lab.scene import InteractiveSceneCfg
+from omni.isaac.lab.sensors import ContactSensorCfg, RayCasterCfg, patterns
+from omni.isaac.lab.terrains import TerrainImporterCfg
+from omni.isaac.lab.utils import configclass
+from omni.isaac.lab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
 import orbit.berkeley_humanoid.tasks.locomotion.velocity.mdp as mdp
 from orbit.berkeley_humanoid.sensors.contact_foot_height_sensor_cfg import ContactFootHeightSensorCfg
@@ -171,14 +171,15 @@ class RandomizationCfg:
     add_base_mass = RandTerm(
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="torso"), "mass_range": (-1.0, 1.0),
+        params={"asset_cfg": SceneEntityCfg("robot", body_names="torso"), "mass_distribution_params": (-1.0, 1.0),
                 "operation": "add"},
     )
 
     scale_all_link_masses = RandTerm(
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=".*"), "mass_range": (0.9, 1.1), "operation": "scale"},
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=".*"), "mass_distribution_params": (0.9, 1.1),
+                "operation": "scale"},
     )
 
     add_all_joint_frictions = RandTerm(
@@ -329,8 +330,8 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     terrain_levels = CurrTerm(func=mdp.terrain_levels_vel)
-    push_force_levels = CurrTerm(func=mdp.modify_push_force, params={"term_name": "push_robot", "max_velocity": [3.0, 3.0], "interval": 200*24, "starting_step": 5000*24})
-    command_vel = CurrTerm(func=mdp.modify_command_velocity, params={"term_name": "track_lin_vel_xy_exp", "max_velocity": [-1.5, 3.0], "interval": 200*24, "starting_step": 5000*24})
+    # push_force_levels = CurrTerm(func=mdp.modify_push_force, params={"term_name": "push_robot", "max_velocity": [3.0, 3.0], "interval": 200*24, "starting_step": 5000*24})
+    # command_vel = CurrTerm(func=mdp.modify_command_velocity, params={"term_name": "track_lin_vel_xy_exp", "max_velocity": [-1.5, 3.0], "interval": 200*24, "starting_step": 5000*24})
 
 ##
 # Environment configuration
@@ -338,7 +339,7 @@ class CurriculumCfg:
 
 
 @configclass
-class LocomotionVelocityRoughEnvCfg(RLTaskEnvCfg):
+class LocomotionVelocityRoughEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the locomotion velocity-tracking environment."""
 
     # Scene settings

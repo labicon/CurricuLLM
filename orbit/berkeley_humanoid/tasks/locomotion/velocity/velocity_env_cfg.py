@@ -248,6 +248,13 @@ class RandomizationCfg:
         params={"velocity_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}},
     )
 
+    add_all_joint_pos_bias = RandTerm(
+        func=mdp.randomize_joint_pos_bias,
+        mode="startup",
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "bias_distribution_params": (-0.1, 0.1),
+                "operation": "add"},
+    )
+
 
 @configclass
 class RewardsCfg:

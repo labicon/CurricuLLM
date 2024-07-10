@@ -10,7 +10,7 @@ from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import (
 class BerkeleyHumanoidRoughPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 30000
-    save_interval = 50
+    save_interval = 200
     experiment_name = "berkeley_humanoid_rough"
     empirical_normalization = False
     policy = RslRlPpoActorCriticCfg(

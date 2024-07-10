@@ -69,7 +69,8 @@ class MySceneCfg(InteractiveSceneCfg):
         debug_vis=False,
         mesh_prim_paths=["/World/ground"],
     )
-    contact_forces = ContactFootHeightSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3, track_air_time=True, track_pose=True)
+    contact_forces = ContactFootHeightSensorCfg(prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3,
+                                                track_air_time=True, track_pose=True)
     # lights
     sky_light = AssetBaseCfg(
         prim_path="/World/skyLight",
@@ -203,6 +204,13 @@ class RandomizationCfg:
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*FFE"]), "friction_distribution_params": (0.0, 1.5),
                 "operation": "add"},
     )
+
+    # scale_all_joint_armature = RandTerm(
+    #     func=mdp.randomize_joint_parameters,
+    #     mode="startup",
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "armature_distribution_params": (1.0, 1.05),
+    #             "operation": "scale"},
+    # )
 
     add_all_joint_default_pos = RandTerm(
         func=mdp.randomize_joint_default_pos,
@@ -341,6 +349,7 @@ class CurriculumCfg:
                                  params={"term_name": "push_robot", "max_velocity": [3.0, 3.0], "interval": 200 * 24,
                                          "starting_step": 3000 * 24})
     # command_vel = CurrTerm(func=mdp.modify_command_velocity, params={"term_name": "track_lin_vel_xy_exp", "max_velocity": [-1.5, 3.0], "interval": 200*24, "starting_step": 5000*24})
+
 
 ##
 # Environment configuration

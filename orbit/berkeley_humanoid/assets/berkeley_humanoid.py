@@ -10,6 +10,7 @@ BERKELEY_HUMANOID_HXX_ACTUATOR_CFG = IdealPDActuatorCfg(
     velocity_limit=23,
     stiffness={".*": 10.0},
     damping={".*": 1.5},
+    armature={".*": 6.9e-5 * 81},
 )
 
 BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdealPDActuatorCfg(
@@ -18,6 +19,7 @@ BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdealPDActuatorCfg(
     velocity_limit=20,
     stiffness={".*": 15.0},
     damping={".*": 1.5},
+    armature={".*": 9.4e-5 * 81},
 )
 
 BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdealPDActuatorCfg(
@@ -26,6 +28,7 @@ BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdealPDActuatorCfg(
     velocity_limit=14,
     stiffness={".*": 15.0},
     damping={".*": 1.5},
+    armature={".*": 1.5e-4 * 81},
 )
 
 BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdealPDActuatorCfg(
@@ -34,6 +37,7 @@ BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdealPDActuatorCfg(
     velocity_limit=23,
     stiffness={".*": 1.0},
     damping={".*": 0.1},
+    armature={".*": 6.9e-5 * 81},
 )
 
 BERKELEY_HUMANOID_FAA_ACTUATOR_CFG = IdealPDActuatorCfg(
@@ -42,6 +46,7 @@ BERKELEY_HUMANOID_FAA_ACTUATOR_CFG = IdealPDActuatorCfg(
     velocity_limit=42,
     stiffness={".*": 1.0},
     damping={".*": 0.1},
+    armature={".*": 6.1e-6 * 81},
 )
 
 BERKELEY_HUMANOID_CFG = ArticulationCfg(

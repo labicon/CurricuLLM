@@ -198,8 +198,8 @@ class RandomizationCfg:
                 "operation": "add"},
     )
 
-    scale_all_joint_friction = RandTerm(
-        func=mdp.randomize_joint_parameters,
+    scale_all_joint_friction_model = RandTerm(
+        func=mdp.randomize_joint_friction_model,
         mode="startup",
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "friction_distribution_params": (0.9, 1.1),
                 "operation": "scale"},

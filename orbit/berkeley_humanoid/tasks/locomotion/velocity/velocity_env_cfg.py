@@ -187,21 +187,21 @@ class RandomizationCfg:
     add_all_joint_frictions = RandTerm(
         func=mdp.randomize_joint_parameters,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "friction_distribution_params": (0.05, 0.5),
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "friction_distribution_params": (1.0, 2.0),
                 "operation": "add"},
     )
 
     add_kfe_frictions = RandTerm(
         func=mdp.randomize_joint_parameters,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*KFE"]), "friction_distribution_params": (0.0, 0.5),
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*KFE"]), "friction_distribution_params": (1.0, 3.0),
                 "operation": "add"},
     )
 
     add_ffe_frictions = RandTerm(
         func=mdp.randomize_joint_parameters,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*FFE"]), "friction_distribution_params": (0.0, 1.5),
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*FFE"]), "friction_distribution_params": (1.0, 4.0),
                 "operation": "add"},
     )
 
@@ -347,7 +347,7 @@ class CurriculumCfg:
     terrain_levels = CurrTerm(func=mdp.terrain_levels_vel)
     push_force_levels = CurrTerm(func=mdp.modify_push_force,
                                  params={"term_name": "push_robot", "max_velocity": [3.0, 3.0], "interval": 200 * 24,
-                                         "starting_step": 3000 * 24})
+                                         "starting_step": 1500 * 24})
     # command_vel = CurrTerm(func=mdp.modify_command_velocity, params={"term_name": "track_lin_vel_xy_exp", "max_velocity": [-1.5, 3.0], "interval": 200*24, "starting_step": 5000*24})
 
 

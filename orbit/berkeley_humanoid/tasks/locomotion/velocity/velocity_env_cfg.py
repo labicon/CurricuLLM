@@ -170,13 +170,6 @@ class RandomizationCfg:
         },
     )
 
-    add_base_mass = RandTerm(
-        func=mdp.randomize_rigid_body_mass,
-        mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="torso"), "mass_distribution_params": (-1.0, 1.0),
-                "operation": "add"},
-    )
-
     scale_all_link_masses = RandTerm(
         func=mdp.randomize_rigid_body_mass,
         mode="startup",
@@ -184,24 +177,10 @@ class RandomizationCfg:
                 "operation": "scale"},
     )
 
-    add_all_joint_frictions = RandTerm(
-        func=mdp.randomize_joint_parameters,
+    add_base_mass = RandTerm(
+        func=mdp.randomize_rigid_body_mass,
         mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "friction_distribution_params": (1.0, 2.0),
-                "operation": "add"},
-    )
-
-    add_kfe_frictions = RandTerm(
-        func=mdp.randomize_joint_parameters,
-        mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*KFE"]), "friction_distribution_params": (1.0, 3.0),
-                "operation": "add"},
-    )
-
-    add_ffe_frictions = RandTerm(
-        func=mdp.randomize_joint_parameters,
-        mode="startup",
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*FFE"]), "friction_distribution_params": (1.0, 4.0),
+        params={"asset_cfg": SceneEntityCfg("robot", body_names="torso"), "mass_distribution_params": (-1.0, 1.0),
                 "operation": "add"},
     )
 

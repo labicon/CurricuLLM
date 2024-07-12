@@ -1,5 +1,4 @@
 import omni.isaac.lab.sim as sim_utils
-# from omni.isaac.lab.actuators import IdealPDActuatorCfg
 from orbit.berkeley_humanoid.actuators import IdentifiedActuatorCfg
 from omni.isaac.lab.assets.articulation import ArticulationCfg
 
@@ -12,9 +11,9 @@ BERKELEY_HUMANOID_HXX_ACTUATOR_CFG = IdentifiedActuatorCfg(
     stiffness={".*": 10.0},
     damping={".*": 1.5},
     armature={".*": 6.9e-5 * 81},
-    friction_torque=0.3,
-    activation_vel=1.0,
-    friction_vel= 0.1,
+    friction_static=0.3,
+    activation_vel=0.1,
+    friction_dynamic=0.02,
 )
 
 BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
@@ -24,9 +23,9 @@ BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
     stiffness={".*": 15.0},
     damping={".*": 1.5},
     armature={".*": 9.4e-5 * 81},
-    friction_torque=0.3,
-    activation_vel=1.0,
-    friction_vel= 0.1,
+    friction_static=0.3,
+    activation_vel=0.1,
+    friction_dynamic=0.02,
 )
 
 BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
@@ -36,9 +35,9 @@ BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
     stiffness={".*": 15.0},
     damping={".*": 1.5},
     armature={".*": 1.5e-4 * 81},
-    friction_torque=0.8,
-    activation_vel=3.0,
-    friction_vel= 0.1,
+    friction_static=0.8,
+    activation_vel=0.1,
+    friction_dynamic=0.02,
 )
 
 BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
@@ -48,9 +47,9 @@ BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
     stiffness={".*": 1.0},
     damping={".*": 0.1},
     armature={".*": 6.9e-5 * 81},
-    friction_torque=1.0,
-    activation_vel=3.0,
-    friction_vel= 0.1,
+    friction_static=1.0,
+    activation_vel=0.1,
+    friction_dynamic=0.02,
 )
 
 BERKELEY_HUMANOID_FAA_ACTUATOR_CFG = IdentifiedActuatorCfg(
@@ -60,9 +59,9 @@ BERKELEY_HUMANOID_FAA_ACTUATOR_CFG = IdentifiedActuatorCfg(
     stiffness={".*": 1.0},
     damping={".*": 0.1},
     armature={".*": 6.1e-6 * 81},
-    friction_torque=0.1,
-    activation_vel=3.0,
-    friction_vel= 0.1,
+    friction_static=0.1,
+    activation_vel=0.1,
+    friction_dynamic=0.005,
 )
 
 BERKELEY_HUMANOID_CFG = ArticulationCfg(

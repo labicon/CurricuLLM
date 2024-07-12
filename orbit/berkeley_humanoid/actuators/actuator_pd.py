@@ -28,22 +28,20 @@ class IdentifiedActuator(IdealPDActuator):
     def __init__(self, cfg: IdentifiedActuatorCfg, *args, **kwargs):
         super().__init__(cfg, *args, **kwargs)
 
-        self.friction_torque = self._parse_joint_parameter(self.cfg.friction_torque, 0.)
+        self.friction_static = self._parse_joint_parameter(self.cfg.friction_static, 0.)
         self.activation_vel = self._parse_joint_parameter(self.cfg.activation_vel, torch.inf)
-        self.friction_vel = self._parse_joint_parameter(self.cfg.friction_vel, 0.)
+        self.friction_dynamic = self._parse_joint_parameter(self.cfg.friction_dynamic, 0.)
 
     def compute(
             self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor
     ) -> ArticulationActions:
         # call the base method
         control_action = super().compute(control_action, joint_pos, joint_vel)
-        control_action.joint_efforts = control_action.joint_efforts - (self.friction_torque * torch.tanh(
-            joint_vel / self.activation_vel) + self.friction_vel * joint_vel)
+        control_action.joint_efforts = control_action.joint_efforts - (self.friction_static * torch.tanh(
+            joint_vel / self.activation_vel) + self.friction_dynamic * joint_vel)
 
         self.applied_effort = control_action.joint_efforts
         control_action.joint_positions = None
         control_action.joint_velocities = None
-
-        print(self.friction_torque)
 
         return control_action

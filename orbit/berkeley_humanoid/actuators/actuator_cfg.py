@@ -15,9 +15,9 @@ class IdentifiedActuatorCfg(IdealPDActuatorCfg):
 
     class_type: type = IdentifiedActuator
 
-    friction_torque: float = MISSING
+    friction_static: float = MISSING
     """ (in N-m)."""
     activation_vel: float = MISSING
     """ (in Rad/s)."""
-    friction_vel: float = MISSING
+    friction_dynamic: float = MISSING
     """ (in N-m-s/Rad)."""

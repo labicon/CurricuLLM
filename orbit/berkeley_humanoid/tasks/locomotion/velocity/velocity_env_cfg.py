@@ -184,12 +184,12 @@ class RandomizationCfg:
                 "operation": "add"},
     )
 
-    # scale_all_joint_armature = RandTerm(
-    #     func=mdp.randomize_joint_parameters,
-    #     mode="startup",
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "armature_distribution_params": (1.0, 1.05),
-    #             "operation": "scale"},
-    # )
+    scale_all_joint_armature = RandTerm(
+        func=mdp.randomize_joint_parameters,
+        mode="startup",
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]), "armature_distribution_params": (1.0, 1.05),
+                "operation": "scale"},
+    )
 
     add_all_joint_default_pos = RandTerm(
         func=mdp.randomize_joint_default_pos,

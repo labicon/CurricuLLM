@@ -1,52 +1,68 @@
 import omni.isaac.lab.sim as sim_utils
-from omni.isaac.lab.actuators import IdealPDActuatorCfg
+# from omni.isaac.lab.actuators import IdealPDActuatorCfg
+from orbit.berkeley_humanoid.actuators import IdentifiedActuatorCfg
 from omni.isaac.lab.assets.articulation import ArticulationCfg
 
 from orbit.berkeley_humanoid.assets import ORBIT_ASSET_DIR
 
-BERKELEY_HUMANOID_HXX_ACTUATOR_CFG = IdealPDActuatorCfg(
+BERKELEY_HUMANOID_HXX_ACTUATOR_CFG = IdentifiedActuatorCfg(
     joint_names_expr=[".*HR", ".*HAA"],
     effort_limit=20.0,
     velocity_limit=23,
     stiffness={".*": 10.0},
     damping={".*": 1.5},
     armature={".*": 6.9e-5 * 81},
+    friction_torque=0.3,
+    activation_vel=1.0,
+    friction_vel= 0.1,
 )
 
-BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdealPDActuatorCfg(
+BERKELEY_HUMANOID_HFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
     joint_names_expr=[".*HFE"],
     effort_limit=30.0,
     velocity_limit=20,
     stiffness={".*": 15.0},
     damping={".*": 1.5},
     armature={".*": 9.4e-5 * 81},
+    friction_torque=0.3,
+    activation_vel=1.0,
+    friction_vel= 0.1,
 )
 
-BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdealPDActuatorCfg(
+BERKELEY_HUMANOID_KFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
     joint_names_expr=[".*KFE"],
     effort_limit=30.0,
     velocity_limit=14,
     stiffness={".*": 15.0},
     damping={".*": 1.5},
     armature={".*": 1.5e-4 * 81},
+    friction_torque=0.8,
+    activation_vel=3.0,
+    friction_vel= 0.1,
 )
 
-BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdealPDActuatorCfg(
+BERKELEY_HUMANOID_FFE_ACTUATOR_CFG = IdentifiedActuatorCfg(
     joint_names_expr=[".*FFE"],
     effort_limit=20.0,
     velocity_limit=23,
     stiffness={".*": 1.0},
     damping={".*": 0.1},
     armature={".*": 6.9e-5 * 81},
+    friction_torque=1.0,
+    activation_vel=3.0,
+    friction_vel= 0.1,
 )
 
-BERKELEY_HUMANOID_FAA_ACTUATOR_CFG = IdealPDActuatorCfg(
+BERKELEY_HUMANOID_FAA_ACTUATOR_CFG = IdentifiedActuatorCfg(
     joint_names_expr=[".*FAA"],
     effort_limit=5.0,
     velocity_limit=42,
     stiffness={".*": 1.0},
     damping={".*": 0.1},
     armature={".*": 6.1e-6 * 81},
+    friction_torque=0.1,
+    activation_vel=3.0,
+    friction_vel= 0.1,
 )
 
 BERKELEY_HUMANOID_CFG = ArticulationCfg(

@@ -23,13 +23,6 @@ and called by the :class:`omni.isaac.lab.assets.Articulation` class.
 """
 
 from .actuator_cfg import (
-    ActuatorBaseCfg,
-    ActuatorNetLSTMCfg,
-    ActuatorNetMLPCfg,
-    DCMotorCfg,
-    DelayedPDActuatorCfg,
-    IdealPDActuatorCfg,
-    ImplicitActuatorCfg,
-    RemotizedPDActuatorCfg,
+    IdentifiedActuatorCfg,
 )
-from .actuator_pd import DCMotor, DelayedPDActuator, IdealPDActuator, ImplicitActuator, RemotizedPDActuator
+from .actuator_pd import IdentifiedActuator

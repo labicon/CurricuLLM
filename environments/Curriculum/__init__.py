@@ -19,32 +19,8 @@ register(
 )
 
 register(
-     id="Curriculum/AntMaze_UMaze-v0",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v0:AntMazeEnv",
-     max_episode_steps=700,
-)
-
-register(
-     id="Curriculum/AntMaze_UMaze-v1",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v1:AntMazeEnv",
-     max_episode_steps=700,
-)
-
-register(
-     id="Curriculum/AntMaze_UMaze-v2",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v2:AntMazeEnv",
-     max_episode_steps=700,
-)
-
-register(
-     id="Curriculum/AntMaze_UMaze-v3",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v3:AntMazeEnv",
-     max_episode_steps=700,
-)
-
-register(
-     id="Curriculum/AntMaze_UMaze-v4",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v4:AntMazeEnv",
+     id="Curriculum/AntMaze_UMaze",
+     entry_point="Curriculum.envs.AntMaze_UMaze:AntMazeEnv",
      max_episode_steps=700,
 )
 

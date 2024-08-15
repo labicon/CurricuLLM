@@ -25,7 +25,8 @@ class Curriculum_Module:
         self.num_cpu = 16
         self.num_samples = 3
         self.seed = seed
-        
+        self.stats_summary = []
+    
     def generate_curriculum(self):
         # Generate curriculum and return list of dictionaries with task details
         self.curriculum_info = self.gpt_api.generate_curriculum()
@@ -41,40 +42,13 @@ class Curriculum_Module:
                     print(f"Error in training task {task['Name']} sample {sample_num}")
                     print(e)
                     continue
-            # Evaluate the trained models
-            statistics = []
-            for sample_num in range(self.num_samples):
-                try:
-                    env_id = f"Curriculum/{self.env_name}-v{sample_num}"
-                    eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
-                    model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
-                    model = SAC.load(model_path)
-                    
-                    # Get trajectory
-                    obs = eval_env.reset()
-                    obs_trajectory = [obs[0]]
-                    for _ in range(800):
-                        action, _ = model.predict(obs, deterministic=True)
-                        obs, _, _, _ = eval_env.step(action)
-                        obs_trajectory.append(obs[0])
 
-                    statistics.append(analyze_trajectory_adroit(obs_trajectory))
-
-                    del eval_env, model
-                    gc.collect()
-                    torch.cuda.empty_cache()  # Free up unused memory
-                except Exception as e:
-                    print(f"Error in evaluating task {task['Name']} sample {sample_num}")
-                    print(e)
-                    statistics.append({"Error": "Error in evaluating task"})
-                    continue
-            
             # Asl LLM to choose the best model
-            best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, self.stats_summary)
             trial = 1
             while best_sample_idx is None:
                 print("Statistics Analysis error. Try again.")
-                best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, self.stats_summary)
                 trial += 1
                 if trial == 5:
                     best_sample_idx = 0
@@ -88,11 +62,11 @@ class Curriculum_Module:
                 file.write(self.current_reward_code_list[best_sample_idx])
                 
             self.current_reward_code_list = []
-
+            self.stats_summary = []
 
     def train_single(self, curriculum_idx, task, sample_num):
         # Create the environment
-        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+        env_id = f"Curriculum/{self.env_name}"
 
         # Update env code
         reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx,
@@ -131,8 +105,32 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
+        try:
+            env_id = f"Curriculum/{self.env_name}"
+            eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+            model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
+            model = SAC.load(model_path)
+            
+            # Get trajectory
+            obs = eval_env.reset()
+            obs_trajectory = [obs[0]]
+            for _ in range(800):
+                action, _ = model.predict(obs, deterministic=True)
+                obs, _, _, _ = eval_env.step(action)
+                obs_trajectory.append(obs[0])
+
+            self.stats_summary.append(analyze_trajectory_adroit(obs_trajectory))
+
+            del eval_env, model
+            gc.collect()
+            torch.cuda.empty_cache()  # Free up unused memory
+        except Exception as e:
+            print(f"Error in evaluating task {task['Name']} sample {sample_num}")
+            print(e)
+            self.stats_summary.append({"Error": "Error in evaluating task"})
+
     def load_and_retrain(self, model_path, sample_num):
-        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+        env_id = f"Curriculum/{self.env_name}"
 
         # Create the vectorized environment
         training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])

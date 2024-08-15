@@ -97,7 +97,6 @@ class CurriculumAPI:
         reward_code = None
         max_attempt = 5
         attempt = 0
-        task = self.tasks_details[curriculum_idx]
         while reward_code is None and attempt < max_attempt:
             reward_code = self.generate_rewards(curriculum_idx, previous_reward_code)
             attempt += 1
@@ -105,6 +104,7 @@ class CurriculumAPI:
                 print("Failed to generate reward code. Retrying...")
 
         # Save the reward code
+        task = self.tasks_details[curriculum_idx]
         save_string_to_file(self.log_path + f"{task['Name']}/sample_{version_number}/" + "reward_code.md", reward_code)
 
         with open(env_code_path, 'r') as file:
@@ -115,7 +115,7 @@ class CurriculumAPI:
         new_code = original_code + '\n\n' + reward_code
 
         # Save as a new file with specific version number
-        new_file_path = env_code_path.replace('.py', f'_v{version_number}.py')
+        new_file_path = env_code_path.replace('_source.py', '.py')
         with open(new_file_path, 'w') as file:
             file.write(new_code)
 

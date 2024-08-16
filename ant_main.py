@@ -3,7 +3,7 @@ import gc
 import torch
 
 from utils.train_utils import *
-from train_ant import Curriculum_Module, Reward_Addition_Module, HER_Module
+from train_ant import Curriculum_Module, HER_Module
 
 if __name__ == "__main__":
     seed = 15
@@ -18,14 +18,6 @@ if __name__ == "__main__":
     curriculum_module.train_curriculum()
 
     del curriculum_module
-    gc.collect()
-    torch.cuda.empty_cache()
-
-    # Reward addition experiments
-    reward_addition_module = Reward_Addition_Module(env_name, env_path, logger_path, seed)
-    reward_addition_module.train_with_reward_addition()
-
-    del reward_addition_module
     gc.collect()
     torch.cuda.empty_cache()
 

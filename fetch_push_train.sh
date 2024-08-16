@@ -30,9 +30,10 @@
 #SBATCH --mail-user=kanghyun.ryu@berkeley.edu
 #
 ## Commands to run
-module load python/3.10.10
-module load cuda/11.2
-module load cudnn/8.1.1
+module load python/3.11 
+module load gcc/11.4.0 
+module load cuda/12.2.1 
+module load cudnn/8.9.0-12.2.1
 
 python ./fetch_push_main.py
 

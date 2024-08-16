@@ -286,7 +286,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         obs = self._get_obs(ant_obs)
 
         reward_main = self.compute_reward(obs["achieved_goal"], self.goal, info)
-        reward, reward_dict = self.compute_reward_curriculum(ant_obs)
+        reward, reward_dict = self.compute_reward_curriculum()
         reward_dict["main"] = reward_main
         reward_dict["task"] = reward
 

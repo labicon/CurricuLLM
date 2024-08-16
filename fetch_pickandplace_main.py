@@ -3,7 +3,7 @@ import gc
 import torch
 
 from utils.train_utils import *
-from train_fetch_pickandplace import Curriculum_Module, Reward_Addition_Module, HER_Module
+from train_fetch_pickandplace import Curriculum_Module, HER_Module
 
 if __name__ == "__main__":
     seed = 14

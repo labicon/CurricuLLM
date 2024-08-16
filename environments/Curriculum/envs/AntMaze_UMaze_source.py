@@ -286,7 +286,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         obs = self._get_obs(ant_obs)
 
         reward_main = self.compute_reward(obs["achieved_goal"], self.goal, info)
-        reward, reward_dict = self.compute_reward_curriculum()
+        reward, reward_dict = self.compute_reward_curriculum(ant_obs)
         reward_dict["main"] = reward_main
         reward_dict["task"] = reward
 
@@ -364,12 +364,13 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return distance
     
     def obs(self):
-        torso_coord = self.torso_coordinate()
-        torso_orientation = self.torso_orientation()
-        torso_velocity = self.torso_velocity()
-        torso_angular_velocity = self.torso_angular_velocity()
+        ant_obs = self.get_ant_obs()
+        torso_coord = self.torso_coordinate(ant_obs)
+        torso_orientation = self.torso_orientation(ant_obs)
+        torso_velocity = self.torso_velocity(ant_obs)
+        torso_angular_velocity = self.torso_angular_velocity(ant_obs)
         goal_pos = self.goal_pos()
-        goal_distance = self.goal_distance()
+        goal_distance = self.goal_distance(ant_obs)
 
         return torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, goal_distance
     

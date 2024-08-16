@@ -9,7 +9,7 @@ if __name__ == "__main__":
     seed = 15
     
     env_name = "AntMaze_UMaze"
-    env_path = "./environments/Curriculum/envs/AntMaze_UMaze.py"
+    env_path = "./environments/Curriculum/envs/AntMaze_UMaze_source.py"
     logger_path = f"./logs/AntMaze_UMaze_{seed}/"
 
     # Curriculum experiments

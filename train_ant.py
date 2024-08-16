@@ -68,7 +68,7 @@ class Curriculum_Module:
 
     def train_single(self, curriculum_idx, task, sample_num):
         # Create the environment
-        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+        env_id = f"Curriculum/{self.env_name}"
 
         # Update env code
         reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx,
@@ -106,6 +106,30 @@ class Curriculum_Module:
         del model, training_env, eval_env, eval_callback
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
+
+        try:
+            env_id = f"Curriculum/{self.env_name}"
+            eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+            model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
+            model = SAC.load(model_path)
+            
+            # Get trajectory
+            obs = eval_env.reset()
+            obs_trajectory = [obs[0]]
+            for _ in range(700):
+                action, _ = model.predict(obs, deterministic=True)
+                obs, _, _, _ = eval_env.step(action)
+                obs_trajectory.append(obs[0])
+
+            self.stats_summary.append(analyze_trajectory_ant(obs_trajectory))
+
+            del eval_env, model
+            gc.collect()
+            torch.cuda.empty_cache()  # Free up unused memory
+        except Exception as e:
+            print(f"Error in evaluating task {task['Name']} sample {sample_num}")
+            print(e)
+            self.stats_summary.append({"Error": "Error in evaluating task"})
 
 def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations

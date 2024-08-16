@@ -21,16 +21,6 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
 
-    # Reward addition experiments
-    reward_addition_module = Reward_Addition_Module(env_name, env_path, logger_path, seed)
-    # reward_addition_module.train_with_reward_addition()
-    additional_train_model = "./logs/Fetch/Push_7/[Push to Goal Position]/sample_1/"
-    reward_addition_module.load_and_retrain(additional_train_model)
-
-    del reward_addition_module
-    gc.collect()
-    torch.cuda.empty_cache()
-
     # HER experiments
     her_module = HER_Module(env_name, env_path, logger_path, seed)
     her_module.train_with_her()

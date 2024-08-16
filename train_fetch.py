@@ -26,6 +26,7 @@ class Curriculum_Module:
         self.num_cpu = 16
         self.num_samples = 3
         self.seed = seed
+        self.stats_summary = []
         
     def generate_curriculum(self):
         # Generate curriculum and return list of dictionaries with task details
@@ -42,38 +43,13 @@ class Curriculum_Module:
                     print(f"Error in training task {task['Name']} sample {sample_num}")
                     print(e)
                     continue
-            # Evaluate the trained models
-            statistics = []
-            for sample_num in range(self.num_samples):
-                try:
-                    env_id = f"Curriculum/{self.env_name}-v{sample_num}"
-                    eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
-                    model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
-                    model = SAC.load(model_path)
-                    
-                    # Get trajectory
-                    obs = eval_env.reset()
-                    obs_trajectory = [obs['observation'][0]]
-                    goal_trajectory = [obs['desired_goal'][0]]
-                    for _ in range(500):
-                        action, _ = model.predict(obs, deterministic=True)
-                        obs, _, _, _ = eval_env.step(action)
-                        obs_trajectory.append(obs['observation'][0])
-                        goal_trajectory.append(obs['desired_goal'][0])
-
-                    statistics.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
-                except Exception as e:
-                    print(f"Error in evaluating task {task['Name']} sample {sample_num}")
-                    print(e)
-                    statistics.append({"Error": "Error in evaluating task"})
-                    continue
             
             # Asl LLM to choose the best model
-            best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, self.stats_summary)
             trial = 1
             while best_sample_idx is None:
                 print("Statistics Analysis error. Try again.")
-                best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, statistics)
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, self.stats_summary)
                 trial += 1
                 if trial == 5:
                     best_sample_idx = 0
@@ -87,11 +63,11 @@ class Curriculum_Module:
                 file.write(self.current_reward_code_list[best_sample_idx])
                 
             self.current_reward_code_list = []
-
+            self.stats_summary = []
 
     def train_single(self, curriculum_idx, task, sample_num):
         # Create the environment
-        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+        env_id = f"Curriculum/{self.env_name}"
 
         # Update env code
         
@@ -131,8 +107,30 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
+        try:
+            env_id = f"Curriculum/{self.env_name}"
+            eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
+            model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
+            model = SAC.load(model_path)
+            
+            # Get trajectory
+            obs = eval_env.reset()
+            obs_trajectory = [obs['observation'][0]]
+            goal_trajectory = [obs['desired_goal'][0]]
+            for _ in range(500):
+                action, _ = model.predict(obs, deterministic=True)
+                obs, _, _, _ = eval_env.step(action)
+                obs_trajectory.append(obs['observation'][0])
+                goal_trajectory.append(obs['desired_goal'][0])
+
+            self.stats_summary.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
+        except Exception as e:
+            print(f"Error in evaluating task {task['Name']} sample {sample_num}")
+            print(e)
+            self.stats_summary.append({"Error": "Error in evaluating task"})
+
     def load_and_retrain(self, model_path, sample_num):
-        env_id = f"Curriculum/{self.env_name}-v{sample_num}"
+        env_id = f"Curriculum/{self.env_name}"
 
         # Create the vectorized environment
         training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
@@ -154,6 +152,7 @@ class Curriculum_Module:
         del model, training_env, eval_env, eval_callback
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
+
 
 def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations
@@ -204,116 +203,6 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
 
     return statistics
 
-
-class Reward_Addition_Module:
-    def __init__(self, env_name, env_path, logger_path, seed=0):
-        self.env_name = env_name
-        self.env_path = env_path
-        self.logger_path = logger_path
-        self.best_reward_code_list = []
-        self.num_cpu = 16
-        self.num_samples = 3
-        self.seed = seed
-        
-    def extract_curriculum(self):
-        # extract curriculum and return list of dictionaries with task details
-        curriculum_txt = file_to_string(self.logger_path + "curriculum.md")
-        # Split the string into individual task sections
-        task_sections = re.split(r'\n\n(?=Task)', curriculum_txt)
-
-        # Function to extract details from each task section
-        def extract_task_details(task_section):
-
-            details = {}
-            lines = task_section.split('\n')
-            for line in lines:
-                if line.startswith('Task'):
-                    details['Task'] = line.split(' ')[1]
-                elif line.startswith('Name:'):
-                    details['Name'] = line.split(': ')[1]
-                elif line.startswith('Description:'):
-                    details['Description'] = line.split(': ')[1]
-                elif line.startswith('Reason:'):
-                    details['Reason'] = ': '.join(line.split(': ')[1:])
-            return details
-
-        # Extract details for all tasks
-        self.curriculum_info = [extract_task_details(section) for section in task_sections]
-        self.curriculum_length = len(self.curriculum_info)
-
-    def update_env_code(self):
-        # Extract reward code from best_reward_code.txt
-        final_task = self.curriculum_info[-1]
-        reward_code_summary = file_to_string(self.logger_path + f"{final_task['Name']}/best_reward_code.txt")
-
-        with open(self.env_path, 'r') as file:
-            original_code = file.read()
-
-        # Append the new code block to the original code
-        reward_code_summary = '\n'.join(line for line in reward_code_summary.splitlines())
-        new_code = original_code + '\n\n' + reward_code_summary
-
-        # Save as a new file with specific version number
-        new_file_path = self.env_path.replace('.py', f'_v0.py')
-        with open(new_file_path, 'w') as file:
-            file.write(new_code)
-
-        print(f"Updated environment code saved to {new_file_path}")
-
-    def train_with_reward_addition(self):
-        self.extract_curriculum()
-        self.update_env_code()
-
-        # Create the environment
-        env_id = f"Curriculum/{self.env_name}-v0"
-
-        # Create the vectorized environment
-        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-
-        # Create the callback
-        eval_callback = CurriculumEvalCallback(eval_env, 
-                                            log_path=self.logger_path + "reward_addition/", 
-                                            best_model_save_path=self.logger_path + "reward_addition/", 
-                                            eval_freq=1000, 
-                                            deterministic=True, render=False, warn=False)
-        
-        model = SAC("MultiInputPolicy",
-                    training_env,
-                    verbose=1)
-        model.learn(total_timesteps=10_000_000, callback=eval_callback)
-        model.save(self.logger_path + f"reward_addition/final_model.zip")
-
-        del model, training_env, eval_env, eval_callback
-        gc.collect()
-        torch.cuda.empty_cache()  # Free up unused memory
-
-    def load_and_retrain(self, model_path):
-        self.extract_curriculum()
-        self.update_env_code()
-
-        env_id = f"Curriculum/{self.env_name}-v0"
-
-        # Create the vectorized environment
-        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-
-        # Create the callback
-        eval_callback = CurriculumEvalCallback(eval_env,
-                                                log_path= model_path + "additional_training/",
-                                                best_model_save_path= model_path + "additional_training/",
-                                                eval_freq=1000,
-                                                deterministic=True, render=False, warn=False)
-        
-        model = SAC.load(model_path + "/final_model.zip")
-        model.set_env(training_env)
-
-        model.learn(total_timesteps=15_000_000, callback=eval_callback)
-        model.save(model_path + "additional_training/final_model.zip")
-
-        del model, training_env, eval_env, eval_callback
-        gc.collect()
-        torch.cuda.empty_cache()  # Free up unused memory
 
 class HER_Module:
     def __init__(self, env_name, env_path, logger_path, seed=0):

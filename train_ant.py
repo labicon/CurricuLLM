@@ -25,7 +25,7 @@ class Curriculum_Module:
         self.best_model_idx_list = []
         self.current_reward_code_list = []
         self.num_cpu = 16
-        self.num_samples = 3
+        self.num_samples = 5
         self.seed = seed
         self.stats_summary = []
         
@@ -98,9 +98,9 @@ class Curriculum_Module:
             model.set_env(training_env)
 
         if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
-            model.learn(total_timesteps=100_000, callback=eval_callback)
+            model.learn(total_timesteps=2_000_000, callback=eval_callback)
         else:
-            model.learn(total_timesteps=100_000, callback=eval_callback)
+            model.learn(total_timesteps=2_000_000, callback=eval_callback)
 
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 

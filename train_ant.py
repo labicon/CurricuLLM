@@ -206,7 +206,7 @@ class HER_Module:
                     ),
                     verbose=1)
         
-        model.learn(total_timesteps=12_000_000, callback=eval_callback)
+        model.learn(total_timesteps=10_000_000, callback=eval_callback)
         model.save(self.logger_path + "her/final_model.zip")
 
         del model, training_env, eval_env, eval_callback

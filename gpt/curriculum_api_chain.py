@@ -157,6 +157,8 @@ class CurriculumAPI:
         
         # Ensure the directory exists and write the curriculum to a file
         os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
+        with open(self.log_path + task['Name'] + '_statistics.md', 'w') as file:
+            file.write(feedback_statistics)        
         with open(self.log_path + task['Name'] + '.md', 'w') as file:
             file.write(gpt_answer)
 

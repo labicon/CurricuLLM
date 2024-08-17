@@ -107,13 +107,15 @@ class Curriculum_Module:
         try:
             # Get trajectory
             obs = eval_env.reset()
-            obs_trajectory = [obs[0]]
-            for _ in range(700):
+            obs_trajectory = [obs['observation'][0]]
+            goal_trajectory = [obs['desired_goal'][0]]
+            for _ in range(1400):
                 action, _ = model.predict(obs, deterministic=True)
                 obs, _, _, _ = eval_env.step(action)
-                obs_trajectory.append(obs[0])
+                obs_trajectory.append(obs['observation'][0])
+                goal_trajectory.append(obs['desired_goal'][0])
 
-            self.stats_summary.append(analyze_trajectory_ant(obs_trajectory))
+            self.stats_summary.append(analyze_trajectory_ant(obs_trajectory, goal_trajectory))
         except Exception as e:
             print(f"Error in evaluating task {task['Name']} sample {sample_num}")
             print(e)

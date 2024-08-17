@@ -98,21 +98,13 @@ class Curriculum_Module:
             model.set_env(training_env)
 
         if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
-            model.learn(total_timesteps=10_000_000, callback=eval_callback)
+            model.learn(total_timesteps=100_000, callback=eval_callback)
         else:
-            model.learn(total_timesteps=1_000_000, callback=eval_callback)
+            model.learn(total_timesteps=100_000, callback=eval_callback)
+
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 
-        del model, training_env, eval_env, eval_callback
-        gc.collect()
-        torch.cuda.empty_cache()  # Free up unused memory
-
         try:
-            env_id = f"Curriculum/{self.env_name}"
-            eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
-            model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
-            model = SAC.load(model_path)
-            
             # Get trajectory
             obs = eval_env.reset()
             obs_trajectory = [obs[0]]
@@ -122,18 +114,19 @@ class Curriculum_Module:
                 obs_trajectory.append(obs[0])
 
             self.stats_summary.append(analyze_trajectory_ant(obs_trajectory))
-
-            del eval_env, model
-            gc.collect()
-            torch.cuda.empty_cache()  # Free up unused memory
         except Exception as e:
             print(f"Error in evaluating task {task['Name']} sample {sample_num}")
             print(e)
             self.stats_summary.append({"Error": "Error in evaluating task"})
 
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
+
+
 def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations
-    # Get list of torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, gosl_distance
+    # Get list of torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, goal_distance
     torso_coord = []
     torso_orientation = []
     torso_velocity = []

@@ -6,11 +6,11 @@ from utils.train_utils import *
 from train_ant import Curriculum_Module, HER_Module
 
 if __name__ == "__main__":
-    seed = 15
+    seed = 10
     
     env_name = "AntMaze_UMaze"
     env_path = "./environments/Curriculum/envs/AntMaze_UMaze_source.py"
-    logger_path = f"./logs/AntMaze_UMaze_{seed}/"
+    logger_path = f"./logs/AntMaze_UMaze_updated_{seed}/"
 
     # Curriculum experiments
     curriculum_module = Curriculum_Module(env_name, env_path, logger_path, seed)

@@ -21,10 +21,10 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
 
-    # HER experiments
-    her_module = HER_Module(env_name, env_path, logger_path, seed)
-    her_module.train_with_her()
+    # # HER experiments
+    # her_module = HER_Module(env_name, env_path, logger_path, seed)
+    # her_module.train_with_her()
 
-    del her_module
-    gc.collect()
-    torch.cuda.empty_cache()
+    # del her_module
+    # gc.collect()
+    # torch.cuda.empty_cache()

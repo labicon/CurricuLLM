@@ -43,6 +43,10 @@ class Curriculum_Module:
                 except Exception as e:
                     print(f"Error in training task {task['Name']} sample {sample_num}")
                     print(e)
+                    # Save error message in log path
+                    with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/error.txt", "w") as file:
+                        file.write(str(e))
+                    self.stats_summary.append({"Error": "Error in evaluating task"})
                     continue
             
             # Asl LLM to choose the best model
@@ -119,6 +123,9 @@ class Curriculum_Module:
         except Exception as e:
             print(f"Error in evaluating task {task['Name']} sample {sample_num}")
             print(e)
+            # Save error message in log path
+            with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/error.txt", "w") as file:
+                file.write(str(e))
             self.stats_summary.append({"Error": "Error in evaluating task"})
 
         del model, training_env, eval_env, eval_callback
@@ -139,8 +146,8 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
     for obs, goal in zip(obs_trajectory, goal_trajectory):
         torso_coord.append(obs[0:3])
         torso_orientation.append(obs[3:7])
-        torso_velocity.append(np.linalg.norm(obs[15:17]))
-        torso_angular_velocity.append(np.linalg.norm(obs[18:21]))
+        torso_velocity.append(obs[15:17])
+        torso_angular_velocity.append(obs[18:21])
         goal_pos.append(goal)
         goal_distance.append(np.linalg.norm(obs[0:2] - goal))
 
@@ -154,18 +161,18 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
 
     # Calculate mean and std of each variable
     statistics = {}
-    statistics["torso_coord_mean"] = np.mean(torso_coord, axis=0)
-    statistics["torso_coord_std"] = np.std(torso_coord, axis=0)
-    statistics["torso_orientation_mean"] = np.mean(torso_orientation, axis=0)
-    statistics["torso_orientation_std"] = np.std(torso_orientation, axis=0)
-    statistics["torso_velocity_mean"] = np.mean(torso_velocity, axis=0)
-    statistics["torso_velocity_std"] = np.std(torso_velocity, axis=0)
-    statistics["torso_angular_velocity_mean"] = np.mean(torso_angular_velocity, axis=0)
-    statistics["torso_angular_velocity_std"] = np.std(torso_angular_velocity, axis=0)
-    statistics["goal_pos_mean"] = np.mean(goal_pos, axis=0)
-    statistics["goal_pos_std"] = np.std(goal_pos, axis=0)
-    statistics["goal_distance_mean"] = np.mean(goal_distance, axis=0)
-    statistics["goal_distance_std"] = np.std(goal_distance, axis=0)
+    statistics["torso_coord_mean"] = np.mean(torso_coord, axis=0).round(2)
+    statistics["torso_coord_std"] = np.std(torso_coord, axis=0).round(2)
+    statistics["torso_orientation_mean"] = np.mean(torso_orientation, axis=0).round(2)
+    statistics["torso_orientation_std"] = np.std(torso_orientation, axis=0).round(2)
+    statistics["torso_velocity_mean"] = np.mean(torso_velocity, axis=0).round(2)
+    statistics["torso_velocity_std"] = np.std(torso_velocity, axis=0).round(2)
+    statistics["torso_angular_velocity_mean"] = np.mean(torso_angular_velocity, axis=0).round(2)
+    statistics["torso_angular_velocity_std"] = np.std(torso_angular_velocity, axis=0).round(2)
+    statistics["goal_pos_mean"] = np.mean(goal_pos, axis=0).round(2)
+    statistics["goal_pos_std"] = np.std(goal_pos, axis=0).round(2)
+    statistics["goal_distance_mean"] = np.mean(goal_distance, axis=0).round(2)
+    statistics["goal_distance_std"] = np.std(goal_distance, axis=0).round(2)
 
     return statistics
 

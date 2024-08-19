@@ -359,7 +359,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
     def goal_distance(self, ant_obs: np.ndarray):
         goal_pos = self.goal_pos()
         xyz_coordinate = self.torso_coordinate(ant_obs)
-        distance = np.array(np.linalg.norm(goal_pos - xyz_coordinate[:2]))
+        distance = np.linalg.norm(goal_pos - xyz_coordinate[:2])
 
         return distance
     
@@ -374,3 +374,56 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
         return torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, goal_distance
     
+
+    def compute_reward_curriculum(self):
+        import numpy as np
+    
+        torso_coordinate, torso_orientation, torso_velocity, \
+        torso_angular_velocity, goal_pos, goal_distance = self.obs()
+    
+        # Reward Components weights for the current and learned tasks
+        goal_reaching_final_weight = 10.0  # Significantly prioritize reaching the final goal
+        goal_reaching_close_weight = 2.0  # Reward for getting closer to the goal
+        forward_movement_weight = 1.0  # Continue to reward forward movement
+        orientation_adjustment_weight = 3.0  # Significant reward for correctly adjusting orientation towards the goal
+        stability_weight = 0.3  # Minor reward for maintaining stable orientation
+        rotation_penalty_weight = 0.1  # Minor penalty for unnecessary rotation
+        backward_movement_penalty_weight = 0.5  # Penalty for moving backwards
+    
+        # Goal reaching reward - higher for final task
+        goal_reaching_reward = -goal_distance
+    
+        # Forward movement reward
+        forward_movement_reward = np.maximum(0, torso_velocity[0])
+    
+        # Orientation adjustment towards the goal
+        direction_to_goal = goal_pos - torso_coordinate
+        direction_to_goal_norm = direction_to_goal / np.linalg.norm(direction_to_goal) if np.linalg.norm(direction_to_goal) != 0 else [0.0, 0.0]
+        orientation_adjustment = -np.linalg.norm(direction_to_goal_norm - torso_orientation[:2])  # Comparing only x, y parts
+    
+        # Stability and movement penalties
+        stability_reward = (1 - np.abs(1 - torso_orientation[0]))  # Encourage the torso to stay upright
+        rotation_penalty = np.linalg.norm(torso_angular_velocity)
+        backward_movement_penalty = -np.minimum(0, torso_velocity[0])
+    
+        # Combine rewards and penalties with their weights
+        reward = (goal_reaching_final_weight * goal_reaching_reward) + \
+                 (forward_movement_weight * forward_movement_reward) + \
+                 (orientation_adjustment_weight * orientation_adjustment) + \
+                 (stability_weight * stability_reward) - \
+                 (rotation_penalty_weight * rotation_penalty) - \
+                 (backward_movement_penalty_weight * backward_movement_penalty) + \
+                 (goal_reaching_close_weight * np.exp(-goal_distance))  # Additional incentive for closing in on the goal
+    
+        # Reward components dictionary for debugging purposes
+        reward_dict = {
+            "goal_reaching_reward": goal_reaching_reward,
+            "forward_movement_reward": forward_movement_reward,
+            "orientation_adjustment": orientation_adjustment,
+            "stability_reward": stability_reward,
+            "rotation_penalty": rotation_penalty,
+            "backward_movement_penalty": backward_movement_penalty,
+            "closing_in_on_goal": np.exp(-goal_distance)
+        }
+    
+        return reward, reward_dict

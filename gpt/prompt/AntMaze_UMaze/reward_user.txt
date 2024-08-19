@@ -2,12 +2,12 @@ The ant is a 3D robot consisting of one torso (free rotational body) with four l
 The original task in the environment is for ant to reach a target goal in a closed maze.
 
 Observation from self.obs() includes
-(1) torso_coordinate: xy coordinate of the torso, numpy array with size 2
-(2) torso_orientation: xyzw orientation of the torso, numpy array with size 4
-(3) torso_velocity: xy velocities of the torso, numpy array with size 2
-(4) torso_angular_velocity: xyz angular velocities of the torso, numpy array with size 3
-(5) goal_pos: final xy goal position of the ant, numpy array with size 2
-(6) goal_distance: distance between final goal and current torso position, numpy array with size 1
+(1) torso_coordinate: xy coordinate of the torso, numpy array with length 2
+(2) torso_orientation: xyzw orientation of the torso, numpy array with length 4
+(3) torso_velocity: xy velocities of the torso, numpy array with length 2
+(4) torso_angular_velocity: xyz angular velocities of the torso, numpy array with length 3
+(5) goal_pos: final xy goal position of the ant, numpy array with length 2
+(6) goal_distance: distance between final goal and current torso position, numpy array with length 1
 
 Your output for the reward code should follow this format
 ```python

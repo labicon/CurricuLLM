@@ -42,6 +42,10 @@ class Curriculum_Module:
                 except Exception as e:
                     print(f"Error in training task {task['Name']} sample {sample_num}")
                     print(e)
+                    # Save the error message
+                    with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/training_error.txt", "w") as file:
+                        file.write(str(e))
+                    self.stats_summary.append({"Error": "Error in evaluating task"})
                     continue
             
             # Asl LLM to choose the best model
@@ -98,21 +102,12 @@ class Curriculum_Module:
             model.set_env(training_env)
 
         if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
-            model.learn(total_timesteps=10_000_000, callback=eval_callback)
+            model.learn(total_timesteps=5_000_000, callback=eval_callback)
         else:
             model.learn(total_timesteps=1_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 
-        del model, training_env, eval_env, eval_callback
-        gc.collect()
-        torch.cuda.empty_cache()  # Free up unused memory
-
         try:
-            env_id = f"Curriculum/{self.env_name}"
-            eval_env = SubprocVecEnv([make_env(env_id, i) for i in range(self.num_cpu)])
-            model_path = self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip"
-            model = SAC.load(model_path)
-            
             # Get trajectory
             obs = eval_env.reset()
             obs_trajectory = [obs['observation'][0]]
@@ -127,7 +122,14 @@ class Curriculum_Module:
         except Exception as e:
             print(f"Error in evaluating task {task['Name']} sample {sample_num}")
             print(e)
+            # Save error message in log path
+            with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/evaluation_error.txt", "w") as file:
+                file.write(str(e))
             self.stats_summary.append({"Error": "Error in evaluating task"})
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
 
     def load_and_retrain(self, model_path, sample_num):
         env_id = f"Curriculum/{self.env_name}"
@@ -186,20 +188,20 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
 
     # Calculate mean and std of each variable
     statistics = {}
-    statistics["end_effector_pos_mean"] = np.mean(end_effector_pos, axis=0)
-    statistics["end_effector_pos_std"] = np.std(end_effector_pos, axis=0)
-    statistics["block_pos_mean"] = np.mean(block_pos, axis=0)
-    statistics["block_pos_std"] = np.std(block_pos, axis=0)
-    statistics["gripper_distance_mean"] = np.mean(gripper_distance, axis=0)
-    statistics["gripper_distance_std"] = np.std(gripper_distance, axis=0)
-    statistics["block_relative_velocity_mean"] = np.mean(block_velocity, axis=0)
-    statistics["block_relative_velocity_std"] = np.std(block_velocity, axis=0)
-    statistics["end_effector_velocity_mean"] = np.mean(end_effector_velocity, axis=0)
-    statistics["end_effector_velocity_std"] = np.std(end_effector_velocity, axis=0)
-    statistics["goal_pos_mean"] = np.mean(goal_pos, axis=0)
-    statistics["goal_pos_std"] = np.std(goal_pos, axis=0)
-    statistics["goal_distance_mean"] = np.mean(goal_distance, axis=0)
-    statistics["goal_distance_std"] = np.std(goal_distance, axis=0)
+    statistics["end_effector_pos_mean"] = np.mean(end_effector_pos, axis=0).round(2)
+    statistics["end_effector_pos_std"] = np.std(end_effector_pos, axis=0).round(2)
+    statistics["block_pos_mean"] = np.mean(block_pos, axis=0).round(2)
+    statistics["block_pos_std"] = np.std(block_pos, axis=0).round(2)
+    statistics["gripper_distance_mean"] = np.mean(gripper_distance, axis=0).round(2)
+    statistics["gripper_distance_std"] = np.std(gripper_distance, axis=0).round(2)
+    statistics["block_relative_velocity_mean"] = np.mean(block_velocity, axis=0).round(2)
+    statistics["block_relative_velocity_std"] = np.std(block_velocity, axis=0).round(2)
+    statistics["end_effector_velocity_mean"] = np.mean(end_effector_velocity, axis=0).round(2)
+    statistics["end_effector_velocity_std"] = np.std(end_effector_velocity, axis=0).round(2)
+    statistics["goal_pos_mean"] = np.mean(goal_pos, axis=0).round(2)
+    statistics["goal_pos_std"] = np.std(goal_pos, axis=0).round(2)
+    statistics["goal_distance_mean"] = np.mean(goal_distance, axis=0).round(2)
+    statistics["goal_distance_std"] = np.std(goal_distance, axis=0).round(2)
 
     return statistics
 

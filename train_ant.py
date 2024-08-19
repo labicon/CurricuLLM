@@ -44,7 +44,7 @@ class Curriculum_Module:
                     print(f"Error in training task {task['Name']} sample {sample_num}")
                     print(e)
                     # Save error message in log path
-                    with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/error.txt", "w") as file:
+                    with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/training_error.txt", "w") as file:
                         file.write(str(e))
                     self.stats_summary.append({"Error": "Error in evaluating task"})
                     continue
@@ -124,7 +124,7 @@ class Curriculum_Module:
             print(f"Error in evaluating task {task['Name']} sample {sample_num}")
             print(e)
             # Save error message in log path
-            with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/error.txt", "w") as file:
+            with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/evaluation_error.txt", "w") as file:
                 file.write(str(e))
             self.stats_summary.append({"Error": "Error in evaluating task"})
 

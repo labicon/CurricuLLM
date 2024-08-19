@@ -12,4 +12,5 @@ The variables you can use to describe the curriculum includes
 In the original task, the task is marked as success if a distance between torso xy position and goal xy position is less than 0.45.
 
 Note that in the starting state where the ant is standing upright, torso_orientation is [1.0, 0.0, 0.0, 0.0].
-goal_pos is initialized randomly.
+Note that goal_pos is initialized randomly and you cannot change it.
+Note that you cannot change maze configuration or detect a collision to the wall.

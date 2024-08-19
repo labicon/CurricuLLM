@@ -359,7 +359,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
     def goal_distance(self, ant_obs: np.ndarray):
         goal_pos = self.goal_pos()
         xyz_coordinate = self.torso_coordinate(ant_obs)
-        distance = np.array(np.linalg.norm(goal_pos - xyz_coordinate[:2]))
+        distance = np.array([np.linalg.norm(goal_pos - xyz_coordinate[:2])])
 
         return distance
     

@@ -25,22 +25,28 @@ register(
 )
 
 register(
-     id="Curriculum/FetchPush-v0",
-     entry_point="Curriculum.envs.FetchPush_v0:MujocoFetchPushEnv",
+     id="Curriculum/FetchPush",
+     entry_point="Curriculum.envs.FetchPush:MujocoFetchPushEnv",
      max_episode_steps=50,
 )
 
-register(
-     id="Curriculum/FetchPush-v1",
-     entry_point="Curriculum.envs.FetchPush_v1:MujocoFetchPushEnv",
-     max_episode_steps=50,
-)
+# register(
+#      id="Curriculum/FetchPush-v0",
+#      entry_point="Curriculum.envs.FetchPush_v0:MujocoFetchPushEnv",
+#      max_episode_steps=50,
+# )
 
-register(
-     id="Curriculum/FetchPush-v2",
-     entry_point="Curriculum.envs.FetchPush_v2:MujocoFetchPushEnv",
-     max_episode_steps=50,
-)
+# register(
+#      id="Curriculum/FetchPush-v1",
+#      entry_point="Curriculum.envs.FetchPush_v1:MujocoFetchPushEnv",
+#      max_episode_steps=50,
+# )
+
+# register(
+#      id="Curriculum/FetchPush-v2",
+#      entry_point="Curriculum.envs.FetchPush_v2:MujocoFetchPushEnv",
+#      max_episode_steps=50,
+# )
 
 register(
      id="Curriculum/FetchPickAndPlace-v0",

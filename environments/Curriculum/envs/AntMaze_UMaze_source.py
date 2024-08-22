@@ -370,7 +370,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         torso_velocity = self.torso_velocity(ant_obs) * 10
         torso_angular_velocity = self.torso_angular_velocity(ant_obs)
         goal_pos = self.goal_pos()
-        goal_distance = self.goal_distance(ant_obs)
+        goal_distance = self.goal_distance(ant_obs) * 10
 
         return torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, goal_distance
     

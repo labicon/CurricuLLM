@@ -11,6 +11,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecEnv
 from stable_baselines3.common.vec_env.patch_gym import _patch_env
 
 import Curriculum
+import importlib
 from evaluation.evalcallback_feedback import CurriculumEvalCallback
 
 def make_env(env_id: str, rank: int, task = None, seed: int = 0, render_mode: str = None):
@@ -23,6 +24,7 @@ def make_env(env_id: str, rank: int, task = None, seed: int = 0, render_mode: st
     :param rank: index of the subprocess
     """
     def _init():
+        importlib.reload(Curriculum)
         if render_mode is None:
             env = gym.make(env_id)
         else:

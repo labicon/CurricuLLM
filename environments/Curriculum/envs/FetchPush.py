@@ -10,7 +10,7 @@ MODEL_XML_PATH = os.path.join("fetch", "push.xml")
 
 
 class MujocoPyFetchPushEnv(MujocoPyFetchEnv, EzPickle):
-    def __init__(self, reward_type="sparse", **kwargs):
+    def __init__(self, reward_type="dense", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
             "robot0:slide1": 0.48,

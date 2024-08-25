@@ -215,7 +215,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         self,
         render_mode: Optional[str] = None,
         maze_map: List[List[Union[str, int]]] = U_MAZE,
-        reward_type: str = "sparse",
+        reward_type: str = "dense",
         continuing_task: bool = True,
         reset_target: bool = False,
         **kwargs,
@@ -268,8 +268,23 @@ class AntMazeEnv(MazeEnv, EzPickle):
             **kwargs,
         )
 
+        # self.goal_dist_threshold = None
+
     def reset(self, *, seed: Optional[int] = None, **kwargs):
         super().reset(seed=seed, **kwargs)
+
+        goal_dist = np.linalg.norm(self.goal - self.reset_pos)
+
+        if self.goal_dist_threshold:
+            trial = 0
+            while goal_dist > self.goal_dist_threshold:
+                super().reset(seed=seed, **kwargs)
+                goal_dist = np.linalg.norm(self.goal - self.reset_pos)
+                trial += 1
+                if trial > 500:
+                    print("Cannot find a goal location within the goal distance threshold")
+                    break
+                
 
         self.ant_env.init_qpos[:2] = self.reset_pos
 
@@ -367,10 +382,10 @@ class AntMazeEnv(MazeEnv, EzPickle):
         ant_obs = self.get_ant_obs()
         torso_coord = self.torso_coordinate(ant_obs)
         torso_orientation = self.torso_orientation(ant_obs)
-        torso_velocity = self.torso_velocity(ant_obs) * 10
+        torso_velocity = self.torso_velocity(ant_obs)
         torso_angular_velocity = self.torso_angular_velocity(ant_obs)
         goal_pos = self.goal_pos()
-        goal_distance = self.goal_distance(ant_obs) * 10
+        goal_distance = self.goal_distance(ant_obs)
 
         return torso_coord, torso_orientation, torso_velocity, torso_angular_velocity, goal_pos, goal_distance
     

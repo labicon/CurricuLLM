@@ -9,6 +9,11 @@ The variables you can use to describe the curriculum includes
 (5) goal_pos: final xy goal position of the ant
 (6) goal_distance: distance between final goal and current torso position.
 
+You can also set up the maximum distance between goal position and ant's initial position during the curriculum.
+Note that the maximum distance that can have in maze is 8.0 and minimun threshold is 3.0
+You also can remove such threshold by setting this variable as None
+(7) goal_dist_threshold: Maximum distance between ant's initial position and goal position
+
 In the original task, the task is marked as success if a distance between torso xy position and goal xy position is less than 0.45.
 
 Note that in the starting state where the ant is standing upright, torso_orientation is [1.0, 0.0, 0.0, 0.0].

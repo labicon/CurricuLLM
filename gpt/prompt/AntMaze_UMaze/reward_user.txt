@@ -25,6 +25,14 @@ Note that in the starting state where the ant is standing upright, torso_orienta
 torso_coordinate, torso_velocity, and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
 goal_pos is initialized randomly.
 
+You also can change self.goal_dist_threshold to set up maximum distance between initial ant position and goal position.
+If you don't want to set up threshold, leave it as None.
+Your output for the goal_dist_threshold value should follow this format.
+```threshold
+self.goal_dist_threshold = None
+```
+Note that the maximum distance that can have in maze is 8.0 and minimun threshold is 3.0
+
 Generate a reward function code for
 Task Name: <<Task_Name>>
 Description: <<Task_Description>>

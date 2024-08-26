@@ -66,20 +66,20 @@ register(
      max_episode_steps=50,
 )
 
-register(
-     id=f"Curriculum/AdroitHandRelocate-v0",
-     entry_point="Curriculum.envs.AdroitHandRelocate_v0:AdroitHandRelocateEnv",
-     max_episode_steps=200,
-)
+# register(
+#      id=f"Curriculum/AdroitHandRelocate-v0",
+#      entry_point="Curriculum.envs.AdroitHandRelocate_v0:AdroitHandRelocateEnv",
+#      max_episode_steps=200,
+# )
 
-register(
-     id=f"Curriculum/AdroitHandRelocate-v1",
-     entry_point="Curriculum.envs.AdroitHandRelocate_v1:AdroitHandRelocateEnv",
-     max_episode_steps=200,
-)
+# register(
+#      id=f"Curriculum/AdroitHandRelocate-v1",
+#      entry_point="Curriculum.envs.AdroitHandRelocate_v1:AdroitHandRelocateEnv",
+#      max_episode_steps=200,
+# )
 
-register(
-     id=f"Curriculum/AdroitHandRelocate-v2",
-     entry_point="Curriculum.envs.AdroitHandRelocate_v2:AdroitHandRelocateEnv",
-     max_episode_steps=200,
-)
+# register(
+#      id=f"Curriculum/AdroitHandRelocate-v2",
+#      entry_point="Curriculum.envs.AdroitHandRelocate_v2:AdroitHandRelocateEnv",
+#      max_episode_steps=200,
+# )

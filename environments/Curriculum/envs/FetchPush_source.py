@@ -263,7 +263,7 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
 
         return object_pos  
 
-    def block_relative_linear_velocity(self):
+    def block_linear_velocity(self):
         (
             grip_pos,
             object_pos,
@@ -276,7 +276,9 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
             gripper_vel,
         ) = self.generate_mujoco_observations()    
 
-        return object_velp
+        block_velocity = object_velp + grip_velp
+
+        return block_velocity
 
     def end_effector_linear_velocity(self):
         (
@@ -299,8 +301,8 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     def obs(self):
         end_effector_position = self.end_effector_position()
         block_position = self.block_position()
-        block_relative_linear_velocity = self.block_relative_linear_velocity()
+        block_linear_velocity = self.block_linear_velocity()
         end_effector_linear_velocity = self.end_effector_linear_velocity()
         goal_position = self.goal_position()
 
-        return end_effector_position, block_position, block_relative_linear_velocity, end_effector_linear_velocity, goal_position
+        return end_effector_position, block_position, block_linear_velocity, end_effector_linear_velocity, goal_position

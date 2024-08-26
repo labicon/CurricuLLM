@@ -6,14 +6,14 @@ The gripper is locked in a closed configuration in order to perform the push tas
 Observation from self.obs() includes
 (1) end_effector_position: xyz position of end effector
 (2) block_position: xyz position a block which robot should move
-(3) block_relative_linear_velocity: Linear velocity of block - Linear velocity of end effector
+(3) block_linear_velocity: Linear velocity of block
 (4) end_effector_linear_velocity: Linear velocity of end effector
 (5) goal_position: Desired goal position in xyz coordinate 
 
 Your output for the reward code should follow this format
 ```python
 def compute_reward_curriculum(self):
-    end_effector_position, block_position, block_relative_linear_velocity, \
+    end_effector_position, block_position, block_linear_velocity, \
     end_effector_linear_velocity, goal_position = self.obs()
 
     # Implement your reward function here

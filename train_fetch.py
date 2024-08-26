@@ -163,7 +163,7 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     end_effector_pos = []
     block_pos = []
     gripper_distance = []
-    block_velocity = []
+    block_relative_velocity = []
     end_effector_velocity = []
     goal_pos = []
     goal_distance = []
@@ -172,7 +172,7 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
         end_effector_pos.append(obs[0:3])
         block_pos.append(obs[3:6])
         gripper_distance.append(abs(obs[9] - obs[10]))
-        block_velocity.append(obs[15:18])
+        block_relative_velocity.append(obs[15:18])
         end_effector_velocity.append(obs[20:23])
         goal_pos.append(goal)
         goal_distance.append(np.linalg.norm(obs[3:6] - goal))
@@ -181,7 +181,7 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     end_effector_pos = np.array(end_effector_pos)
     block_pos = np.array(block_pos)
     gripper_distance = np.array(gripper_distance)
-    block_velocity = np.array(block_velocity)
+    block_velocity = np.array(block_relative_velocity) + np.array(end_effector_velocity)
     end_effector_velocity = np.array(end_effector_velocity)
     goal_pos = np.array(goal_pos)
     goal_distance = np.array(goal_distance)

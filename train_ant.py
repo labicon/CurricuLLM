@@ -25,7 +25,7 @@ class Curriculum_Module:
         self.best_model_idx_list = []
         self.current_reward_code_list = []
         self.num_cpu = 16
-        self.num_samples = 5
+        self.num_samples = 3
         self.seed = seed
         self.stats_summary = []
         

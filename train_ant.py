@@ -98,6 +98,8 @@ class Curriculum_Module:
         else:
             previous_task = self.curriculum_info[curriculum_idx - 1]['Name']
             pre_tuned_model_path = self.logger_path + previous_task + f"/sample_{self.best_model_idx_list[-1]}/final_model"
+
+            print("Loading model from " + pre_tuned_model_path)
             model = SAC.load(pre_tuned_model_path)
             model.set_env(training_env)
 

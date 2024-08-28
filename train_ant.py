@@ -104,9 +104,9 @@ class Curriculum_Module:
             model.set_env(training_env)
 
         if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
-            model.learn(total_timesteps=5_000_000, callback=eval_callback)
+            model.learn(total_timesteps=3_000_000, callback=eval_callback)
         else:
-            model.learn(total_timesteps=1_000_000, callback=eval_callback)
+            model.learn(total_timesteps=500_000, callback=eval_callback)
 
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 

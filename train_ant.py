@@ -115,7 +115,7 @@ class Curriculum_Module:
             obs = eval_env.reset()
             obs_trajectory = [obs['observation'][0]]
             goal_trajectory = [obs['desired_goal'][0]]
-            for _ in range(1400):
+            for _ in range(7000):
                 action, _ = model.predict(obs, deterministic=True)
                 obs, _, _, _ = eval_env.step(action)
                 obs_trajectory.append(obs['observation'][0])

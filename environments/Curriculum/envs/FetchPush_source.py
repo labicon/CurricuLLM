@@ -301,8 +301,8 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
     def obs(self):
         end_effector_position = self.end_effector_position()
         block_position = self.block_position()
-        block_linear_velocity = self.block_linear_velocity()
-        end_effector_linear_velocity = self.end_effector_linear_velocity()
+        block_linear_velocity = self.block_linear_velocity() * 10
+        end_effector_linear_velocity = self.end_effector_linear_velocity() * 10
         goal_position = self.goal_position()
 
         return end_effector_position, block_position, block_linear_velocity, end_effector_linear_velocity, goal_position

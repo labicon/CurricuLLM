@@ -250,7 +250,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         self.observation_space = spaces.Dict(
             dict(
                 observation=spaces.Box(
-                    -np.inf, np.inf, shape=(obs_shape[0],), dtype="float64"
+                    -np.inf, np.inf, shape=(obs_shape[0]-2,), dtype="float64"
                 ),
                 achieved_goal=spaces.Box(-np.inf, np.inf, shape=(2,), dtype="float64"),
                 desired_goal=spaces.Box(-np.inf, np.inf, shape=(2,), dtype="float64"),
@@ -320,7 +320,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
     def _get_obs(self, ant_obs: np.ndarray) -> Dict[str, np.ndarray]:
         achieved_goal = ant_obs[:2]
-        observation = ant_obs  # [2:]
+        observation = ant_obs[2:]
 
         return {
             "observation": observation.copy(),
@@ -349,7 +349,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return xy_coordinate
     
     def torso_orientation(self, ant_obs: np.ndarray):
-        xyz_orientation = ant_obs[3:7]
+        xyz_orientation = ant_obs[4:7]
 
         return xyz_orientation
 
@@ -382,7 +382,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         ant_obs = self.get_ant_obs()
         torso_coord = self.torso_coordinate(ant_obs)
         torso_orientation = self.torso_orientation(ant_obs)
-        torso_velocity = self.torso_velocity(ant_obs) * 20
+        torso_velocity = self.torso_velocity(ant_obs) * 10
         torso_angular_velocity = self.torso_angular_velocity(ant_obs)
         goal_pos = self.goal_pos()
         goal_distance = self.goal_distance(ant_obs)

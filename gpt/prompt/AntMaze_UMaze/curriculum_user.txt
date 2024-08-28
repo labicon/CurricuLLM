@@ -17,5 +17,5 @@ You also can remove such threshold by setting this variable as None
 In the original task, the task is marked as success if a distance between torso xy position and goal xy position is less than 0.45.
 
 Note that in the starting state where the ant is standing upright, torso_orientation is [1.0, 0.0, 0.0, 0.0].
-Note that goal_pos is initialized randomly and you cannot change it.
+Note that goal_pos is initialized randomly.
 Note that you cannot change maze configuration or detect a collision to the wall.

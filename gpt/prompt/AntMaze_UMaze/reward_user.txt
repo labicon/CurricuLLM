@@ -3,7 +3,7 @@ The original task in the environment is for ant to reach a target goal in a clos
 
 Observation from self.obs() includes
 (1) torso_coordinate: xy coordinate of the torso, numpy array with length 2
-(2) torso_orientation: xyzw orientation of the torso, numpy array with length 4
+(2) torso_orientation: xyz orientation of the torso, numpy array with length 3
 (3) torso_velocity: xy velocities of the torso, numpy array with length 2
 (4) torso_angular_velocity: xyz angular velocities of the torso, numpy array with length 3
 (5) goal_pos: final xy goal position of the ant, numpy array with length 2
@@ -21,7 +21,7 @@ def compute_reward_curriculum(self):
     return reward
 ```
 
-Note that in the starting state where the ant is standing upright, torso_orientation is [1.0, 0.0, 0.0, 0.0].
+Note that in the starting state where the ant is standing upright, torso_orientation is [0.0, 0.0, 0.0].
 torso_coordinate, torso_velocity, and torso_angular_velocity is initialized as [0.0, 0.0, 0.0].
 goal_pos is initialized randomly.
 

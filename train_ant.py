@@ -147,7 +147,7 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
 
     for obs, goal in zip(obs_trajectory, goal_trajectory):
         torso_coord.append(obs[0:3])
-        torso_orientation.append(obs[3:7])
+        torso_orientation.append(obs[4:7])
         torso_velocity.append(obs[15:17])
         torso_angular_velocity.append(obs[18:21])
         goal_pos.append(goal)

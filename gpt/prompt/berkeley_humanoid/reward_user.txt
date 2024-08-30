@@ -1,0 +1,54 @@
+The hub is a bipedal robot that can walk and run in a fashion similar to that of humans or animals.
+The original task in the environment is for hub to walk in x direction with speed of 2m/s.
+This is identical with following a command that consist of [linear velocity x, linear velocity y, angular velocity z, heading angle]
+with linear velocity x = 2.0, linear velocity y = 0.0, and angular velocity z = 0.0
+
+observation from normalized_obs() includes
+base_lin_vel: Linear velocity of base in xyz direction, 2 dimension with shape (number of envs, 3)
+base_ang_vel: angular velocity of base in xyz direction, 2 dimension with shape (number of envs, 3)
+nonflat_base_orientation: Size of deviation of base orientation from default standing position, 1 dimension with shape (number of envs)
+base_height_diff: height difference between measured base height and default stainding height, 1 dimension with shape (number of envs)
+torques: Torques applied to the joint, 2 dimension with shape (number of envs, number of joints)
+hip_pos_deviation: Relative position of hip joint from default standing position, 2 dimension with shape (number of envs, number of hip joints)
+knee_pos_deviation: Relative position of knee joint from default standing position, 2 dimension with shape (number of envs, number of knee joints)
+joint_vel: Velocity of each joint, 2 dimension with shape (number of envs, number of joints)
+joint_acc: Acceleration of each joint, 2 dimension with shape (number of envs, number of joints)
+is_alive: 1 if the environment is healthy, 0 if the environment is terminated due to failure, 1 dimension with shape (number of envs)
+
+commands: Commands that robot base should follow. 
+          Consist of [linear velocity x, linear velocity y, angular velocity z].
+          2 dimension with shape (number ov envs, 3)
+
+Note that default values are initialized to make the bipedal robot stand.
+
+Your output for the reward code should follow this format
+```python
+def reward_curriculum(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """Compute the reward for the current curriculum step."""
+    command, base_lin_vel, base_ang_vel, hip_pos_deviation, knee_pos_deviation, \
+    joint_vel, joint_acc, torque, \
+    nonflat_base_orientation, base_height_diff = normalized_obs(env, asset_cfg)
+    is_alive = (~env.termination_manager.terminated).float()
+
+    n_envs = env.scene.num_envs
+
+    # Implement your reward function here
+    reward = torch.zeros(n_envs, device=env.device)
+    return reward
+```
+
+You should re-implement reward_curriculum function to assign a proper reward function for given task. 
+Note that you should try to follow command linear velocity and angular velocity z.
+Especially, third component of base angular velocity should accurately follow angular velocity z in command.
+
+Your output for the command value should follow this format.
+You should change value of lin_vel_x, lin_vel_y, ang_vel_z, and heading for your specific task.
+
+```command
+value=mdp.ConstVelocityCommandCfg.Value(lin_vel_x=2.0, lin_vel_y=0.0, ang_vel_z=0.0, heading=0.0),
+```
+
+Generate a reward function code and command for
+Task Name: <<Task_Name>>
+Description: <<Task_Description>>
+Reason: <<Task_Reason>>

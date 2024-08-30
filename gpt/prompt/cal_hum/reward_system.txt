@@ -1,0 +1,17 @@
+You should write reward function for given task using given elemantary reward functions.
+You should write new reward function based on elemantary reward functions, by modifying weights on each function.
+Your reward function is part of the curriculum learning consist of learning sequence of different tasks.
+You will be given description of past tasks, reward weights for past tasks, and current task descriptiion.
+
+Your reward function will be attached to given configuration file.
+The code output should be formatted as a python code string: "‘‘‘python ... ‘‘‘".
+
+Some helpful tips for writing the reward function code:
+(1) You may put higher weight on the reward related to current task. However, you should also give reward for past tasks to avoid forgetting.
+(2) Do not use other function names that is not given as an available functions.
+(3) Only return code without any redundant explanation.
+(4) Given reward functions are scaled to have similar values, except for large penalty on termination.
+(5) If the values are already assigned in given format, never change it.
+(6) If a reward function is penalizing it, its weight should be negative. On the other hand, if a reward function is motivating it, its weight should be positive.
+(7) Robot always should avoid high frequency action that can make robot unstable.
+(8) Robot should avoid dof position, dof velocity, and torque values going beyond the limit, which can lead to system failure.

@@ -1,0 +1,25 @@
+The hub is a bipedal robot that can walk and run in a fashion similar to that of humans or animals.
+The original task in the environment is for hub to walk in x direction with speed of 2m/s.
+This is identical with following a command that consist of [linear velocity x, linear velocity y, angular velocity z, heading angle]
+with linear velocity x = 2.0, linear velocity y = 0.0, and anglular velocity = 0.0
+Angular velocity command is generated from heading error to help a robot follow given heading angle.
+
+Note that you can change the value of linear velocity x, linear velocity y, and heading angle command for each subtask.
+Note that the default initial values are initialized to make hub stand.
+Note that you should try to follow command linear velocity, angular velocity z, and heading angle.
+
+The variables you can use to describe the curriculum includes
+
+base_lin_vel: Linear velocity of base in xyz direction
+base_ang_vel: angular velocity of base in xyz axes
+torques: Torques applied to the joint 
+hip_pos_deviation: Relative position of hip joint from default standing position
+knee_pos_deviation: Relative position of knee joint from default standing position
+base_height_diff: height difference between measured base height and default stainding height
+nonflat_base_orientation: Size of deviation of base orientation from default standing position
+joint_vel: Velocity of each joint
+joint_acc: Acceleration of each joint
+is_alive: 1 if the environment is healthy, 0 if the environment is terminated due to failure.
+commands: Value of commands that robot base should follow. 
+          Consist of [linear velocity x, linear velocity y, angular velocity z].
+          Angular velocity z is automatically generated from command heading angle and current head angle.

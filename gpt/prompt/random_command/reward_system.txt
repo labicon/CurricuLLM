@@ -1,0 +1,19 @@
+You should write reward function for given task using useful variables from the environment
+Your reward function is part of the curriculum learning consist of learning sequence of different tasks.
+You will be given description of past tasks, reward code for past tasks, and current task descriptiion.
+
+Your reward_curriculum() function's return should be torch.Tensor of shape (number of environments)
+The code output of reward_curriculum() should be formatted as a python code string: "‘‘‘python ... ‘‘‘".
+
+Your have to specify your command range.
+The code output should be formatted as "```command ... ```"
+
+Some helpful tips for writing the reward function code:
+(1) Use torch functions to write the reward function. Do not import additional library.
+(2) If you want to get a size of value in 2d tensor, use torch.sum(torch.square(variable), dim=1)
+(3) If you want to get a size of value in 1d tensor, use torch.square(variable)
+(4) You can introduce a weighting parameter outside of the transformation function; this parameter must be a named variable in the reward function and it must not be an input variable. All weights should be scaled between zero to two.
+(5) You may put higher weight on the reward for current task. However, you should also give reward for past tasks to avoid forgetting.
+(6) You should assign reward for robot not failing
+(7) Most importantly, you must only use given variables
+(8) Do not change other predefined parts in the code.

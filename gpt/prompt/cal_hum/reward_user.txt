@@ -1,0 +1,100 @@
+The hub is a bipedal robot that can walk and run in a fashin similar to that of humans or animals.
+The original task in the environment is for hub to walk in x direction with speed of 1m/s.
+This is identical with following a command that consist of [linear velocity x, linear velocity y, angular velocity yaw, heading angle]
+with linear velocity x = 1.0, linear velocity y = 0.0, and head angle = 0.0
+Angular velocity command is generated from heading error to help a robot follow given heading angle.
+
+Available reward functions are
+lin_vel_z: Penalize z axis base linear velocity
+ang_vel_xy: Penalize xy axes base angular velocity
+orientation: Penalize if base orientation is not flat
+base_height: Penalize if base height is away from stable height
+torques: Penalize torque actions
+dof_vel: Penalize dof velocities
+dof_acc: Penalize dof accelerations
+action_rate: Penalize changes in actions
+collision: Penalize collisions on bodies
+termination: Penalize for termination before time out
+dof_pos_limits: Penalize dof positions that is too close to the limit
+dof_vel_limits: Penalize dof velocities too close to the limit
+torque_limits: Penalize torques too close to the limit
+tracking_lin_vel: Reward for tracking linear velocity command in xy direction
+tracking_ang_vel: Reward for tracking angular velocity commands in yaw
+feet_air_time: Reward for long steps which makes feet on the air for long time
+stumble: Penalize feet for hitting vertical surfaces
+stand_still: Penalize if there is a motion even if at zero commands
+feet_contact_forces: Penalize high contact forces
+no_fly: Reward if all feet is on the air
+high_freq: Penalize high frequency actions
+default_joint_angles: Penalize if joint angles are away from default
+hip_pos: Penalize if hip position is away from default
+foot_pos: Penalize if foot position is away from default
+
+In addition, you can change the command value during the curriculum while original command is 
+lin_vel_x = 1.0
+lin_vel_y = 0.0
+heading = 0.0
+
+Note that in the starting state where the hub is standing still, the position of the body base is [0.0, 0.0, 0.515].
+Default joint angles are initialized to make hub stand.
+
+The environment is terminated if their torso gets contact with the floor.
+
+Your output should be
+```python
+class rewards(LeggedRobotCfg.rewards):
+    soft_dof_pos_limit = 0.95
+    soft_dof_vel_limit = 0.9
+    soft_torque_limit = 0.9
+    max_contact_force = 300.
+    only_positive_rewards = False
+    cutoff_freq = 10.0
+
+    class scales(LeggedRobotCfg.rewards.scales):
+        lin_vel_z = -0.0    # Penalize z axis base linear velocity
+        ang_vel_xy = -0.0   # Penalize xy axes base angular velocity
+        orientation = -0.0  # Penalize if base orientation is not flat
+        base_height = -0.0  # Penalize if base height is away from stable height
+        torques = -0.0      # Penalize torque actions
+        dof_vel = -0.0      # Penalize dof velocities
+        dof_acc = -0.0      # Penalize dof accelerations
+        action_rate = -0.0  # Penalize changes in actions
+        collision = -0.0    # Penalize collisions on bodies
+        termination = -0.0  # Penalize for termination before time out
+        dof_pos_limits = -0.0   # Penalize dof positions that is too close to the limit
+        dof_vel_limits = -0.0   # Penalize dof velocities too close to the limit
+        torque_limits = -0.0    # Penalize torques too close to the limit
+        tracking_lin_vel = 0.0 # Reward for tracking linear velocity command in xy direction
+        tracking_ang_vel = 0.0 # Reward for tracking angular velocity commands in yaw
+        feet_air_time = 0.0    # Reward for long steps which makes feet on the air for long time
+        stumble = -0.0          # Penalize feet for hitting vertical surfaces
+        stand_still = -0.0      # Penalize if there is a motion even at zero commands
+        feet_contact_forces = -0.0  # Penalize high contact forces
+        no_fly = 0.0           # Reward if all feet is on the air
+        high_freq = -0.0    # Penalize high frequency actions
+        default_joint_angles = -0.0 # Penalize if joint angles are away from default
+        hip_pos = -0.0      # Penalize if hip position is away from default
+        foot_pos = -0.0      # Penalize if foot position is away from default
+
+class commands(LeggedRobotCfg.commands):
+    deterministic = True
+    class ranges(LeggedRobotCfg.commands.ranges):
+        lin_vel_x = [-1.0, 1.0] # min max [m/s]
+        lin_vel_y = [-1.0, 1.0]   # min max [m/s]
+        ang_vel_yaw = [-1.0, 1.0]    # min max [rad/s]
+        heading = [-3.14, 3.14]  # min max [rad]
+    class values(LeggedRobotCfg.commands.values):
+        lin_vel_x = 1.0     # Assign proper linear velocity x command
+        lin_vel_y = 0.0     # Assign proper linear velocity y command
+        heading = 0.0       # Assign proper heading command
+```
+Assign proper float value for each variables in rewards.scales and commands.values.
+Do not change the value of other variables.
+If you want to neglect some reward arguments, set their weight as 0.
+If the comment says "Penalize" arguments, scale should be negative.
+If the comment says "Reward" arguments, scale should be positive.
+
+Generate a reward function code for
+Task Name: <<Task_Name>>
+Description: <<Task_Description>>
+Reason: <<Task_Reason>>

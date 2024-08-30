@@ -1,0 +1,39 @@
+The hub is a bipedal robot that can walk and run in a fashin similar to that of humans or animals.
+The original task in the environment is for hub to walk in x direction with speed of 1m/s.
+This is identical with following a command that consist of [linear velocity x, linear velocity y, angular velocity yaw, heading angle]
+with linear velocity x = 1.0, linear velocity y = 0.0, and head angle = 0.0
+Angular velocity command is generated from heading error to help a robot follow given heading angle.
+
+You can change the value of command for the curriculum.
+
+Note that in the starting state where the hub is standing still, the position of the body base is [0.0, 0.0, 0.515].
+Default joint angles are initialized to make hub stand.
+
+The environment is terminated if their torso gets contact with the floor.
+
+There are elemantary reward functions available.
+Available reward functions are
+lin_vel_z: Penalize z axis base linear velocity
+ang_vel_xy: Penalize xy axes base angular velocity
+orientation: Penalize if base orientation is not flat
+base_height: Penalize if base height is away from stable height
+torques: Penalize torque actions
+dof_vel: Penalize dof velocities
+dof_acc: Penalize dof accelerations
+action_rate: Penalize changes in actions
+collision: Penalize collisions on bodies
+termination: Penalize for termination before time out
+dof_pos_limits: Penalize dof positions that is too close to the limit
+dof_vel_limits: Penalize dof velocities too close to the limit
+torque_limits: Penalize torques too close to the limit
+tracking_lin_vel: Reward for tracking linear velocity command in xy direction
+tracking_ang_vel: Reward for tracking angular velocity commands in yaw
+feet_air_time: Reward for long steps which makes feet on the air for long time
+stumble: Penalize feet for hitting vertical surfaces
+stand_still: Penalize if there is a motion even if at zero commands
+feet_contact_forces: Penalize high contact forces
+no_fly: Reward if all feet is on the air
+high_freq: Penalize high frequency actions
+default_joint_angles: Penalize if joint angles are away from default
+hip_pos: Penalize if hip position is away from default
+foot_pos: Penalize if foot position is away from default

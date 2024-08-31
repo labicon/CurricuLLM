@@ -25,6 +25,12 @@ register(
 )
 
 register(
+     id="Curriculum/AntMaze_UMaze_play",
+     entry_point="Curriculum.envs.AntMaze_UMaze_play:AntMazeEnv",
+     max_episode_steps=700,
+)
+
+register(
      id="Curriculum/FetchPush",
      entry_point="Curriculum.envs.FetchPush:MujocoFetchPushEnv",
      max_episode_steps=50,

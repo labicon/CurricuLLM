@@ -3,7 +3,7 @@ The original task in the environment is for ant to reach a target goal in a clos
 
 The variables you can use to describe the curriculum includes
 (1) torso_coordinate: xy coordinate of the torso
-(2) torso_orientation: xyz orientation of the torso
+(2) torso_orientation: xyzw orientation of the torso
 (3) torso_velocity: xy velocities of the torso
 (4) torso_angular_velocity: xyz angular velocities of the torso
 (5) goal_pos: final xy goal position of the ant
@@ -16,6 +16,6 @@ You also can remove such threshold by setting this variable as None
 
 In the original task, the task is marked as success if a distance between torso xy position and goal xy position is less than 0.45.
 
-Note that in the starting state where the ant is standing upright, torso_orientation is [0.0, 0.0, 0.0].
+Note that in the starting state where the ant is standing upright, torso_orientation is [1.0, 0.0, 0.0, 0.0].
 Note that goal_pos is initialized randomly and you cannot change it.
 Note that you cannot change maze configuration or detect a collision to the wall.

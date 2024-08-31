@@ -73,6 +73,7 @@ class Curriculum_Module:
     def train_single(self, curriculum_idx, task, sample_num):
         # Create the environment
         env_id = f"Curriculum/{self.env_name}"
+        eval_env_id = f"Curriculum/{self.env_name}_play"
 
         # Update env code
         reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx,
@@ -82,7 +83,7 @@ class Curriculum_Module:
 
         # Create the vectorized environment
         training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(eval_env_id, i, seed=self.seed) for i in range(self.num_cpu)])
 
         # Create the callback
         eval_callback = CurriculumEvalCallback(eval_env, 
@@ -147,7 +148,7 @@ def analyze_trajectory_ant(obs_trajectory, goal_trajectory):
 
     for obs, goal in zip(obs_trajectory, goal_trajectory):
         torso_coord.append(obs[0:3])
-        torso_orientation.append(obs[4:7])
+        torso_orientation.append(obs[3:7])
         torso_velocity.append(obs[15:17])
         torso_angular_velocity.append(obs[18:21])
         goal_pos.append(goal)

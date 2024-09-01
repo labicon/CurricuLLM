@@ -9,7 +9,7 @@ from gymnasium_robotics.envs.fetch import MujocoFetchEnv, MujocoPyFetchEnv
 MODEL_XML_PATH = os.path.join("fetch", "pick_and_place.xml")
 
 class MujocoPyFetchPickAndPlaceEnv(MujocoPyFetchEnv, EzPickle):
-    def __init__(self, reward_type="sparse", **kwargs):
+    def __init__(self, reward_type="dense", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
             "robot0:slide1": 0.48,
@@ -278,7 +278,7 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
 
         return gripper_distance
 
-    def block_relative_linear_velocity(self):
+    def block_linear_velocity(self):
     # This is realtive velocity, which is block_linear_velocity - end_effector_linear_velocity
         (
             grip_pos,
@@ -292,7 +292,7 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
             gripper_vel,
         ) = self.generate_mujoco_observations()    
 
-        return object_velp
+        return object_velp + grip_velp
 
     def end_effector_linear_velocity(self):
         (
@@ -315,9 +315,9 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
     def obs(self):
         end_effector_position = self.end_effector_position()
         block_position = self.block_position()
-        gripper_distance = self.gripper_distance()
-        block_relative_linear_velocity = self.block_relative_linear_velocity()
-        end_effector_linear_velocity = self.end_effector_linear_velocity()
+        gripper_distance = self.gripper_distance() * 10
+        block_linear_velocity = self.block_linear_velocity() * 100
+        end_effector_linear_velocity = self.end_effector_linear_velocity() * 100
         goal_position = self.goal_position()
 
-        return end_effector_position, block_position, gripper_distance, block_relative_linear_velocity, end_effector_linear_velocity, goal_position
+        return end_effector_position, block_position, gripper_distance, block_linear_velocity, end_effector_linear_velocity, goal_position

@@ -101,8 +101,8 @@ class Curriculum_Module:
             model = SAC.load(pre_tuned_model_path)
             model.set_env(training_env)
 
-        if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
-            model.learn(total_timesteps=3_000_000, callback=eval_callback)
+        if curriculum_idx == self.curriculum_length - 1:
+            model.learn(total_timesteps=5_000_000, callback=eval_callback)
         else:
             model.learn(total_timesteps=500_000, callback=eval_callback)
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
@@ -194,10 +194,10 @@ def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     statistics["block_pos_std"] = np.std(block_pos, axis=0).round(2)
     statistics["gripper_distance_mean"] = np.mean(gripper_distance, axis=0).round(2)
     statistics["gripper_distance_std"] = np.std(gripper_distance, axis=0).round(2)
-    statistics["block_velocity_mean"] = np.mean(block_velocity, axis=0).round(2)
-    statistics["block_velocity_std"] = np.std(block_velocity, axis=0).round(2)
-    statistics["end_effector_velocity_mean"] = np.mean(end_effector_velocity, axis=0).round(2)
-    statistics["end_effector_velocity_std"] = np.std(end_effector_velocity, axis=0).round(2)
+    statistics["block_velocity_mean"] = np.mean(block_velocity, axis=0)
+    statistics["block_velocity_std"] = np.std(block_velocity, axis=0)
+    statistics["end_effector_velocity_mean"] = np.mean(end_effector_velocity, axis=0)
+    statistics["end_effector_velocity_std"] = np.std(end_effector_velocity, axis=0)
     statistics["goal_pos_mean"] = np.mean(goal_pos, axis=0).round(2)
     statistics["goal_pos_std"] = np.std(goal_pos, axis=0).round(2)
     statistics["goal_distance_mean"] = np.mean(goal_distance, axis=0).round(2)

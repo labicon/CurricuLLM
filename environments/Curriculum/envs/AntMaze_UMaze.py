@@ -215,7 +215,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         self,
         render_mode: Optional[str] = None,
         maze_map: List[List[Union[str, int]]] = U_MAZE,
-        reward_type: str = "sparse",
+        reward_type: str = "dense",
         continuing_task: bool = True,
         reset_target: bool = False,
         **kwargs,
@@ -321,7 +321,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
 
     def _get_obs(self, ant_obs: np.ndarray) -> Dict[str, np.ndarray]:
         achieved_goal = ant_obs[:2]
-        observation = ant_obs  # [2:]
+        observation = ant_obs #[2:]
 
         return {
             "observation": observation.copy(),
@@ -350,9 +350,9 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return xy_coordinate
     
     def torso_orientation(self, ant_obs: np.ndarray):
-        xyz_orientation = ant_obs[3:7]
+        xyzw_orientation = ant_obs[3:7]
 
-        return xyz_orientation
+        return xyzw_orientation
 
     def torso_velocity(self, ant_obs: np.ndarray):
         xy_velocity = ant_obs[15:17]
@@ -383,7 +383,7 @@ class AntMazeEnv(MazeEnv, EzPickle):
         ant_obs = self.get_ant_obs()
         torso_coord = self.torso_coordinate(ant_obs)
         torso_orientation = self.torso_orientation(ant_obs)
-        torso_velocity = self.torso_velocity(ant_obs)
+        torso_velocity = self.torso_velocity(ant_obs) * 10
         torso_angular_velocity = self.torso_angular_velocity(ant_obs)
         goal_pos = self.goal_pos()
         goal_distance = self.goal_distance(ant_obs)
@@ -395,41 +395,34 @@ class AntMazeEnv(MazeEnv, EzPickle):
         torso_coordinate, torso_orientation, torso_velocity, \
         torso_angular_velocity, goal_pos, goal_distance = self.obs()
     
-        # Parameters for current task: Orientation control
-        target_orientation = [1.0, 0.0, 0.0, 0.0]  # Assuming target orientation is upright
-        position_stability_weight = 0.5  # Encourage less movement
-        orientation_control_weight = 2.0  # Major focus on controlling orientation
-        movement_penalty_weight = 0.2  # Penalty for moving
+        # Adjusted reward weights considering all previous tasks
+        velocity_reward_weight = 0.1  # Least priority, basic locomotion maintained
+        orientation_reward_weight = 0.3  # Keep the ant oriented correctly
+        precision_navigation_weight = 2.0  # Continue emphasizing close navigation to the goal
+        success_reward_weight = 5.0  # Highest weight, reward for completing the primary task
     
-        # Parameters for previous task: Basic locomotion
-        velocity_weight = 0.1  # Lower importance for movement itself
-        angular_velocity_penalty_weight = 0.05  # Keep stability in control
+        # Components from previous tasks
+        velocity_reward = np.linalg.norm(torso_velocity)
+        expected_orientation = np.array([1.0, 0.0, 0.0, 0.0])
+        orientation_similarity = np.dot(expected_orientation, torso_orientation)
+        orientation_reward = orientation_similarity
+        precision_navigation_reward = -np.linalg.norm(goal_distance)  # Encourage minimizing distance
     
-        # Position stability reward - penalize deviation from initial position
-        initial_position = [0.0, 0.0]  # Assuming starting position
-        position_deviation_penalty = -np.linalg.norm(torso_coordinate - initial_position) * position_stability_weight
+        # Original task specific component
+        success_reward = 1.0 if np.linalg.norm(goal_distance) < 0.45 else 0.0  # Reward for reaching the goal
     
-        # Orientation control reward - aligning with target orientation
-        orientation_control_reward = -np.linalg.norm(torso_orientation - target_orientation) * orientation_control_weight
+        # Compute total reward
+        reward = (velocity_reward_weight * velocity_reward +
+                  orientation_reward_weight * orientation_reward +
+                  precision_navigation_weight * precision_navigation_reward +
+                  success_reward_weight * success_reward)
     
-        # Movement penalty
-        movement_penalty = -np.linalg.norm(torso_velocity) * movement_penalty_weight
-    
-        # Movement reward component and Stability Penalty from previous task
-        movement_reward = np.linalg.norm(torso_velocity) * velocity_weight
-        stability_penalty = -np.linalg.norm(torso_angular_velocity) * angular_velocity_penalty_weight
-    
-        # Summing up all the rewards and penalties for the total reward
-        total_reward = position_deviation_penalty + orientation_control_reward + movement_penalty + \
-                       movement_reward + stability_penalty
-    
+        # Dictionary to track each individual component of the reward
         reward_dict = {
-            'position_deviation_penalty': position_deviation_penalty,
-            'orientation_control_reward': orientation_control_reward,
-            'movement_penalty': movement_penalty,
-            'movement_reward': movement_reward,
-            'stability_penalty': stability_penalty,
-            'total_reward': total_reward
+            'velocity_reward': velocity_reward,
+            'orientation_reward': orientation_reward,
+            'precision_navigation_reward': precision_navigation_reward,
+            'success_reward': success_reward,
         }
     
-        return total_reward, reward_dict
+        return reward, reward_dict

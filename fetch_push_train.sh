@@ -15,13 +15,13 @@
 #SBATCH --ntasks=1
 
 #Processors per task:
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #
 # QoS option for GPU
-#SBATCH --qos=gtx2080_gpu3_normal
+#SBATCH --qos=v100_gpu3_normal
 #
 # Number of GPUs
-#SBATCH --gres=gpu:GTX2080TI:4
+#SBATCH --gres=gpu:V100:1
 #
 # Wall clock limit:
 #SBATCH --time=36:00:00

@@ -6,7 +6,7 @@ from utils.train_utils import *
 from train_ant import Curriculum_Module, HER_Module
 
 if __name__ == "__main__":
-    seed = 10
+    seed = 13
     
     env_name = "AntMaze_UMaze"
     env_path = "./environments/Curriculum/envs/AntMaze_UMaze_source.py"

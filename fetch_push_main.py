@@ -6,7 +6,7 @@ from utils.train_utils import *
 from train_fetch import Curriculum_Module, HER_Module
 
 if __name__ == "__main__":
-    seed = 10
+    seed = 14
     
     env_name = "FetchPush"
     env_path = "./environments/Curriculum/envs/FetchPush_source.py" # FetchPush.py

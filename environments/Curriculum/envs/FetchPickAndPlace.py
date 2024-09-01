@@ -9,7 +9,7 @@ from gymnasium_robotics.envs.fetch import MujocoFetchEnv, MujocoPyFetchEnv
 MODEL_XML_PATH = os.path.join("fetch", "pick_and_place.xml")
 
 class MujocoPyFetchPickAndPlaceEnv(MujocoPyFetchEnv, EzPickle):
-    def __init__(self, reward_type="sparse", **kwargs):
+    def __init__(self, reward_type="dense", **kwargs):
         initial_qpos = {
             "robot0:slide0": 0.405,
             "robot0:slide1": 0.48,
@@ -278,7 +278,7 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
 
         return gripper_distance
 
-    def block_relative_linear_velocity(self):
+    def block_linear_velocity(self):
     # This is realtive velocity, which is block_linear_velocity - end_effector_linear_velocity
         (
             grip_pos,
@@ -292,7 +292,7 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
             gripper_vel,
         ) = self.generate_mujoco_observations()    
 
-        return object_velp
+        return object_velp + grip_velp
 
     def end_effector_linear_velocity(self):
         (
@@ -311,3 +311,45 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
 
     def goal_position(self):
         return self.goal.copy()
+
+    def obs(self):
+        end_effector_position = self.end_effector_position()
+        block_position = self.block_position()
+        gripper_distance = self.gripper_distance() * 10
+        block_linear_velocity = self.block_linear_velocity() * 100
+        end_effector_linear_velocity = self.end_effector_linear_velocity() * 100
+        goal_position = self.goal_position()
+
+        return end_effector_position, block_position, gripper_distance, block_linear_velocity, end_effector_linear_velocity, goal_position
+
+    import numpy as np
+    
+    def compute_reward_curriculum(self):
+        end_effector_position, block_position, gripper_distance, \
+        block_linear_velocity, end_effector_linear_velocity, \
+        goal_position = self.obs()
+    
+        # Parameters for reward function
+        distance_weight = -1.0  # Negative to penalize distance, thereby minimizing it
+        velocity_weight = -0.1  # Negative to discourage excessive movement
+    
+        # Compute the Euclidean distance between the end effector and the block
+        position_difference = np.linalg.norm(end_effector_position - block_position)
+        position_reward = distance_weight * position_difference
+    
+        # Compute the magnitudes of the end effector and block linear velocities
+        ee_velocity_mag = np.linalg.norm(end_effector_linear_velocity)
+        block_velocity_mag = np.linalg.norm(block_linear_velocity)
+        
+        # Velocity penalty to encourage stable and controlled movement
+        velocity_penalty = velocity_weight * (ee_velocity_mag + block_velocity_mag)
+    
+        # Total reward computation
+        reward = position_reward + velocity_penalty
+    
+        reward_dict = {
+            'position_reward': position_reward,
+            'velocity_penalty': velocity_penalty,
+        }
+    
+        return reward, reward_dict

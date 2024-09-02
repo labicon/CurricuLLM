@@ -135,7 +135,7 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
-    def load_task_info(self):
+    def load_curriculum(self):
         # Load curriculum
         with open(self.logger_path + "curriculum.md", "r") as file:
             curriculum_txt = file.read()
@@ -170,10 +170,10 @@ class Curriculum_Module:
         for task in self.curriculum_info[:resume_idx]:
             with open(self.logger_path + f"{task['Name']}/best_reward_code.txt", "r") as file:
                 reward_code = file.read()
-                self.best_reward_list.append(reward_code)
+                self.best_reward_code_list.append(reward_code)
 
             # Load best model indices
-            with open(self.log_path + f"{task['Name']}.md", "r") as file:
+            with open(self.logger_path + f"{task['Name']}.md", "r") as file:
                 decision_txt = file.read()
 
             decision = decision_txt.splitlines()[0]
@@ -186,15 +186,15 @@ class Curriculum_Module:
                 self.best_model_idx_list.append(0)
 
     def load_current_rewards(self, resume_idx):
-        for sample in range(self.num_reward_samples):
+        for sample in range(self.num_samples):
             with open(
                 self.logger_path + f"{self.curriculum_info[resume_idx]['Name']}/sample_{sample}/reward_code.md", "r"
             ) as file:
                 response = file.read()
                 if "Error" in response:
-                    self.current_reward_list.append(None)
+                    self.current_reward_code_list.append(None)
                 else:
-                    self.current_reward_list.append(response)
+                    self.current_reward_code_list.append(response)
 
     def resume_curriculum(self, resume_idx, resume_sample_idx=0, resume_from_training=True):
         print(f"Resuming curriculum at task {resume_idx}")
@@ -208,21 +208,41 @@ class Curriculum_Module:
             if resume_from_training:
                 print(f"Training task {task['Name']}")
                 start_idx = resume_sample_idx
-                for sample_num in range(start_idx, self.num_reward_samples):
+                for sample_num in range(start_idx, self.num_samples):
                     try:
-                        self.train_single(task, prev_task, idx, sample_num)
+                        self.train_single(idx, task, sample_num)
                     except Exception as e:
-                        print(f"Error in training task {task['Name']} Sample {sample_num}: {e}")
+                        print(f"Error in training task {task['Name']} sample {sample_num}")
+                        print(e)
+                        # Save error message in log path
+                        with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/training_error.txt", "w") as file:
+                            file.write(str(e))
+                        self.stats_summary.append({"Error": "Error in evaluating task"})
                         continue
                 start_idx = 0
             else:
                 self.load_current_rewards(resume_idx)
                 print(f"Loaded current rewards for task {task['Name']}")
 
-            # Evaluate
-            _ = self.evaluate_best_model(task, idx)
-            prev_task = task
+            # Asl LLM to choose the best model
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, idx, self.stats_summary)
+            trial = 1
+            while best_sample_idx is None:
+                print("Statistics Analysis error. Try again.")
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, idx, self.stats_summary)
+                trial += 1
+                if trial == 5:
+                    best_sample_idx = 0
 
+            self.best_model_idx_list.append(best_sample_idx)
+            # Update best reward code list
+            self.best_reward_code_list.append(self.current_reward_code_list[best_sample_idx])
+
+            # Save the best reward code list
+            with open(self.logger_path + f"{task['Name']}/best_reward_code.txt", "w") as file:
+                file.write(self.current_reward_code_list[best_sample_idx])
+                
+            self.current_reward_code_list = []
             self.stats_summary = []
 
             resume_from_training = True

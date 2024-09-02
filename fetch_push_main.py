@@ -3,10 +3,10 @@ import gc
 import torch
 
 from utils.train_utils import *
-from train_fetch import Curriculum_Module, HER_Module
+from train_fetch import Curriculum_Module, HER_Module, SAC_Module, Scratch_Module
 
 if __name__ == "__main__":
-    seed = 14
+    seed = 15
     
     env_name = "FetchPush"
     env_path = "./environments/Curriculum/envs/FetchPush_source.py" # FetchPush.py
@@ -28,3 +28,19 @@ if __name__ == "__main__":
     # del her_module
     # gc.collect()
     # torch.cuda.empty_cache()
+    
+    # SAC experiments
+    sac_module = SAC_Module(env_name, env_path, logger_path, seed)
+    sac_module.train_with_sac()
+    
+    del sac_module
+    gc.collect()
+    torch.cuda.empty_cache()
+    
+    # Scratch experiments
+    scratch_module = Scratch_Module(env_name, env_path, logger_path, seed)
+    scratch_module.train_curriculum()
+    
+    del scratch_module
+    gc.collect()
+    torch.cuda.empty_cache()

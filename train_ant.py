@@ -73,7 +73,7 @@ class Curriculum_Module:
     def train_single(self, curriculum_idx, task, sample_num):
         # Create the environment
         env_id = f"Curriculum/{self.env_name}"
-        eval_env_id = f"Curriculum/{self.env_name}_play"
+        eval_env_id = f"Curriculum/{self.env_name}"
 
         # Update env code
         reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx,

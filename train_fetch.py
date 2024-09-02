@@ -249,6 +249,41 @@ class HER_Module:
         gc.collect()
         torch.cuda.empty_cache()
 
+class SAC_Module:
+    def __init__(self, env_name, env_path, logger_path, seed=0):
+        self.env_name = env_name
+        self.env_path = env_path
+        self.logger_path = logger_path
+        self.num_cpu = 16
+        self.seed = seed
+
+    def train_with_sac(self):
+        # Create the environment
+        env_id = f"{self.env_name}-v2"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = EvalCallback(eval_env, 
+                                    log_path=self.logger_path + "sac/", 
+                                    best_model_save_path=self.logger_path + "sac/", 
+                                    eval_freq=1000, 
+                                    deterministic=True, render=False, warn=False)
+        
+        model = SAC("MultiInputPolicy",
+                    training_env,
+                    verbose=1,
+                    )
+        
+        model.learn(total_timesteps=13_000_000, callback=eval_callback)
+        model.save(self.logger_path + "her/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()
+
 
 class Scratch_Module:
 

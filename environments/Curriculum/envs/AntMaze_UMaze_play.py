@@ -335,9 +335,9 @@ class AntMazeEnv(MazeEnv, EzPickle):
         return xy_coordinate
     
     def torso_orientation(self, ant_obs: np.ndarray):
-        xyz_orientation = ant_obs[4:7]
+        xyzw_orientation = ant_obs[3:7]
 
-        return xyz_orientation
+        return xyzw_orientation
 
     def torso_velocity(self, ant_obs: np.ndarray):
         xy_velocity = ant_obs[15:17]

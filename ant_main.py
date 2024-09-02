@@ -1,12 +1,16 @@
 import gymnasium as gym
 import gc
 import torch
+import argparse
 
 from utils.train_utils import *
 from train_ant import Curriculum_Module, HER_Module
 
 if __name__ == "__main__":
-    seed = 13
+    parser = argparse.ArgumentParser(description="Recieve seed number")
+    parser.add_argument("--seed", help="Random seed", default=0)
+    args = parser.parse_args()
+    seed = args.seed
     
     env_name = "AntMaze_UMaze"
     env_path = "./environments/Curriculum/envs/AntMaze_UMaze_source.py"
@@ -14,8 +18,9 @@ if __name__ == "__main__":
 
     # Curriculum experiments
     curriculum_module = Curriculum_Module(env_name, env_path, logger_path, seed)
-    curriculum_module.generate_curriculum()
-    curriculum_module.train_curriculum()
+    # curriculum_module.generate_curriculum()
+    # curriculum_module.train_curriculum()
+    curriculum_module.resume_curriculum(resume_idx=1, resume_sample_idx=0, resume_from_training=True)
 
     del curriculum_module
     gc.collect()

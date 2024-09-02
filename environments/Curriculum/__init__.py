@@ -55,22 +55,28 @@ register(
 # )
 
 register(
-     id="Curriculum/FetchPickAndPlace-v0",
-     entry_point="Curriculum.envs.FetchPickAndPlace_v0:MujocoFetchPickAndPlaceEnv",
+     id="Curriculum/FetchPickAndPlace",
+     entry_point="Curriculum.envs.FetchPickAndPlace:MujocoFetchPickAndPlaceEnv",
      max_episode_steps=50,
 )
 
-register(
-     id="Curriculum/FetchPickAndPlace-v1",
-     entry_point="Curriculum.envs.FetchPickAndPlace_v1:MujocoFetchPickAndPlaceEnv",
-     max_episode_steps=50,
-)
+# register(
+#      id="Curriculum/FetchPickAndPlace-v0",
+#      entry_point="Curriculum.envs.FetchPickAndPlace_v0:MujocoFetchPickAndPlaceEnv",
+#      max_episode_steps=50,
+# )
 
-register(
-     id="Curriculum/FetchPickAndPlace-v2",
-     entry_point="Curriculum.envs.FetchPickAndPlace_v2:MujocoFetchPickAndPlaceEnv",
-     max_episode_steps=50,
-)
+# register(
+#      id="Curriculum/FetchPickAndPlace-v1",
+#      entry_point="Curriculum.envs.FetchPickAndPlace_v1:MujocoFetchPickAndPlaceEnv",
+#      max_episode_steps=50,
+# )
+
+# register(
+#      id="Curriculum/FetchPickAndPlace-v2",
+#      entry_point="Curriculum.envs.FetchPickAndPlace_v2:MujocoFetchPickAndPlaceEnv",
+#      max_episode_steps=50,
+# )
 
 # register(
 #      id=f"Curriculum/AdroitHandRelocate-v0",

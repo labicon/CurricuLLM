@@ -1,22 +1,22 @@
 from gymnasium.envs.registration import register
 
-register(
-     id="Curriculum/Walker2d-v0",
-     entry_point="Curriculum.envs.Walker2d_v0:Walker2dEnv",
-     max_episode_steps=1000,
-)
+# register(
+#      id="Curriculum/Walker2d-v0",
+#      entry_point="Curriculum.envs.Walker2d_v0:Walker2dEnv",
+#      max_episode_steps=1000,
+# )
 
-register(
-     id="Curriculum/Walker2d-v1",
-     entry_point="Curriculum.envs.Walker2d_v1:Walker2dEnv",
-     max_episode_steps=1000,
-)
+# register(
+#      id="Curriculum/Walker2d-v1",
+#      entry_point="Curriculum.envs.Walker2d_v1:Walker2dEnv",
+#      max_episode_steps=1000,
+# )
 
-register(
-     id="Curriculum/Walker2d-v2",
-     entry_point="Curriculum.envs.Walker2d_v2:Walker2dEnv",
-     max_episode_steps=1000,
-)
+# register(
+#      id="Curriculum/Walker2d-v2",
+#      entry_point="Curriculum.envs.Walker2d_v2:Walker2dEnv",
+#      max_episode_steps=1000,
+# )
 
 register(
      id="Curriculum/AntMaze_UMaze",

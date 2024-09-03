@@ -8,7 +8,7 @@ from train_fetch_slide import Curriculum_Module, HER_Module, SAC_Module, Scratch
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Recieve seed number")
-    parser.add_argument("--seed", help="Random seed", default=0)
+    parser.add_argument("--seed", type=int, help="Random seed", default=0)
     args = parser.parse_args()
     seed = args.seed
     

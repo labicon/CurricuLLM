@@ -1,5 +1,6 @@
 This environment is Fetch-Slide environment
 The original task in the environment is for a manipulator hit a puck in order to reach a target position on top of a long and slippery table.
+The table has a low friction coefficient in order to make it slippery for the puck to slide and be able to reach the target position which is outside of the robot’s workspace.
 The robot is a 7-DoF Fetch Mobile Manipulator with a two-fingered parallel gripper.  
 The gripper is locked in a closed configuration in order to perform the push task.
 

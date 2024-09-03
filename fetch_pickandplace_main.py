@@ -1,12 +1,16 @@
 import gymnasium as gym
 import gc
 import torch
+import argparse
 
 from utils.train_utils import *
 from train_fetch_pickandplace import Curriculum_Module, HER_Module
 
 if __name__ == "__main__":
-    seed = 14
+    parser = argparse.ArgumentParser(description="Recieve seed number")
+    parser.add_argument("--seed", type=int, help="Random seed", default=0)
+    args = parser.parse_args()
+    seed = args.seed
     
     env_name = "FetchPickAndPlace" # "FetchPush"
     env_path = "./environments/Curriculum/envs/FetchPickAndPlace_source.py" # FetchPush.py

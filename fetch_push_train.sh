@@ -18,10 +18,10 @@
 #SBATCH --cpus-per-task=4
 #
 # QoS option for GPU
-#SBATCH --qos=v100_gpu3_normal
+#SBATCH --qos=gtx2080_gpu3_normal
 #
 # Number of GPUs
-#SBATCH --gres=gpu:V100:1
+#SBATCH --gres=gpu:GTX2080TI:2
 #
 # Wall clock limit:
 #SBATCH --time=36:00:00
@@ -35,6 +35,6 @@ module load gcc/11.4.0
 module load cuda/12.2.1 
 module load cudnn/8.9.0-12.2.1
 
-python ./fetch_push_main.py
+python ./fetch_push_main.py  --seed=2
 
 

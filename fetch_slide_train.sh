@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name:
-#SBATCH --job-name=kanghyun_fetch_push
+#SBATCH --job-name=kanghyun_fetch_slide
 #
 # Account:
 #SBATCH --account=fc_icon

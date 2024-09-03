@@ -35,6 +35,6 @@ module load gcc/11.4.0
 module load cuda/12.2.1 
 module load cudnn/8.9.0-12.2.1
 
-python ./ant_main.py
+python ./ant_main.py --seed=1
 
 

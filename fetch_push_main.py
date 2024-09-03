@@ -1,12 +1,16 @@
 import gymnasium as gym
 import gc
 import torch
+import argparse
 
 from utils.train_utils import *
 from train_fetch import Curriculum_Module, HER_Module, SAC_Module, Scratch_Module
 
 if __name__ == "__main__":
-    seed = 15
+    parser = argparse.ArgumentParser(description="Recieve seed number")
+    parser.add_argument("--seed", help="Random seed", default=0)
+    args = parser.parse_args()
+    seed = args.seed
     
     env_name = "FetchPush"
     env_path = "./environments/Curriculum/envs/FetchPush_source.py" # FetchPush.py

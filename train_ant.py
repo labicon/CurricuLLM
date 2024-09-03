@@ -24,7 +24,7 @@ class Curriculum_Module:
         self.best_reward_code_list = []
         self.best_model_idx_list = []
         self.current_reward_code_list = []
-        self.num_cpu = 8
+        self.num_cpu = 16
         self.num_samples = 3
         self.seed = seed
         self.stats_summary = []
@@ -334,3 +334,173 @@ class HER_Module:
         del model, training_env, eval_env, eval_callback
         gc.collect()
         torch.cuda.empty_cache() # Free up unused memory
+
+class SAC_Module:
+    def __init__(self, env_name, env_path, logger_path, seed=0):
+        self.env_name = env_name
+        self.env_path = env_path
+        self.logger_path = logger_path
+        self.num_cpu = 16
+        self.seed = seed
+
+    def train_with_sac(self):
+        # Create the environment
+        env_id = f"{self.env_name}Dense-v4"
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = EvalCallback(eval_env, 
+                                    log_path=self.logger_path + "sac/", 
+                                    best_model_save_path=self.logger_path + "sac/", 
+                                    eval_freq=1000, 
+                                    deterministic=True, render=False, warn=False)
+        
+        model = SAC("MultiInputPolicy",
+                    training_env,
+                    verbose=1,
+                    )
+        
+        model.learn(total_timesteps=13_000_000, callback=eval_callback)
+        model.save(self.logger_path + "her/final_model.zip")
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()
+
+
+class Scratch_Module:
+
+    def __init__(self, env_name, env_path, logger_path, seed=0):
+        self.env_name = env_name
+        self.env_path = env_path
+        self.prompt_path = "./gpt/prompt/"
+        self.gpt_api = CurriculumAPI(self.env_name, self.prompt_path, logger_path)
+        self.logger_path = logger_path
+        self.best_reward_code_list = []
+        self.best_model_idx_list = []
+        self.current_reward_code_list = []
+        self.num_cpu = 16
+        self.num_samples = 3
+        self.seed = seed
+        self.stats_summary = []
+        
+    def train_curriculum(self):
+        self.load_task_info()
+
+        for curriculum_idx in range(self.curriculum_length):
+            for sample_num in range(self.num_samples):
+                task = self.curriculum_info[curriculum_idx]
+                try:
+                    self.train_single(curriculum_idx, task, sample_num)
+                except Exception as e:
+                    print(f"Error in training task {task['Name']} sample {sample_num}")
+                    print(e)
+                    # Save the error message
+                    with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/training_error.txt", "w") as file:
+                        file.write(str(e))
+                    self.stats_summary.append({"Error": "Error in evaluating task"})
+                    continue
+            
+            # Asl LLM to choose the best model
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, self.stats_summary)
+            trial = 1
+            while best_sample_idx is None:
+                print("Statistics Analysis error. Try again.")
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, curriculum_idx, self.stats_summary)
+                trial += 1
+                if trial == 5:
+                    best_sample_idx = 0
+
+            self.best_model_idx_list.append(best_sample_idx)
+            # Update best reward code list
+            self.best_reward_code_list.append(self.current_reward_code_list[best_sample_idx])
+
+            # Save the best reward code list
+            with open(self.logger_path + f"{task['Name']}/best_reward_code.txt", "w") as file:
+                file.write(self.current_reward_code_list[best_sample_idx])
+                
+            self.current_reward_code_list = []
+            self.stats_summary = []
+
+    def train_single(self, curriculum_idx, task, sample_num):
+        # Create the environment
+        env_id = f"Curriculum/{self.env_name}"
+
+        # Update env code
+        
+        reward_code = self.gpt_api.update_env_code(self.env_path, curriculum_idx, 
+                                     previous_reward_code=self.best_reward_code_list, 
+                                     version_number=sample_num)
+        self.current_reward_code_list.append(reward_code)
+
+        # Create the vectorized environment
+        training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+        eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+
+        # Create the callback
+        eval_callback = CurriculumEvalCallback(eval_env, 
+                                            log_path=self.logger_path + f"{task['Name']}/sample_{sample_num}", 
+                                            best_model_save_path=self.logger_path + f"{task['Name']}/sample_{sample_num}", 
+                                            eval_freq=1000, 
+                                            deterministic=True, render=False, warn=False)
+        
+        model = SAC("MultiInputPolicy",
+                    training_env,
+                    verbose=1)
+
+        model.learn(total_timesteps=13_000_000, callback=eval_callback)
+        model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
+
+        try:
+            # Get trajectory
+            obs = eval_env.reset()
+            obs_trajectory = [obs['observation'][0]]
+            goal_trajectory = [obs['desired_goal'][0]]
+            for _ in range(500):
+                action, _ = model.predict(obs, deterministic=True)
+                obs, _, _, _ = eval_env.step(action)
+                obs_trajectory.append(obs['observation'][0])
+                goal_trajectory.append(obs['desired_goal'][0])
+
+            self.stats_summary.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
+        except Exception as e:
+            print(f"Error in evaluating task {task['Name']} sample {sample_num}")
+            print(e)
+            # Save error message in log path
+            with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/evaluation_error.txt", "w") as file:
+                file.write(str(e))
+            self.stats_summary.append({"Error": "Error in evaluating task"})
+
+        del model, training_env, eval_env, eval_callback
+        gc.collect()
+        torch.cuda.empty_cache()  # Free up unused memory
+
+    def load_task_info(self):
+        # Load curriculum
+        with open(self.prompt_path + self.env_name + "original_task_info.md", "r") as file:
+            task_txt = file.read()
+
+        # Function to extract details from each task section
+        def extract_task_details(task_section):
+
+            details = {}
+            lines = task_section.split("\n")
+            for line in lines:
+                if line.startswith("Task"):
+                    details["Task"] = line.split(" ")[1]
+                elif line.startswith("Name:"):
+                    details["Name"] = line.split(": ")[1]
+                elif line.startswith("Description:"):
+                    details["Description"] = line.split(": ")[1]
+                elif line.startswith("Reason:"):
+                    details["Reason"] = ": ".join(line.split(": ")[1:])
+            return details
+
+        # Extract details for all tasks
+        tasks_details = [extract_task_details(task_txt)]
+        self.curriculum_info = tasks_details
+        self.gpt_api.tasks_details = tasks_details
+        self.curriculum_length = len(self.curriculum_info)

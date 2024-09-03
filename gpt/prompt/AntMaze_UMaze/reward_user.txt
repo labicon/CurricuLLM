@@ -31,7 +31,7 @@ Your output for the goal_dist_threshold value should follow this format.
 ```threshold
 self.goal_dist_threshold = None
 ```
-Note that the maximum distance that can have in maze is 8.0 and minimun threshold is 3.0
+Note that the maximum distance that can have in maze is 8.0 and minimun threshold is 5.0
 
 Generate a reward function code for
 Task Name: <<Task_Name>>

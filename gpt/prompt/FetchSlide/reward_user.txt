@@ -1,0 +1,31 @@
+This environment is Fetch-Slide environment
+The original task in the environment is for a manipulator hit a puck in order to reach a target position on top of a long and slippery table.
+The robot is a 7-DoF Fetch Mobile Manipulator with a two-fingered parallel gripper.  
+The gripper is locked in a closed configuration in order to perform the push task.
+
+Observation from self.obs() includes
+(1) end_effector_position: xyz position of end effector
+(2) block_position: xyz position a block which robot should move
+(3) block_linear_velocity: Linear velocity of block
+(4) end_effector_linear_velocity: Linear velocity of end effector
+(5) goal_position: Desired goal position in xyz coordinate 
+
+Your output for the reward code should follow this format
+```python
+def compute_reward_curriculum(self):
+    end_effector_position, block_position, block_linear_velocity, \
+    end_effector_linear_velocity, goal_position = self.obs()
+
+    # Implement your reward function here
+    reward = np.zeros(1)
+
+    return reward
+```
+
+Note that the block is placed on a table with a fixed height of z = 0.42.
+Note that goal position is also on a table with a height of z = 0.42, while xy position is initialized randomly.
+
+Generate a reward function code for
+Task Name: <<Task_Name>>
+Description: <<Task_Description>>
+Reason: <<Task_Reason>>

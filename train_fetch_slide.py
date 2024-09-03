@@ -259,7 +259,7 @@ class SAC_Module:
 
     def train_with_sac(self):
         # Create the environment
-        env_id = f"{self.env_name}-v2"
+        env_id = f"{self.env_name}Dense-v2"
 
         # Create the vectorized environment
         training_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])

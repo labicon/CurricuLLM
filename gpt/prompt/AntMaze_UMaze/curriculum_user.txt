@@ -11,7 +11,7 @@ The variables you can use to describe the curriculum includes
 (7) goal_dist_threshold: Maximum distance between ant's initial position and goal position
 
 You can set up the maximum distance between goal position and ant's initial position during the curriculum.
-Note that the maximum distance that can have in maze is 8.0 and minimun threshold is 3.0
+Note that the maximum distance that can have in maze is 8.0 and minimun threshold is 5.0
 You also can remove such threshold by setting this variable as None
 
 In the original task, the task is marked as success if a distance between torso xy position and goal xy position is less than 0.45.

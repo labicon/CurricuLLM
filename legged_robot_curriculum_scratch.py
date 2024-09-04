@@ -78,7 +78,7 @@ class CurriculumModule:
 
     def train_single(self, task, prev_task, curriculum_idx, sample_num):
         # Environment Task id
-        task_id = "Velocity-Rough-Berkeley-Curriculum-Humanoid-v0"
+        task_id = "Velocity-Flat-Berkeley-Curriculum-Humanoid-v0"
 
         # Update env code
         reward_code = self.gpt_api.update_env_code(
@@ -166,7 +166,7 @@ class CurriculumModule:
                 [
                     "python",
                     "./scripts/rsl_rl/play_save.py",
-                    f"--task=Velocity-Rough-Berkeley-Curriculum-Humanoid-Play-v0",
+                    f"--task=Velocity-Flat-Berkeley-Curriculum-Humanoid-Play-v0",
                     f"--traj_log_path={traj_filepath}",
                     "--headless",
                     f"--load_run={task['Name']}_v{sample_num}",

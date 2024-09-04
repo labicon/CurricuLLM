@@ -305,11 +305,11 @@ class RewardsCfg:
             "asset_cfg": SceneEntityCfg("robot", body_names=".*faa"),
         },
     )
-    # undesired_contacts = RewTerm(
-    #     func=mdp.undesired_contacts,
-    #     weight=-1.0,
-    #     params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*hfe", ".*haa"]), "threshold": 1.0},
-    # )
+    undesired_contacts = RewTerm(
+        func=mdp.undesired_contacts,
+        weight=-1.0,
+        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*hfe", ".*haa"]), "threshold": 1.0},
+    )
     # joint_deviation_hip = RewTerm(
     #     func=mdp.joint_deviation_l1,
     #     weight=-0.1,
@@ -322,7 +322,7 @@ class RewardsCfg:
     # )
     # -- optional penalties
     # flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=0.0)
-    # dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-1.0)
+    dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-1.0)
     # -- curriculum
     curriculum_reward = RewTerm(func=mdp.reward_curriculum, weight=1.0)
 

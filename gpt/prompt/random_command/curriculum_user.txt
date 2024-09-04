@@ -1,7 +1,7 @@
 The hub is a bipedal robot that can walk and run in a fashin similar to that of humans or animals.
 The original task in the environment is for hub to walk or run by following random command.
 Speed of the hub robot will be specified in a command consist of [linear velocity x, linear velocity y, heading angle]
-The command range in original task should follow this: "linear velocity x: [-2, 2] , linear velocity y: [-2, 2], angular velocity z: [-1, 1] heading angle is [-pi, pi]"
+The command range in original task should follow this: "linear velocity x: [-2, 2] , linear velocity y: [0, 0], angular velocity z: [-1, 1] heading angle is [-pi, pi]"
 
 In each subtask, you can train the agent for randomized command with specific command range.
 You have to specify the range of command value in the task description.

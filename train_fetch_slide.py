@@ -230,17 +230,16 @@ class Curriculum_Module:
         # Load trajectory statistics
         self.stats_summary = []
         for sample in range(resume_sample_idx):
-            # Load final model and roll out trajectory
-            model_path = self.logger_path + f"{task['Name']}/sample_{sample}/"
-            env_id = f"Curriculum/{self.env_name}"
-
-            # Create the vectorized environment
-            eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
-            
-            model = SAC.load(model_path + "/final_model.zip")
-            model.set_env(eval_env)
-
             try:
+                # Load final model and roll out trajectory
+                model_path = self.logger_path + f"{task['Name']}/sample_{sample}/"
+                env_id = f"Curriculum/{self.env_name}"
+
+                # Create the vectorized environment
+                eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+                
+                model = SAC.load(model_path + "/final_model.zip")
+                model.set_env(eval_env)
                 # Get trajectory
                 obs = eval_env.reset()
                 obs_trajectory = [obs['observation'][0]]

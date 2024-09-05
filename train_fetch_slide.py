@@ -224,7 +224,47 @@ class Curriculum_Module:
 
         prev_task = self.curriculum_info[resume_idx - 1]
         print(f"Resuming from task {prev_task['Name']}")
-        for idx, task in enumerate(self.curriculum_info[resume_idx:], start=resume_idx):
+
+        task = self.curriculum_info[resume_idx]
+
+        # Load trajectory statistics
+        self.stats_summary = []
+        for sample in range(resume_sample_idx):
+            # Load final model and roll out trajectory
+            model_path = self.logger_path + f"{task['Name']}/sample_{sample}/"
+            env_id = f"Curriculum/{self.env_name}"
+
+            # Create the vectorized environment
+            eval_env = SubprocVecEnv([make_env(env_id, i, seed=self.seed) for i in range(self.num_cpu)])
+            
+            model = SAC.load(model_path + "/final_model.zip")
+            model.set_env(eval_env)
+
+            try:
+                # Get trajectory
+                obs = eval_env.reset()
+                obs_trajectory = [obs['observation'][0]]
+                goal_trajectory = [obs['desired_goal'][0]]
+                for _ in range(500):
+                    action, _ = model.predict(obs, deterministic=True)
+                    obs, _, _, _ = eval_env.step(action)
+                    obs_trajectory.append(obs['observation'][0])
+                    goal_trajectory.append(obs['desired_goal'][0])
+
+                self.stats_summary.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
+            except Exception as e:
+                print(f"Error in evaluating task {task['Name']} sample {sample_num}")
+                print(e)
+                # Save error message in log path
+                with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/evaluation_error.txt", "w") as file:
+                    file.write(str(e))
+                self.stats_summary.append({"Error": "Error in evaluating task"})
+
+            del model, eval_env
+            gc.collect()
+            torch.cuda.empty_cache()  # Free up unused memory
+
+        for idx, task in enumerate(self.curriculum_info[resume_idx:], start=resume_idx):            
             if resume_from_training:
                 print(f"Training task {task['Name']}")
                 start_idx = resume_sample_idx

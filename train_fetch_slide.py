@@ -251,6 +251,10 @@ class Curriculum_Module:
                     goal_trajectory.append(obs['desired_goal'][0])
 
                 self.stats_summary.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
+
+                del model, eval_env
+                gc.collect()
+                torch.cuda.empty_cache()  # Free up unused memory
             except Exception as e:
                 print(f"Error in evaluating task {task['Name']} sample {sample}")
                 print(e)
@@ -259,9 +263,6 @@ class Curriculum_Module:
                     file.write(str(e))
                 self.stats_summary.append({"Error": "Error in evaluating task"})
 
-            del model, eval_env
-            gc.collect()
-            torch.cuda.empty_cache()  # Free up unused memory
 
         for idx, task in enumerate(self.curriculum_info[resume_idx:], start=resume_idx):            
             if resume_from_training:

@@ -252,10 +252,10 @@ class Curriculum_Module:
 
                 self.stats_summary.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
             except Exception as e:
-                print(f"Error in evaluating task {task['Name']} sample {sample_num}")
+                print(f"Error in evaluating task {task['Name']} sample {sample}")
                 print(e)
                 # Save error message in log path
-                with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/evaluation_error.txt", "w") as file:
+                with open(self.logger_path + f"{task['Name']}/sample_{sample}/evaluation_error.txt", "w") as file:
                     file.write(str(e))
                 self.stats_summary.append({"Error": "Error in evaluating task"})
 

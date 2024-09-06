@@ -465,7 +465,7 @@ class Scratch_Module:
                 obs_trajectory.append(obs['observation'][0])
                 goal_trajectory.append(obs['desired_goal'][0])
 
-            self.stats_summary.append(analyze_trajectory_fetch(obs_trajectory, goal_trajectory))
+            self.stats_summary.append(analyze_trajectory_ant(obs_trajectory, goal_trajectory))
         except Exception as e:
             print(f"Error in evaluating task {task['Name']} sample {sample_num}")
             print(e)
@@ -480,7 +480,7 @@ class Scratch_Module:
 
     def load_task_info(self):
         # Load curriculum
-        with open(self.prompt_path + self.env_name + "original_task_info.md", "r") as file:
+        with open(self.prompt_path + self.env_name + "/original_task_info.md", "r") as file:
             task_txt = file.read()
 
         # Function to extract details from each task section

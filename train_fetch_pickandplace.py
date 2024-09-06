@@ -155,6 +155,118 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
+    def load_curriculum(self):
+        # Load curriculum
+        with open(self.logger_path + "curriculum.md", "r") as file:
+            curriculum_txt = file.read()
+
+        # Split the string into individual task sections
+        task_sections = re.split(r"\n\n(?=Task)", curriculum_txt)
+
+        # Function to extract details from each task section
+        def extract_task_details(task_section):
+
+            details = {}
+            lines = task_section.split("\n")
+            for line in lines:
+                if line.startswith("Task"):
+                    details["Task"] = line.split(" ")[1]
+                elif line.startswith("Name:"):
+                    details["Name"] = line.split(": ")[1]
+                elif line.startswith("Description:"):
+                    details["Description"] = line.split(": ")[1]
+                elif line.startswith("Reason:"):
+                    details["Reason"] = ": ".join(line.split(": ")[1:])
+            return details
+
+        # Extract details for all tasks
+        tasks_details = [extract_task_details(section) for section in task_sections]
+        self.curriculum_info = tasks_details
+        self.gpt_api.tasks_details = tasks_details
+        self.curriculum_length = len(self.curriculum_info)
+
+    def load_rewards(self, resume_idx):
+        # Load rewards
+        for task in self.curriculum_info[:resume_idx]:
+            with open(self.logger_path + f"{task['Name']}/best_reward_code.txt", "r") as file:
+                reward_code = file.read()
+                self.best_reward_code_list.append(reward_code)
+
+            # Load best model indices
+            with open(self.logger_path + f"{task['Name']}.md", "r") as file:
+                decision_txt = file.read()
+
+            decision = decision_txt.splitlines()[0]
+            print("For task " + task["Name"] + ", GPT decided " + decision)
+            numbers = re.findall(r"\d+", decision)
+            if numbers:
+                self.best_model_idx_list.append(int(numbers[0]))
+            else:
+                print("No number found in the decision.")
+                self.best_model_idx_list.append(0)
+
+    def load_current_rewards(self, resume_idx):
+        for sample in range(self.num_samples):
+            with open(
+                self.logger_path + f"{self.curriculum_info[resume_idx]['Name']}/sample_{sample}/reward_code.md", "r"
+            ) as file:
+                response = file.read()
+                if "Error" in response:
+                    self.current_reward_code_list.append(None)
+                else:
+                    self.current_reward_code_list.append(response)
+
+    def resume_curriculum(self, resume_idx, resume_sample_idx=0, resume_from_training=True):
+        print(f"Resuming curriculum at task {resume_idx}")
+        # Load curriculum and rewards
+        self.load_curriculum()
+        self.load_rewards(resume_idx)
+
+        prev_task = self.curriculum_info[resume_idx - 1]
+        print(f"Resuming from task {prev_task['Name']}")
+        for idx, task in enumerate(self.curriculum_info[resume_idx:], start=resume_idx):
+            if resume_from_training:
+                print(f"Training task {task['Name']}")
+                start_idx = resume_sample_idx
+                for sample_num in range(start_idx, self.num_samples):
+                    try:
+                        self.train_single(idx, task, sample_num)
+                    except Exception as e:
+                        print(f"Error in training task {task['Name']} sample {sample_num}")
+                        print(e)
+                        # Save error message in log path
+                        with open(self.logger_path + f"{task['Name']}/sample_{sample_num}/training_error.txt", "w") as file:
+                            file.write(str(e))
+                        self.stats_summary.append({"Error": "Error in evaluating task"})
+                        continue
+                start_idx = 0
+            else:
+                self.load_current_rewards(resume_idx)
+                print(f"Loaded current rewards for task {task['Name']}")
+
+            # Asl LLM to choose the best model
+            best_sample_idx = self.gpt_api.feedback(self.env_name, task, idx, self.stats_summary)
+            trial = 1
+            while best_sample_idx is None:
+                print("Statistics Analysis error. Try again.")
+                best_sample_idx = self.gpt_api.feedback(self.env_name, task, idx, self.stats_summary)
+                trial += 1
+                if trial == 5:
+                    best_sample_idx = 0
+
+            self.best_model_idx_list.append(best_sample_idx)
+            # Update best reward code list
+            self.best_reward_code_list.append(self.current_reward_code_list[best_sample_idx])
+
+            # Save the best reward code list
+            with open(self.logger_path + f"{task['Name']}/best_reward_code.txt", "w") as file:
+                file.write(self.current_reward_code_list[best_sample_idx])
+                
+            self.current_reward_code_list = []
+            self.stats_summary = []
+
+            resume_from_training = True
+
 def analyze_trajectory_fetch(obs_trajectory, goal_trajectory):
     # obs_trajectory: list of observations
     # Get list of end effector position, block position, relative block linear velocity, end effector velocity, goal_pos, gosl_distance

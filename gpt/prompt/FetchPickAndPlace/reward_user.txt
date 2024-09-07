@@ -24,8 +24,8 @@ def compute_reward_curriculum(self):
     return reward
 ```
 
-Note that since the block is placed on a table, it has a fixed height of z = 0.42 when it is initialized.
-Note that goal position can be mid-air over the table with a range of height [0.42, 0.87].
+Note that since the block is placed on a table, it has a fixed height of z = 2.1 when it is initialized.
+Note that goal position can be mid-air over the table
 Note that xy coordinate goal position is initialized randomly and you cannot change it. 
 
 Generate a reward function code for

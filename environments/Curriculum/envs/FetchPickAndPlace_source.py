@@ -314,7 +314,9 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
 
     def obs(self):
         end_effector_position = self.end_effector_position()
+        end_effector_position[2] = end_effector_position[2] * 5
         block_position = self.block_position()
+        block_position[2] = block_position[2] * 5
         gripper_distance = self.gripper_distance() * 10
         block_linear_velocity = self.block_linear_velocity() * 100
         end_effector_linear_velocity = self.end_effector_linear_velocity() * 100

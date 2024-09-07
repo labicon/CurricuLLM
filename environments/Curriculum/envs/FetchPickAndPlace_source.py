@@ -321,5 +321,6 @@ class MujocoFetchPickAndPlaceEnv(MujocoFetchEnv, EzPickle):
         block_linear_velocity = self.block_linear_velocity() * 100
         end_effector_linear_velocity = self.end_effector_linear_velocity() * 100
         goal_position = self.goal_position()
+        goal_position[2] = goal_position[2] * 5
 
         return end_effector_position, block_position, gripper_distance, block_linear_velocity, end_effector_linear_velocity, goal_position

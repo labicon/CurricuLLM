@@ -133,7 +133,7 @@ class Curriculum_Module:
         gc.collect()
         torch.cuda.empty_cache()  # Free up unused memory
 
-    def load_and_retrain(self, model_path, sample_num):
+    def load_and_retrain(self, model_path):
         env_id = f"Curriculum/{self.env_name}"
 
         # Create the vectorized environment
@@ -150,7 +150,7 @@ class Curriculum_Module:
         model = SAC.load(model_path + "/final_model.zip")
         model.set_env(training_env)
 
-        model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        model.learn(total_timesteps=5_000_000, callback=eval_callback)
         model.save(model_path + "additional_training/final_model.zip")
 
         del model, training_env, eval_env, eval_callback

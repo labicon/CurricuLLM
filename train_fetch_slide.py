@@ -519,7 +519,7 @@ class Scratch_Module:
                     training_env,
                     verbose=1)
 
-        model.learn(total_timesteps=10_000_000, callback=eval_callback)
+        model.learn(total_timesteps=13_000_000, callback=eval_callback)
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 
         try:

@@ -10,13 +10,13 @@ from typing import TYPE_CHECKING
 
 from omni.isaac.core.utils.types import ArticulationActions
 
-from omni.isaac.lab.actuators import IdealPDActuator
+from omni.isaac.lab.actuators import DCMotor
 
 if TYPE_CHECKING:
     from .actuator_cfg import IdentifiedActuatorCfg
 
 
-class IdentifiedActuator(IdealPDActuator):
+class IdentifiedActuator(DCMotor):
     cfg: IdentifiedActuatorCfg
 
     def __init__(self, cfg: IdentifiedActuatorCfg, *args, **kwargs):

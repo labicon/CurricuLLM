@@ -82,23 +82,26 @@ def main():
     # reset environment
     obs, _ = env.get_observations()
 
-    base_lin_vel_traj = []
-    base_ang_vel_traj = []
-    projected_gravity_traj = []
-    velocity_command_traj = []
-    hip_pos_traj = []
-    kfe_pos_traj = []
-    ffe_pos_traj = []
-    faa_pos_traj = []
-    joint_vel_traj = []
-    last_actions_traj = []
-    episode_length = []
+    # base_lin_vel_traj = []
+    # base_ang_vel_traj = []
+    # projected_gravity_traj = []
+    # velocity_command_traj = []
+    # hip_pos_traj = []
+    # kfe_pos_traj = []
+    # ffe_pos_traj = []
+    # faa_pos_traj = []
+    # joint_vel_traj = []
+    # last_actions_traj = []
+    episode_length_traj = []
+    velocity_error_traj = []
+    fail_count = 0
+    success_count = 0
 
     step = 0
-    traj_length = 0
+    traj_length = np.zeros(args_cli.num_envs)
 
     # simulate environment
-    while step < 1000:
+    while step < 5000:
         # run everything in inference mode
         with torch.inference_mode():
             # agent stepping
@@ -106,38 +109,29 @@ def main():
             # env stepping
             obs, _, dones, _ = env.step(actions)
 
-        traj_length += 1
-
         # obs: shape (n_envs, obs_dim=48) action: shape (n_envs, action_dim=12)
-        # print(f"obs: {obs.shape}")
-        # print(f"actions: {actions.shape}")
         numpy_obs = obs.cpu().numpy()
-        base_lin_vel = env.get_observations()[1]['observations']['base_lin_vel'].cpu().numpy()[0,:]
-        base_ang_vel = numpy_obs[0, :3]
-        projected_gravity = numpy_obs[0, 3:6]
-        velocity_command = numpy_obs[0, 6:9]
-        hip_pos = numpy_obs[0, 9:15]
-        kfe_pos = numpy_obs[0, 15:17]
-        ffe_pos = numpy_obs[0, 17:19]
-        faa_pos = numpy_obs[0, 19:21]
-        joint_vel = numpy_obs[0, 21:33]
-        last_actions = numpy_obs[0, 33:45]
-        
+        velocity_error = np.linalg.norm((env.get_observations()[1]['observations']['base_lin_vel'].cpu().numpy()[:,:2] - numpy_obs[:, 6:8]), axis=1)
 
-        base_lin_vel_traj.append(base_lin_vel)
-        base_ang_vel_traj.append(base_ang_vel)
-        projected_gravity_traj.append(projected_gravity)
-        velocity_command_traj.append(velocity_command)
-        hip_pos_traj.append(hip_pos)
-        kfe_pos_traj.append(kfe_pos)
-        ffe_pos_traj.append(ffe_pos)
-        faa_pos_traj.append(faa_pos)
-        joint_vel_traj.append(joint_vel)
-        last_actions_traj.append(last_actions)
+        velocity_error_traj.append(velocity_error)
+        # detect env id of done environments
+        done_env_ids = np.where(dones.cpu().numpy())[0]
+        # increment the trajectory length
+        traj_length += 1
+        # for each done environment, record the episode length
+        for env_id in done_env_ids:
+            print(f"Episode length: {traj_length[env_id]}")
+            print("Env ID: ", env_id)
+            episode_length_traj.append(traj_length[env_id])
 
-        if dones[0] == 1:
-            episode_length.append(traj_length)
-            traj_length = 0
+            # If the trajectory length is smaller than 100, report as failure
+            if traj_length[env_id] < 100:
+                fail_count += 1
+            else:
+                success_count += 1
+
+            traj_length[env_id] = 0
+
 
         step += 1
 
@@ -145,23 +139,27 @@ def main():
     env.close()
 
     state_log = {}
-    state_log["base_lin_vel"] = np.round(np.mean(np.array(base_lin_vel_traj), axis=0), 3)
-    state_log["base_ang_vel"] = np.round(np.mean(np.array(base_ang_vel_traj), axis=0), 3)
-    state_log["projected_gravity"] = np.round(np.mean(np.array(projected_gravity_traj), axis=0), 3)
-    state_log["velocity_command"] = np.round(np.mean(np.array(velocity_command_traj), axis=0), 3)
-    state_log["hip_pos"] = np.round(np.mean(np.array(hip_pos_traj), axis=0), 3)
-    state_log["kfe_pos"] = np.round(np.mean(np.array(kfe_pos_traj), axis=0), 3)
-    state_log["ffe_pos"] = np.round(np.mean(np.array(ffe_pos_traj), axis=0), 3)
-    state_log["faa_pos"] = np.round(np.mean(np.array(faa_pos_traj), axis=0), 3)
-    state_log["joint_vel"] = np.round(np.mean(np.array(joint_vel_traj), axis=0), 3)
-    state_log["last_actions"] = np.round(np.mean(np.array(last_actions_traj), axis=0), 3)
-    state_log["episode_length"] = np.round(np.mean(np.array(episode_length), axis=0), 3)
+    # state_log["base_lin_vel"] = np.round(np.mean(np.concatenate(base_lin_vel_traj, axis=0), axis=0), 3)
+    # state_log["base_ang_vel"] = np.round(np.mean(np.concatenate(base_ang_vel_traj, axis=0), axis=0), 3)
+    # state_log["velocity_command"] = np.round(np.mean(np.concatenate(velocity_command_traj, axis=0), axis=0), 3)
+    state_log["episode_length_mean"] = np.round(np.mean(np.array(episode_length_traj), axis=0), 3)
+    state_log["episode_length_std"] = np.round(np.std(np.array(episode_length_traj), axis=0), 3)
+    if len(velocity_error_traj) == 0:
+        velocity_error_traj = np.zeros(1)
+    velocity_error_traj = np.concatenate(velocity_error_traj, axis=0)
+    state_log["velocity_error_mean"] = np.round(np.mean(velocity_error_traj, axis=0), 3)
+    state_log["velocity_error_std"] = np.round(np.std(velocity_error_traj, axis=0), 3)
+    state_log["velocity_error_max"] = np.round(np.max(velocity_error_traj, axis=0), 3)
+    state_log["velocity_error_min"] = np.round(np.min(velocity_error_traj, axis=0), 3)
+
+    print("Failed episodes: ", fail_count)
+    print("Successful episodes: ", success_count)
 
     for key, value in state_log.items():
         print(key, value)
 
     print(f"Saving state log to: ", args_cli.traj_log_path)
-    with open(args_cli.traj_log_path + 'states.pkl', "wb+") as file:
+    with open(args_cli.traj_log_path + '/results.pkl', "wb+") as file:
         pickle.dump(state_log, file)
 
 

@@ -240,7 +240,7 @@ class CurriculumModule:
                 self.best_model_idx_list.append(0)
 
     def load_current_rewards(self, resume_idx):
-        for sample in range(self.num_reward_samples):
+        for sample in range(3): # self.num_reward_samples
             with open(
                 self.log_path + f"{self.curriculum_info[resume_idx]['Name']}/sample_{sample}/reward_code.md", "r"
             ) as file:
@@ -250,14 +250,27 @@ class CurriculumModule:
                 else:
                     self.current_reward_list.append(response)
 
+            print("Loading trajectory logs from: ", self.log_path + f"{self.curriculum_info[resume_idx]['Name']}/sample_{sample}")
+            try:
+                with open(self.log_path + f"{self.curriculum_info[resume_idx]['Name']}/sample_{sample}/states.pkl", "rb") as f:
+                    state_dict = pickle.load(f)
+                    self.stats_summary.append(state_dict)
+            except Exception as e:
+                print("Error in loading trajectory logs from: " + self.log_path + f"{self.curriculum_info[resume_idx]['Name']}/sample_{sample}")
+                self.stats_summary.append({"Error": "Error in loading trajectory logs"})
+
     def resume_curriculum(self, resume_idx, resume_sample_idx=0, resume_from_training=True):
         print(f"Resuming curriculum at task {resume_idx}")
         # Load curriculum and rewards
         self.load_curriculum()
         self.load_rewards(resume_idx)
 
-        prev_task = self.curriculum_info[resume_idx - 1]
-        print(f"Resuming from task {prev_task['Name']}")
+        if resume_idx > 0:
+            prev_task = self.curriculum_info[resume_idx - 1]
+            print(f"Resuming from task {prev_task['Name']}")
+        else:
+            prev_task = None
+        
         for idx, task in enumerate(self.curriculum_info[resume_idx:], start=resume_idx):
             if resume_from_training:
                 print(f"Training task {task['Name']}")
@@ -286,4 +299,4 @@ if __name__ == "__main__":
     curriculum_module = CurriculumModule(iteration=500)
     curriculum_module.generate_curriculum()
     curriculum_module.train_curriculum()
-    # curriculum_module.resume_curriculum(1, 0, resume_from_training=True)
+    # curriculum_module.resume_curriculum(2, 0, resume_from_training=True)

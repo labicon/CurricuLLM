@@ -59,7 +59,7 @@ class ZeroshotModule:
         prev_task = None
         for idx, task in enumerate(self.curriculum_info):
             print(f"Training task {task['Name']}")
-            for sample_num in range(self.num_reward_samples):
+            for sample_num in range(5, self.num_reward_samples):
                 try:
                     self.train_single(task, prev_task, idx, sample_num)
                 except Exception as e:

@@ -99,11 +99,15 @@ class ObservationsCfg:
     """Observation specifications for the MDP."""
 
     @configclass
+    class BaseLinVelCfg(ObsGroup):
+        """Only for obaservation, do not use for policy."""
+        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
+
+    @configclass
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
-
         # observation terms (order preserved)
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
+        # base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
         projected_gravity = ObsTerm(
             func=mdp.projected_gravity,
@@ -145,6 +149,7 @@ class ObservationsCfg:
             self.concatenate_terms = True
 
     # observation groups
+    base_lin_vel: BaseLinVelCfg= BaseLinVelCfg()
     policy: PolicyCfg = PolicyCfg()
 
 
@@ -263,7 +268,7 @@ class RandomizationCfg:
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
-    # terminate = RewTerm(func=mdp.is_alive, weight=1)
+    # base_termination = RewTerm(func=mdp.is_terminated_term, weight=-10.0, params={"term_keys": "base_contact"})
     # -- task
     # track_lin_vel_xy_exp = RewTerm(
     #     func=mdp.track_lin_vel_xy_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
@@ -278,7 +283,7 @@ class RewardsCfg:
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     feet_air_time = RewTerm(
         func=mdp.feet_air_time,
-        weight=2.0,
+        weight=0.5,
         params={
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"),
             "command_name": "base_velocity",
@@ -321,7 +326,7 @@ class RewardsCfg:
     #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*KFE"])},
     # )
     # -- optional penalties
-    # flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=0.0)
+    # contact_force_penalty = RewTerm(func=mdp.contact_forces, weight=-0.01, params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*faa"), "threshold": 1.0}),
     dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-1.0)
     # -- curriculum
     curriculum_reward = RewTerm(func=mdp.reward_curriculum, weight=1.0)
@@ -335,6 +340,14 @@ class TerminationsCfg:
     base_contact = DoneTerm(
         func=mdp.illegal_contact,
         params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="torso"), "threshold": 1.0},
+    )
+    velocity_tracking = DoneTerm(
+        func=mdp.bad_velocity_tracking,
+        params={"limit_error": 0.5, "starting_step": 3/0.02}
+    )
+    heading_tracking = DoneTerm(
+        func=mdp.bad_heading_tracking,
+        params={"limit_error": 45.0 * math.pi/180.0, "starting_step": 5/0.02}
     )
 
 
@@ -360,10 +373,10 @@ class CommandsCfg:
 
     base_velocity = mdp.UniformVelocityCommandCfg(
         asset_name="robot",
-        resampling_time_range=(10.0, 10.0),
+        resampling_time_range=(20.0, 20.0),
         rel_standing_envs=0.02,
         rel_heading_envs=1.0,
-        heading_command=False,
+        heading_command=True,
         heading_control_stiffness=0.5,
         debug_vis=True,
         

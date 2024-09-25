@@ -1,7 +1,7 @@
 The hub is a bipedal robot that can walk and run in a fashin similar to that of humans or animals.
 The original task in the environment is for hub to walk or run by following random command.
 Speed of the hub robot will be specified in a command consist of [linear velocity x, linear velocity y, angular velocity z, heading angle]
-The command range in original task should follow this: "linear velocity x: [-2, 2] , linear velocity y: [0, 0], angular velocity z: [-1,1], heading angle is [-pi, pi]"
+The command range in original task should follow this: "linear velocity x: [-2, 2] , linear velocity y: [-2, 2], heading angle is [-pi, pi]"
 
 observation from normalized_obs() includes
 base_lin_vel: Linear velocity of base in xyz direction, 2 dimension with shape (number of envs, 3)
@@ -43,9 +43,10 @@ Especially, third component of base angular velocity should accurately follow an
 
 
 Your output for the command value should follow this format.
-You should change the range of lin_vel_x, lin_vel_y, ang_vel_z, and heading for your specific task.
+You should change the range of lin_vel_x, lin_vel_y, and heading for your specific task.
+You cannot change the range of ang_vel_z.
 ```command        
-ranges=mdp.UniformVelocityCommandCfg.Ranges(lin_vel_x=(-2.0, 2.0), lin_vel_y=(0.0, 0.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)),
+ranges=mdp.UniformVelocityCommandCfg.Ranges(lin_vel_x=(-2.0, 2.0), lin_vel_y=(-2.0, 2.0), ang_vel_z=(-1.0, 1.0), heading=(-math.pi, math.pi)),
 ```
 
 Generate a reward function code and command for

@@ -4,13 +4,13 @@ from dataclasses import MISSING
 from typing import Literal, TYPE_CHECKING
 
 from omni.isaac.lab.utils import configclass
-from omni.isaac.lab.actuators import IdealPDActuatorCfg
+from omni.isaac.lab.actuators import DCMotorCfg
 
 from .actuator_pd import IdentifiedActuator
 
 
 @configclass
-class IdentifiedActuatorCfg(IdealPDActuatorCfg):
+class IdentifiedActuatorCfg(DCMotorCfg):
     """Configuration for direct control (DC) motor actuator model."""
 
     class_type: type = IdentifiedActuator

@@ -4,8 +4,9 @@ Your goal is to write a list of tasks for the agent that will help the agent lea
 Some helpful tips for generating a curriculum:
 (1) Do not explore or learn dynamics by doing random actions. Each task should have a specific goal to achieve.
 (2) Curriculum should be made as short as possible. Be concise.
-(3) Never generate more than 7 tasks
+(3) Never generate more than 5 tasks
 (4) The last task of your curriculum should align with the original task description
+(5) Focus on stability and learning healthy in early stages. However, focus on command tracking in later stages.
 
 You will be given several variables you can use to describe each task in curriculum.
 Each task should be described using the given variables and do not introduce new variables.

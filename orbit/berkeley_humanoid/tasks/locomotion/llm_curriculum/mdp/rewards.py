@@ -89,12 +89,14 @@ def foot_clearance_reward(
 
 
 def normalized_obs(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
-    command = env.command_manager.get_command("base_velocity")
-    command[2] = command[2] * 0.1
+    command = env.command_manager.get_command("base_velocity").clone()
+    command[:,:2] = command[:,:2] * 1.5
+    command[:,2] = command[:,2] * 0.3
     asset: Articulation = env.scene[asset_cfg.name]
     base_lin_vel = asset.data.root_lin_vel_b
+    base_lin_vel[:,:2] = asset.data.root_lin_vel_b[:,:2] * 1.5
     base_ang_vel = asset.data.root_ang_vel_b
-    base_ang_vel[:,2] = base_ang_vel[:,2] * 0.1
+    base_ang_vel[:,2] = asset.data.root_ang_vel_b[:,2] * 0.3
     torque = asset.data.applied_torque[:, asset_cfg.joint_ids] * 3.0e-3
     hip_asset_cfg = SceneEntityCfg("robot", joint_names=[".*HR", ".*HAA"])
     hip_asset: Articulation = env.scene[hip_asset_cfg.name]
@@ -128,7 +130,7 @@ def normalized_obs(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEnti
 
 
 def reward_curriculum(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
-    """Compute the reward for the current curriculum step focusing on straight walking."""
+    """Compute the reward for the Targeted Velocity Control task."""
     command, base_lin_vel, base_ang_vel, hip_pos_deviation, knee_pos_deviation, \
     joint_vel, joint_acc, torque, \
     nonflat_base_orientation, base_height_diff = normalized_obs(env, asset_cfg)
@@ -136,27 +138,17 @@ def reward_curriculum(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneE
 
     n_envs = env.scene.num_envs
 
-    # Weights for different components of the reward
-    lin_vel_weight = 1.2  # Slightly increased weight for straight walking
-    ang_vel_weight_z = 2.0  # Higher weight for angular z velocity to ensure straight line
-    alive_bonus = 0.2  # Giving more bonus for staying alive
-    nonflat_base_orientation_weight = 0.3
-    base_height_diff_weight = 0.2
+    # Rewards for closely following the commanded velocities
+    lin_vel_x_error = torch.square(command[:, 0] - base_lin_vel[:, 0])
+    lin_vel_y_error = torch.square(command[:, 1] - base_lin_vel[:, 1])
+    ang_vel_z_error = torch.square(command[:, 2] - base_ang_vel[:, 2])
 
-    # Calculate the difference between the command velocities (focus on x for linear, z for angular) and the actual velocities
-    lin_vel_error_x = torch.abs(command[:, 0] - base_lin_vel[:, 0])  # Focusing on x linear velocity
-    ang_vel_error_z = torch.abs(command[:, 2] - base_ang_vel[:, 2])  # Focusing on z angular velocity
+    # Maintain stability with slight adjustments in reward weights
+    orientation_penalty = torch.square(nonflat_base_orientation) * 1.2 # Increased emphasis on orientation
+    height_penalty = torch.square(base_height_diff) * 1.2  # Slight increase to emphasize upright standing
 
-    # Reward for matching linear velocity x and angular velocity z with command
-    lin_vel_reward_x = torch.exp(-lin_vel_weight * lin_vel_error_x)
-    ang_vel_reward_z = torch.exp(-ang_vel_weight_z * ang_vel_error_z)
-
-    # Penalty for deviation from standing orientation and height
-    nonflat_base_orientation_penalty = torch.exp(-nonflat_base_orientation_weight * nonflat_base_orientation)
-    base_height_diff_penalty = torch.exp(-base_height_diff_weight * base_height_diff)
-
-    # Compute the total reward
-    reward = lin_vel_reward_x + ang_vel_reward_z + alive_bonus * is_alive + \
-             nonflat_base_orientation_penalty + base_height_diff_penalty
+    # Composite reward adjusting weights for the new task focus
+    # Heavier emphasis on matching the velocities accurately
+    reward = is_alive * (5.0 - 4.0 * lin_vel_x_error - 4.0 * lin_vel_y_error - 5.0 * ang_vel_z_error - orientation_penalty - height_penalty)
 
     return reward

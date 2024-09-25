@@ -137,7 +137,7 @@ class CurriculumAPI:
             with open(file_path, 'w') as file:
                 file.writelines(lines)
 
-        insert_line_in_file(command_code_path, command_code, 371)
+        insert_line_in_file(command_code_path, command_code, 382)
         print(f"Updated command code saved to {command_code_path}")
 
         return reward_code

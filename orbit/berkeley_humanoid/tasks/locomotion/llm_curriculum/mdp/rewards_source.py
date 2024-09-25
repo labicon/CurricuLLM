@@ -89,12 +89,14 @@ def foot_clearance_reward(
 
 
 def normalized_obs(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")):
-    command = env.command_manager.get_command("base_velocity")
-    command[2] = command[2] * 0.3
+    command = env.command_manager.get_command("base_velocity").clone()
+    command[:,:2] = command[:,:2] * 1.5
+    command[:,2] = command[:,2] * 0.3
     asset: Articulation = env.scene[asset_cfg.name]
     base_lin_vel = asset.data.root_lin_vel_b
+    base_lin_vel[:,:2] = asset.data.root_lin_vel_b[:,:2] * 1.5
     base_ang_vel = asset.data.root_ang_vel_b
-    base_ang_vel[:,2] = base_ang_vel[:,2] * 0.3
+    base_ang_vel[:,2] = asset.data.root_ang_vel_b[:,2] * 0.3
     torque = asset.data.applied_torque[:, asset_cfg.joint_ids] * 3.0e-3
     hip_asset_cfg = SceneEntityCfg("robot", joint_names=[".*HR", ".*HAA"])
     hip_asset: Articulation = env.scene[hip_asset_cfg.name]

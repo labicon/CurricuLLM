@@ -9,7 +9,7 @@ from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import (
 @configclass
 class BerkeleyHumanoidRoughPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
-    max_iterations = 500
+    max_iterations = 1000
     save_interval = 200
     experiment_name = "berkeley_humanoid_rough"
     empirical_normalization = False
@@ -42,7 +42,7 @@ class BerkeleyHumanoidFlatPPORunnerCfg(BerkeleyHumanoidRoughPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
 
-        self.max_iterations = 1000
+        self.max_iterations = 4000
         self.experiment_name = "berkeley_humanoid_curriculum_flat"
         self.policy.actor_hidden_dims = [128, 128, 128]
         self.policy.critic_hidden_dims = [128, 128, 128]

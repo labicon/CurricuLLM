@@ -18,7 +18,7 @@ conda activate CurricuLLM
 
 Before you run CurricuLLM, please install dependencies and edited custom environments.  
 ```
-git clone https://github.com/kh-ryu/curriculum.git
+git clone https://github.com/labicon/CurricuLLM.git
 cd CurricuLLM
 pip install -r requirements.txt
 pip install -e environments

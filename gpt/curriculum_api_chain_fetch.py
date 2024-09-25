@@ -1,15 +1,10 @@
-from openai import OpenAI
-import yaml
-import os
-import numpy as np
-import pandas as pd
 import re
 
 from gpt.utils import *
 
 GPT_MODEL = "gpt-4-turbo-preview" # gpt-4-1106-preview, gpt-4-0613, gpt-4-32k, gpt-3.5-turbo-1106
 
-class CurriculumAPI:
+class CurriculumAPI_Fetch:
     def __init__(self, env_name, prompt_path, log_path):
         self.env = env_name
         self.client = get_client()

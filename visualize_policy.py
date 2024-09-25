@@ -1,32 +1,20 @@
-import gymnasium as gym
-import os
-import imageio
-import numpy as np
-import time
-
-from stable_baselines3 import PPO, SAC
-from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.utils import set_random_seed
-from stable_baselines3.common.env_util import make_vec_env
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecVideoRecorder
-from stable_baselines3.common.logger import configure
-
-import Curriculum
+from stable_baselines3 import SAC
+from stable_baselines3.common.vec_env import SubprocVecEnv, VecVideoRecorder
 
 from utils.train_utils import *
 
 import sys
 
 if __name__ == "__main__":
-    env_id = "FetchPickAndPlace-v2"
-    num_cpu = 16
+    env_id = "Curriculum/FetchSlide"
+    num_cpu = 24
 
     if len(sys.argv) > 1:
         task = sys.argv[1]
         sample_num = sys.argv[2]
         log_dir = "./logs/AntMaze_UMaze_SAC_empty/" + task + "/sample_" + sample_num
     else:
-        log_dir = "./logs/Fetch/PickAndPlace_13/Original task/sample_1"
+        log_dir = "./logs/Fetch_Slide/curriculum_5/[Original task]/sample_2"
         task = None
 
     test_env = SubprocVecEnv([make_env(env_id, i, render_mode="rgb_array") for i in range(num_cpu)])

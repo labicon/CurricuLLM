@@ -311,51 +311,23 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
         end_effector_position, block_position, block_linear_velocity, \
         end_effector_linear_velocity, goal_position = self.obs()
     
-        # Weight parameters for individual reward components from past and current tasks
-        weight_distance_to_block_previous = 0.5  # Lower weight as this is a past task
-        weight_velocity_approach_previous = 0.25  # Past task, so lower weight
-        weight_distance_block_to_goal_dense = 0.75  # Important for pushing task
-        weight_end_effector_to_block_dense = 0.5  # Maintain end_effector close to block
-        weight_goal_achievement = 2.0  # High weight for achieving the main goal
-    
-        # Distances and velocities
-        distance_to_block = np.linalg.norm(end_effector_position - block_position)
-        distance_block_to_goal = np.linalg.norm(block_position - goal_position)
-        end_effector_velocity_magnitude = np.linalg.norm(end_effector_linear_velocity)
-    
-        # Rewards for past tasks to avoid forgetting
-        reward_distance_to_block_previous = -distance_to_block
-        reward_velocity_approach_previous = 0
-        if distance_to_block < 0.05:
-            reward_velocity_approach_previous = -2.0 * end_effector_velocity_magnitude
-        else:
-            reward_velocity_approach_previous = -0.5 * end_effector_velocity_magnitude
+        # Parameters for reward calculation
+        end_effector_goal_distance_weights = 1.0
         
-        # Dense reward for pushing block towards goal
-        reward_distance_block_to_goal_dense = -distance_block_to_goal
+        # Reward components
+        end_effector_goal_distance = np.linalg.norm(end_effector_position - goal_position)
+        
+        # Inverse distance reward: Encourage the end effector to be close to the goal
+        # The closer the end effector is to the goal, the higher the reward
+        end_effector_goal_distance_reward = -end_effector_goal_distance_weights * end_effector_goal_distance
     
-        # Encourage end effector to stay close to block
-        reward_end_effector_to_block_dense = -distance_to_block
-    
-        # Main goal achievement reward: Sparse reward based on block being close to goal position
-        reward_goal_achievement = 0
-        if distance_block_to_goal < 0.05:
-            reward_goal_achievement = 1  # Rewarding success when block is near the goal
-    
-        # Composite Reward
-        reward = (weight_distance_to_block_previous * reward_distance_to_block_previous + 
-                  weight_velocity_approach_previous * reward_velocity_approach_previous + 
-                  weight_distance_block_to_goal_dense * reward_distance_block_to_goal_dense + 
-                  weight_end_effector_to_block_dense * reward_end_effector_to_block_dense +
-                  weight_goal_achievement * reward_goal_achievement)
-    
-        # Individual reward components
+        # Total reward is the sum of individual components.
+        # In this basic task, only focusing on end effector movement towards the goal
+        reward = end_effector_goal_distance_reward
+        
+        # Dictionary for individual reward components
         reward_dict = {
-            "distance_to_block_previous": reward_distance_to_block_previous,
-            "velocity_approach_previous": reward_velocity_approach_previous,
-            "distance_block_to_goal_dense": reward_distance_block_to_goal_dense,
-            "end_effector_to_block_dense": reward_end_effector_to_block_dense,
-            "goal_achievement": reward_goal_achievement,
+            'end_effector_goal_distance_reward': end_effector_goal_distance_reward,
         }
     
         return reward, reward_dict

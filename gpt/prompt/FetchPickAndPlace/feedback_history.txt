@@ -1,3 +1,0 @@
-Task Name: <<Task_Name>>
-Description: <<Task_Description>>
-Reason: <<Task_Reason>>

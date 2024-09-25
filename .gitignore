@@ -3,3 +3,4 @@ logs/
 *.pyc
 *.egg-info
 *.out
+gpt/key.yaml

@@ -2,3 +2,5 @@ gymnasium
 gymnasium-robotics
 stable-baselines3[extra]
 openai
+yaml
+imageio

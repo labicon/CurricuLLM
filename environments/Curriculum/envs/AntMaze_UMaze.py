@@ -268,7 +268,6 @@ class AntMazeEnv(MazeEnv, EzPickle):
             **kwargs,
         )
 
-        self.goal_dist_threshold = None
         # self.goal_dist_threshold = None
 
     def reset(self, *, seed: Optional[int] = None, **kwargs):
@@ -383,8 +382,8 @@ class AntMazeEnv(MazeEnv, EzPickle):
         ant_obs = self.get_ant_obs()
         torso_coord = self.torso_coordinate(ant_obs)
         torso_orientation = self.torso_orientation(ant_obs)
-        torso_velocity = self.torso_velocity(ant_obs) * 10
-        torso_angular_velocity = self.torso_angular_velocity(ant_obs)
+        torso_velocity = self.torso_velocity(ant_obs) * 2
+        torso_angular_velocity = self.torso_angular_velocity(ant_obs) * 0.5
         goal_pos = self.goal_pos()
         goal_distance = self.goal_distance(ant_obs)
 
@@ -392,37 +391,37 @@ class AntMazeEnv(MazeEnv, EzPickle):
     
 
     def compute_reward_curriculum(self):
-        torso_coordinate, torso_orientation, torso_velocity, \
-        torso_angular_velocity, goal_pos, goal_distance = self.obs()
+        end_effector_position, block_position, block_linear_velocity, \
+        end_effector_linear_velocity, goal_position = self.obs()
     
-        # Adjusted reward weights considering all previous tasks
-        velocity_reward_weight = 0.1  # Least priority, basic locomotion maintained
-        orientation_reward_weight = 0.3  # Keep the ant oriented correctly
-        precision_navigation_weight = 2.0  # Continue emphasizing close navigation to the goal
-        success_reward_weight = 5.0  # Highest weight, reward for completing the primary task
+        # Parameters
+        desired_z_offset = 0.05  # Desired offset in z above the block (0.42 + offset)
+        position_tolerance = 0.02  # How close the end effector needs to be to the target position
     
-        # Components from previous tasks
-        velocity_reward = np.linalg.norm(torso_velocity)
-        expected_orientation = np.array([1.0, 0.0, 0.0, 0.0])
-        orientation_similarity = np.dot(expected_orientation, torso_orientation)
-        orientation_reward = orientation_similarity
-        precision_navigation_reward = -np.linalg.norm(goal_distance)  # Encourage minimizing distance
+        # Calculate the desired position for the end effector above the block
+        desired_position_above_block = block_position + np.array([0.0, 0.0, desired_z_offset])
     
-        # Original task specific component
-        success_reward = 1.0 if np.linalg.norm(goal_distance) < 0.45 else 0.0  # Reward for reaching the goal
+        # Calculate distance (error) between current end effector position and desired position
+        position_error = np.linalg.norm(end_effector_position - desired_position_above_block)
     
-        # Compute total reward
-        reward = (velocity_reward_weight * velocity_reward +
-                  orientation_reward_weight * orientation_reward +
-                  precision_navigation_weight * precision_navigation_reward +
-                  success_reward_weight * success_reward)
+        # Transform position error into a negative reward (the closer to the desired position, the higher the reward)
+        position_control_reward_weight = 2.0  # Weighting of the position control reward component
+        position_control_reward = -position_control_reward_weight * position_error
     
-        # Dictionary to track each individual component of the reward
+        # Additional reward for being within a tolerance of the desired position
+        tolerance_reward = 0.0
+        if position_error < position_tolerance:
+            tolerance_reward_weight = 5.0  # Weighting of the tolerance reward component
+            tolerance_reward = tolerance_reward_weight
+    
+        # Total reward
+        reward = position_control_reward + tolerance_reward
+    
+        # Reward dictionary for easier debugging and interpretation
         reward_dict = {
-            'velocity_reward': velocity_reward,
-            'orientation_reward': orientation_reward,
-            'precision_navigation_reward': precision_navigation_reward,
-            'success_reward': success_reward,
+            "position_control_reward": position_control_reward,
+            "tolerance_reward": tolerance_reward,
+            "position_error": position_error
         }
     
         return reward, reward_dict

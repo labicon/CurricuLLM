@@ -304,28 +304,49 @@ class MujocoFetchSlideEnv(MujocoFetchEnv, EzPickle):
         goal_position = self.goal_position()
 
         return end_effector_position, block_position, block_linear_velocity, end_effector_linear_velocity, goal_position
-    
+
     def compute_reward_curriculum(self):
-        end_effector_position, block_position, block_linear_velocity, end_effector_linear_velocity, goal_position = self.obs()
-        
-        block_position = np.array(block_position)
-        goal_position = np.array(goal_position)
-        end_effector_position = np.array(end_effector_position)
-        block_linear_velocity = np.array(block_linear_velocity)
-        end_effector_linear_velocity = np.array(end_effector_linear_velocity)
-
-        reward = 0
-
-        # Reward for reaching the goal
-        if np.linalg.norm(block_position - goal_position) < 0.05:
-            reward += 1
-
-        # Reward for moving the block
-        if np.linalg.norm(block_linear_velocity) > 0.01:
-            reward += 0.1
-
-        # Reward for moving the end effector
-        if np.linalg.norm(end_effector_linear_velocity) > 0.01:
-            reward += 0.1
-
-        return reward, {"task": reward}
+        end_effector_position, block_position, block_linear_velocity, \
+        end_effector_linear_velocity, goal_position = self.obs()
+    
+        # Previous tasks rewards components
+        # Reach Task Weight
+        reach_weight = 0.05  # Slightly lower weight to focus on the original task
+        reach_distance = np.linalg.norm(end_effector_position - block_position)
+        reach_reward = -reach_distance * reach_weight
+    
+        # Alignment Task Weight
+        align_weight = 0.05
+        align_difference = np.linalg.norm(end_effector_position[:2] - block_position[:2])
+        align_reward = -align_difference * align_weight
+    
+        # Initial Push Task Weight
+        velocity_weight = 0.05
+        velocity_reward = np.linalg.norm(block_linear_velocity) * velocity_weight
+    
+        # Controlled Push Towards Goal Weight
+        push_weight = 0.05
+        goal_distance_previous = np.linalg.norm(block_position - goal_position)
+        push_reward = -goal_distance_previous * push_weight
+    
+        # Original Task: Give reward if distance between block position and goal position is less than 0.05, 0 otherwise.
+        # Setting a high weight to emphasize the success of the original task
+        original_task_weight = 1.0
+        goal_distance = np.linalg.norm(block_position - goal_position)
+        success_reward = 0.0
+        if goal_distance < 0.05:
+            success_reward = original_task_weight
+    
+        # Total reward combines all task rewards with respective weights
+        reward = reach_reward + align_reward + velocity_reward + push_reward + success_reward
+    
+        # Constructing a dictionary to break down the reward components for all tasks including the success reward for the original task
+        reward_dict = {
+            "reach_reward": reach_reward,
+            "align_reward": align_reward,
+            "velocity_reward": velocity_reward,
+            "push_reward": push_reward,
+            "success_reward": success_reward,
+        }
+    
+        return reward, reward_dict

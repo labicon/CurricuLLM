@@ -1,8 +1,0 @@
-Previous learned task was
-Task Name: <<Task_Name>>
-Description: <<Task_Description>>
-Reason: <<Task_Reason>>
-Code:
-```python
-<<Task_Code>>
-```

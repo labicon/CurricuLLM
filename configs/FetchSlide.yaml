@@ -1,0 +1,36 @@
+env_path: "./environments/Curriculum/envs/FetchSlide_source.py"
+CurriculumCfg:
+  env_id: "Curriculum/FetchSlide"
+  num_envs: 16
+  num_samples: 3
+  training_alg: "SAC"
+  policy_network: "MultiInputPolicy"
+  eval_freq: 1_000
+  short_training_timesteps: 500_000
+  long_training_timesteps: 5_000_000
+  evaluation_timesteps: 500
+
+HerCfg:
+  env_id: "FetchSlide-v2"
+  num_envs: 16
+  training_alg: "SAC"
+  policy_network: "MultiInputPolicy"
+  eval_freq: 1_000
+  training_timesteps: 13_000_000
+
+SacCfg:
+  env_id: "FetchSlideDense-v2"
+  num_envs: 16
+  training_alg: "SAC"
+  policy_network: "MultiInputPolicy"
+  training_timesteps: 13_000_000
+  eval_freq: 1_000
+
+ZeroshotCfg:
+  env_id: "Curriculum/FetchSlide"
+  num_envs: 16
+  num_samples: 3
+  training_alg: "SAC"
+  policy_network: "MultiInputPolicy"
+  eval_freq: 1_000
+  training_timesteps: 13_000_000

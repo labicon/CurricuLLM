@@ -306,28 +306,3 @@ class MujocoFetchPushEnv(MujocoFetchEnv, EzPickle):
         goal_position = self.goal_position()
 
         return end_effector_position, block_position, block_linear_velocity, end_effector_linear_velocity, goal_position
-
-    def compute_reward_curriculum(self):
-        end_effector_position, block_position, block_linear_velocity, \
-        end_effector_linear_velocity, goal_position = self.obs()
-    
-        # Parameters for reward calculation
-        end_effector_goal_distance_weights = 1.0
-        
-        # Reward components
-        end_effector_goal_distance = np.linalg.norm(end_effector_position - goal_position)
-        
-        # Inverse distance reward: Encourage the end effector to be close to the goal
-        # The closer the end effector is to the goal, the higher the reward
-        end_effector_goal_distance_reward = -end_effector_goal_distance_weights * end_effector_goal_distance
-    
-        # Total reward is the sum of individual components.
-        # In this basic task, only focusing on end effector movement towards the goal
-        reward = end_effector_goal_distance_reward
-        
-        # Dictionary for individual reward components
-        reward_dict = {
-            'end_effector_goal_distance_reward': end_effector_goal_distance_reward,
-        }
-    
-        return reward, reward_dict

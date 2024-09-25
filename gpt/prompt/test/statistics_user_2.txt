@@ -1,8 +1,0 @@
-This is two different robot trajectories with statistics that you requested.
-Find a trajectory that better follows the given task.
-
-Answer with following output format.
-Output format
-
-Decision: Agent [1 or 2]
-Reason: 

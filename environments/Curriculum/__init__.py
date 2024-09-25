@@ -1,79 +1,67 @@
 from gymnasium.envs.registration import register
 
+# register(
+#      id="Curriculum/Walker2d-v0",
+#      entry_point="Curriculum.envs.Walker2d_v0:Walker2dEnv",
+#      max_episode_steps=1000,
+# )
+
+# register(
+#      id="Curriculum/Walker2d-v1",
+#      entry_point="Curriculum.envs.Walker2d_v1:Walker2dEnv",
+#      max_episode_steps=1000,
+# )
+
+# register(
+#      id="Curriculum/Walker2d-v2",
+#      entry_point="Curriculum.envs.Walker2d_v2:Walker2dEnv",
+#      max_episode_steps=1000,
+# )
+
 register(
-     id="Curriculum/AntMaze_UMaze-v0",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v0:AntMazeEnv",
+     id="Curriculum/AntMaze_UMaze",
+     entry_point="Curriculum.envs.AntMaze_UMaze:AntMazeEnv",
      max_episode_steps=700,
 )
 
 register(
-     id="Curriculum/AntMaze_UMaze-v1",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v1:AntMazeEnv",
+     id="Curriculum/AntMaze_UMaze_play",
+     entry_point="Curriculum.envs.AntMaze_UMaze_play:AntMazeEnv",
      max_episode_steps=700,
 )
 
 register(
-     id="Curriculum/AntMaze_UMaze-v2",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v2:AntMazeEnv",
-     max_episode_steps=700,
+     id="Curriculum/FetchPush",
+     entry_point="Curriculum.envs.FetchPush:MujocoFetchPushEnv",
+     max_episode_steps=50,
 )
 
-register(
-     id="Curriculum/AntMaze_UMaze-v3",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v3:AntMazeEnv",
-     max_episode_steps=700,
-)
+# register(
+#      id="Curriculum/FetchPush-v0",
+#      entry_point="Curriculum.envs.FetchPush_v0:MujocoFetchPushEnv",
+#      max_episode_steps=50,
+# )
+
+# register(
+#      id="Curriculum/FetchPush-v1",
+#      entry_point="Curriculum.envs.FetchPush_v1:MujocoFetchPushEnv",
+#      max_episode_steps=50,
+# )
+
+# register(
+#      id="Curriculum/FetchPush-v2",
+#      entry_point="Curriculum.envs.FetchPush_v2:MujocoFetchPushEnv",
+#      max_episode_steps=50,
+# )
 
 register(
-     id="Curriculum/AntMaze_UMaze-v4",
-     entry_point="Curriculum.envs.AntMaze_UMaze_v4:AntMazeEnv",
-     max_episode_steps=700,
-)
-
-register(
-     id="Curriculum/FetchPush-v0",
-     entry_point="Curriculum.envs.FetchPush_v0:MujocoFetchPushEnv",
+     id="Curriculum/FetchPickAndPlace",
+     entry_point="Curriculum.envs.FetchPickAndPlace:MujocoFetchPickAndPlaceEnv",
      max_episode_steps=50,
 )
 
 register(
-     id="Curriculum/FetchPush-v1",
-     entry_point="Curriculum.envs.FetchPush_v1:MujocoFetchPushEnv",
+     id="Curriculum/FetchSlide",
+     entry_point="Curriculum.envs.FetchSlide:MujocoFetchSlideEnv",
      max_episode_steps=50,
-)
-
-register(
-     id="Curriculum/FetchPush-v2",
-     entry_point="Curriculum.envs.FetchPush_v2:MujocoFetchPushEnv",
-     max_episode_steps=50,
-)
-
-register(
-     id="Curriculum/FetchPush-v3",
-     entry_point="Curriculum.envs.FetchPush_v3:MujocoFetchPushEnv",
-     max_episode_steps=50,
-)
-
-register(
-     id="Curriculum/FetchPush-v4",
-     entry_point="Curriculum.envs.FetchPush_v4:MujocoFetchPushEnv",
-     max_episode_steps=50,
-)
-
-register(
-     id=f"Curriculum/AdroitHandRelocate-v0",
-     entry_point="Curriculum.envs.AdroitHandRelocate_v0:AdroitHandRelocateEnv",
-     max_episode_steps=200,
-)
-
-register(
-     id=f"Curriculum/AdroitHandRelocate-v1",
-     entry_point="Curriculum.envs.AdroitHandRelocate_v1:AdroitHandRelocateEnv",
-     max_episode_steps=200,
-)
-
-register(
-     id=f"Curriculum/AdroitHandRelocate-v2",
-     entry_point="Curriculum.envs.AdroitHandRelocate_v2:AdroitHandRelocateEnv",
-     max_episode_steps=200,
 )

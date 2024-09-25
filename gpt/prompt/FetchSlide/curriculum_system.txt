@@ -8,7 +8,7 @@ Some helpful tips for generating a curriculum:
 
 You will be given several variables you can use to describe each task in curriculum.
 Each task should be described using the given variables and do not introduce new variables.
-When you describe the task, use the descriptiion
+When you describe the task, use the combination of descriptiions
 (1) maximize [variable]
 (2) minimize [variable]
 (3) set up [variable] as [specific value]

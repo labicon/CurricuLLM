@@ -11,7 +11,7 @@ Each task should be described using the given variables and do not introduce new
 When you describe the task, use the descriptiion
 (1) maximize [variable]
 (2) minimize [variable]
-(3) set up [variable] as [specific value]
+(3) maintain [variable] as a value of [num]
 
 Only for the last task, which is original task, description should be signal function like
 - Give reward if [success condition] is true. Return 0 otherwise.

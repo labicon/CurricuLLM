@@ -1,5 +1,0 @@
-Task 2: Simple Hopping
-In task 2, we tackle the idea of the hopper hopping in place without moving forward or backward. 
-
-Task 2 Description: 
-Using the torques on the three hinges, the agent's goal is to maintain vertical jumping and landing without progressing in the x-direction. In this case, the reward function should discourage horizontal movement, while encouraging vertical movement.

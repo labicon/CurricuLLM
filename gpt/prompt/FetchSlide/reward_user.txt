@@ -1,5 +1,6 @@
-This environment is Fetch-Push environment
-The original task in the environment is for a manipulator to move a block to a target position on top of a table by pushing with its gripper. 
+This environment is Fetch-Slide environment
+The original task in the environment is for a manipulator hit a puck in order to reach a target position on top of a long and slippery table.
+The table has a low friction coefficient in order to make it slippery for the puck to slide and be able to reach the target position which is outside of the robot’s workspace.
 The robot is a 7-DoF Fetch Mobile Manipulator with a two-fingered parallel gripper.  
 The gripper is locked in a closed configuration in order to perform the push task.
 
@@ -18,12 +19,15 @@ def compute_reward_curriculum(self):
 
     # Implement your reward function here
     reward = np.zeros(1)
+    reward_dict = {}
 
-    return reward
+    return reward, reward_dict
 ```
 
 Note that the block is placed on a table with a fixed height of z = 0.42.
-Note that goal position is also on a table with a height of z = 0.42, while xy position is initialized randomly.
+Note that goal position is also on a table with a height of z = 0.42.
+End effector is initialized in (x,y,z) = [1.0, 0.75, 0.41] and goal position is randomized around (x,y,z) = [1.4, 0.75, 0.41]
+Note that xy coordinate goal position is initialized randomly and you cannot change it. 
 
 Generate a reward function code for
 Task Name: <<Task_Name>>

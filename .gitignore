@@ -1,6 +1,5 @@
-logs/
 **/__pycache__/
-*.pyc
 *.egg-info
-*.out
-*/key.yaml
+logs/
+_orbit*
+wandb/

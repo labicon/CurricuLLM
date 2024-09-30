@@ -1,5 +1,7 @@
 # CurricuLLM: Automatic Task Curricula Design for Learning Complex Robot Skills using Large Language Models
 
+[[arXiv]](https://arxiv.org/abs/2409.18382)
+
 ## Introduction
 
 Curriculum learning is a training mechanism in reinforcement learning (RL) that facilitates the achievement of complex policies by progressively increasing the task difficulty during training. However, designing effective curricula for a specific task often requires extensive domain knowledge and human intervention, which limits its applicability across various domains. Our core idea is that large language models (LLMs), with their extensive training on diverse language data and ability to encapsulate world knowledge, present significant potential for efficiently breaking down tasks and decomposing skills across various robotics environments.

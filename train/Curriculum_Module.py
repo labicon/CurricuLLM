@@ -114,7 +114,8 @@ class Curriculum_Module:
         if curriculum_idx == 0:
             model = self.training_algorithm(self.cfg["policy_network"],
                                             training_env,
-                                            verbose=1)
+                                            verbose=1,
+                                            tensorboard_log=self.logger_path)
         else:
             previous_task = self.curriculum_info[curriculum_idx - 1]['Name']
             pre_tuned_model_path = self.logger_path + previous_task + f"/sample_{self.best_model_idx_list[-1]}/final_model"
@@ -124,9 +125,9 @@ class Curriculum_Module:
             model.set_env(training_env)
 
         if curriculum_idx == self.curriculum_length - 1 or curriculum_idx == self.curriculum_length - 2:
-            model.learn(total_timesteps=self.cfg['long_training_timesteps'], callback=eval_callback)
+            model.learn(total_timesteps=self.cfg['long_training_timesteps'], callback=eval_callback, tb_log_name=f"{task['Name']}_sample_{sample_num}")
         else:
-            model.learn(total_timesteps=self.cfg['short_training_timesteps'], callback=eval_callback)
+            model.learn(total_timesteps=self.cfg['short_training_timesteps'], callback=eval_callback, tb_log_name=f"{task['Name']}_sample_{sample_num}")
 
         model.save(self.logger_path + f"{task['Name']}/sample_{sample_num}/final_model.zip")
 

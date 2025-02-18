@@ -1,4 +1,5 @@
 import gymnasium as gym
+import gymnasium_robotics
 
 from stable_baselines3.common.utils import set_random_seed
 

@@ -25,7 +25,7 @@
 
 
   <title>CurricuLLM</title>
-  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="static/images/iconlab.ico">
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
   rel="stylesheet">
 
@@ -222,7 +222,7 @@
         <img src="static/images/Feedback Loop.pdf" alt="Step 2 & 3: Task code generation and evaluation" style="height:400px !important; display:block !important; margin:auto !important;"/>
 	<div class="content has-text-justified">
           <p>
-          <strong>Step 2: Task code generation and evaluation framework in each subtask</strong> - Task code generation LLM takes the environment and target
+          <strong>Step 2 & 3: Task code generation and evaluation framework in each subtask</strong> - Task code generation LLM takes the environment and target
           task description, current and past task information, and the reward function used for previous task. Then, $K$ task code candidates for current
           subtask is sampled and used for fine-tuning policies from previous subtask. Then, evaluation LLM receives the statistics of trajectory
           rollout from trained policy and find a policy that best aligns with current subtask description.

@@ -169,15 +169,15 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            While curriculum learning in reinforcement learning (RL) can achieve complex policies by progressively increasing the task difficulty during training, 
-            designing effective curricula for a specific task often requires extensive domain knowledge and human intervention, 
+            Curriculum learning can achieve complex policies by progressively increasing the task difficulty during training. 
+            However, designing effective curricula for a specific task often requires extensive domain knowledge and human intervention, 
             which limits its applicability across various domains. Our core idea is that large language models (LLMs) present significant potential for efficiently breaking down tasks 
             and decomposing skills across various robotics environments. Additionally, the demonstrated success of LLMs in translating natural language
             into executable code for RL agents strengthens their role in generating task curricula. In this work, we propose <strong>CurricuLLM</strong>,
             which leverages the high-level planning and programming capabilities of LLMs for curriculum design, thereby enhancing the
-            efficient learning of complex tasks. CurricuLLM consists of: <strong>(Step 1)</strong> Generating sequence of subtasks that aid target
-            task learning in natural language form, <strong>(Step 2)</strong> Translating natural language description of subtasks in executable task
-            code, including the reward code and goal distribution code, and <strong>(Step 3)</strong> Evaluating trained policies based on trajectory rollout
+            efficient learning of complex tasks. CurricuLLM consists of: <strong>(Step 1)</strong> Generating sequence of subtasks in natural language form, <strong>(Step 2)</strong> 
+            Translating natural language description of subtasks in executable task code, including the reward code and goal distribution code, and 
+            <strong>(Step 3)</strong> Evaluating trained policies based on trajectory rollout
             and subtask description. We evaluate CurricuLLM in various robotics simulation environments, ranging from manipulation,
             navigation, and locomotion, to show that CurricuLLM can aid learning complex robot control tasks. In addition, we validate
             humanoid locomotion policy learned through CurricuLLM in real-world.
@@ -189,6 +189,60 @@
 </section>
 <!-- End paper abstract -->
 
+<section class="section hero is-small">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <img src="static/images/Curriculum Generation.pdf" alt="Step 1: Curriculum generation" style="height:300px !important; display:block !important; margin:auto !important;"/>
+	<div class="content has-text-justified">
+          <p>
+          <strong>Step 1: Curriculum generation</strong> - Curriculum generation LLM receives the natural language form of a curriculum prompt as well as the environment description to
+          generate a sequence of subtasks. Our prompt includes instruction for tje curriculum designer, rules for how to describe the subtasks, and
+          other tips on describing the curriculum. Environment description consists of the robot and its state variable description, the target task,
+          and the initial state description.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section hero is-small">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <img src="static/images/Feedback Loop.pdf" alt="Step 2 & 3: Task code generation and evaluation" style="height:300px !important; display:block !important; margin:auto !important;"/>
+	<div class="content has-text-justified">
+          <p>
+          <strong>Step 2: Task code generation and evaluation framework in each subtask</strong> - Task code generation LLM takes the environment and target
+          task description, current and past task information, and the reward function used for previous task. Then, $K$ task code candidates for current
+          subtask is sampled and used for fine-tuning policies from previous subtask. Then, evaluation LLM receives the statistics of trajectory
+          rollout from trained policy and find a policy that best aligns with current subtask description.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+          <h2 class="title">CurricuLLM's reward code motivates exploration to the target task</h2>
+          <div class="content has-text-justified">
+                  <p>
+                    Example reward code generated from CurricuLLM and reward code generated in a zero-shot manner from LLM for AntMaze environment.
+                    The reward code designed from CurricuLLM encompasses diverse behaviors that motivates learning the target task. 
+                    However, directly querying a reward code for the target task leads to sparse, uninformative reward function.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
 <!-- Image carousel -->
 <section class="hero is-small">
@@ -197,88 +251,109 @@
       <div id="results-carousel" class="carousel results-carousel">
        <div class="item">
         <!-- Your image here -->
-        <img src="static/images/carousel1.jpg" alt="MY ALT TEXT"/>
+        <img src="static/images/reward code example.pdf" alt="MY ALT TEXT"/>
         <h2 class="subtitle has-text-centered">
-          First image description.
+          Comparison of reward code from CurricuLLM and zero-shot querying.
         </h2>
       </div>
       <div class="item">
         <!-- Your image here -->
-        <img src="static/images/carousel2.jpg" alt="MY ALT TEXT"/>
+        <img src="static/images/CurricuLLM reward code example.pdf" alt="MY ALT TEXT"/>
         <h2 class="subtitle has-text-centered">
-          Second image description.
+          Reward code from CurricuLLM can capture diverse behaviors required for the target task.
         </h2>
       </div>
       <div class="item">
         <!-- Your image here -->
-        <img src="static/images/carousel3.jpg" alt="MY ALT TEXT"/>
+        <img src="static/images/LLM-Scratch reward.pdf" alt="MY ALT TEXT"/>
         <h2 class="subtitle has-text-centered">
-         Third image description.
+         Zero-shot querying for the target task reward code leads to sparse, uninformative reward code.
        </h2>
      </div>
-     <div class="item">
-      <!-- Your image here -->
-      <img src="static/images/carousel4.jpg" alt="MY ALT TEXT"/>
-      <h2 class="subtitle has-text-centered">
-        Fourth image description.
-      </h2>
-    </div>
   </div>
 </div>
 </div>
 </section>
 <!-- End image carousel -->
 
-
-
-
-<!-- Youtube video -->
-<section class="hero is-small is-light">
+<!-- Image carousel -->
+<section class="hero is-small">
   <div class="hero-body">
     <div class="container">
-      <!-- Paper video. -->
-      <h2 class="title is-3">Video Presentation</h2>
-      <div class="columns is-centered has-text-centered">
-        <div class="column is-four-fifths">
-          
-          <div class="publication-video">
-            <!-- Youtube embed code here -->
-            <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-          </div>
-        </div>
+      <h2 class="title is-3">CurricuLLM can solve complex sparse reward tasks</h2>
+      <div id="results-carousel" class="carousel results-carousel">
+       <div class="item">
+        <!-- Your image here -->
+        <img src="static/images/antmaze_result.pdf" alt="MY ALT TEXT"/>
+        <h2 class="subtitle has-text-centered">
+          Training result from AntMaze environment.
+        </h2>
       </div>
-    </div>
+      <div class="item">
+        <!-- Your image here -->
+        <img src="static/images/fetch_push_result.pdf" alt="MY ALT TEXT"/>
+        <h2 class="subtitle has-text-centered">
+          Training result from FetchPush environment.
+        </h2>
+      </div>
+      <div class="item">
+        <!-- Your image here -->
+        <img src="static/images/fetch_slide_result.pdf" alt="MY ALT TEXT"/>
+        <h2 class="subtitle has-text-centered">
+          Training result from FetchSlide environment.
+       </h2>
+     </div>
   </div>
+</div>
+</div>
 </section>
-<!-- End youtube video -->
-
+<!-- End image carousel -->
 
 <!-- Video carousel -->
 <section class="hero is-small">
   <div class="hero-body">
     <div class="container">
-      <h2 class="title is-3">Another Carousel</h2>
+      <h2 class="title is-3">CurricuLLM result for FetchPush environment</h2>
       <div id="results-carousel" class="carousel results-carousel">
         <div class="item item-video1">
           <video poster="" id="video1" autoplay controls muted loop height="100%">
             <!-- Your video file here -->
-            <source src="static/videos/carousel1.mp4"
+            <source src="static/videos/push-reach block.mp4"
             type="video/mp4">
           </video>
+          <h2 class="subtitle has-text-centered">
+            Task 1: Reach the block. The robot manipulator must use its end effector to reach and position itself directly above the block without making contact.
+         </h2>
         </div>
         <div class="item item-video2">
           <video poster="" id="video2" autoplay controls muted loop height="100%">
             <!-- Your video file here -->
-            <source src="static/videos/carousel2.mp4"
+            <source src="static/videos/push-maintain contact.mp4"
             type="video/mp4">
           </video>
+          <h2 class="subtitle has-text-centered">
+            Task 2: Maintain contact. Once the end effector is directly above the block, slowly decrease the z-coordinate of the end_effector_position to make gentle contact with the block while ensuring that the block_relative_linear_velocity remains close to zero.
+         </h2>
         </div>
         <div class="item item-video3">
           <video poster="" id="video3" autoplay controls muted loop height="100%">\
             <!-- Your video file here -->
-            <source src="static/videos/carousel3.mp4"
+            <source src="static/videos/push-push a short distance.mp4"
             type="video/mp4">
           </video>
+          <h2 class="subtitle has-text-centered">
+            Task 3: Push a short distance. After making contact, the robot manipulator must push the block to a predefined point that is a short distance away from the starting point.
+         </h2>
+        </div>
+        <div class="item item-video4">
+          <video poster="" id="video4" autoplay controls muted loop height="100%">
+            <!-- Your video file here -->
+            <source src="static/videos/push-final.mp4"
+            type="video/mp4">
+          </video>
+          <h2 class="subtitle has-text-centered">
+            Task 4: Push to the goal. The manipulator needs to push the block to a goal position on the table.
+         </h2>
         </div>
       </div>
     </div>
@@ -287,7 +362,25 @@
 <!-- End video carousel -->
 
 
-
+<!-- Youtube video -->
+<!-- <section class="hero is-small is-light">
+  <div class="hero-body">
+    <div class="container"> -->
+      <!-- Paper video. -->
+      <!-- <h2 class="title is-3">Video Presentation</h2>
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          
+          <div class="publication-video"> -->
+            <!-- Youtube embed code here -->
+            <!-- <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section> -->
+<!-- End youtube video -->
 
 
 
@@ -310,10 +403,61 @@
   <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <h2 class="title">BibTeX</h2>
-      <pre><code>BibTex Code Here</code></pre>
+      <pre><code>
+        @inproceedings{ryu2025curricullm,
+          title={CurricuLLm: Automatic task curricula design for learning complex robot skills using large language models}, 
+          author={Ryu, Kanghyun and Liao, Qiayuan and Li, Zhongyu and Sreenath, Koushil and Mehr, Negar},
+          booktitle={2025 IEEE International Conference on Robotics and Automation (ICRA)},
+          year={2025},
+          organization={IEEE},
+          arxiv={2409.18382},
+        }
+      </code></pre>
     </div>
 </section>
 <!--End BibTex citation -->
+
+<!--References -->
+<section class="section hero is-small is-light">
+  <div class="container is-max-desktop content">
+    <h2 class="title">References</h2>
+    <dl>
+	<dt><strong>[Eureka]</strong></dt>
+	<dd>
+	  <div class="reference" id="Eureka">
+	    Yecheng Jason Ma, William Liang, Guanzhi Wang, De-An Huang, Osbert Bastani, Dinesh Jayaraman, Yuke Zhu, Linxi “Jim” Fan, Anima Anandkumar,
+	    <a href="https://arxiv.org/pdf/2310.12931" target="_blank" rel="noopener noreferrer">Eureka: Human-level reward design via coding large language models</a>,
+	    International Conference on Learning Representations (ICLR), 2024.
+	  </div>
+	</dd>
+      <dt><strong>[HER]</strong></dt>
+	<dd>
+	  <div class="reference" id="HER">
+	    Marcin Andrychowicz, Filip Wolski, Alex Ray, Jonas Schneider, Rachel Fong, Peter Welinder, Bob McGrew, Josh Tobin, Pieter Abbeel, and Wojciech Zaremba,
+	    <a href="https://proceedings.neurips.cc/paper_files/paper/2017/file/453fadbd8a1a3af50a9df4df899537b5-Paper.pdf" target="_blank" rel="noopener noreferrer">Hindsight Experience Replay</a>,
+	    Advances in Neural Information Processing Systems (Neurips), 2017.
+	  </div>
+	</dd>
+	<dt><strong>[Eurekaverse]</strong></dt>
+	<dd>
+	  <div class="reference" id="POLICE">
+	    William Liang, Sam Wang, Hung-Ju Wang, Osbert Bastani, Dinesh Jayaraman, Yecheng Jason Ma,
+	    <a href="https://arxiv.org/abs/2411.01775" target="_blank" rel="noopener noreferrer"> Eurekaverse: Environment Curriculum Generation via Large Language Models</a>,
+	    Conference on Robot Learning (CoRL), 2024.
+	  </div>
+	</dd>
+	<dt><strong>[Berkeley Humanoid]</strong></dt>
+	<dd>
+	  <div class="reference" id="Berkeley Humanoid">
+	    Qiayuan Liao, Bike Zhang, Xuanyu Huang, Xiaoyu Huang, Zhongyu Li, and Koushil Sreenath,
+	    <a href="https://arxiv.org/pdf/2407.21781" target="_blank" rel="noopener noreferrer">Berkeley Humanoid: A Research Platform for Learning-based Control</a>,
+	    Arxiv, 2024.
+	  </div>
+	</dd>
+	
+    </dl>  
+  </div>
+</section>
 
 
   <footer class="footer">

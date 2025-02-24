@@ -112,6 +112,12 @@ body {
 
 .results-carousel {
   overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Centers the items horizontally */
+  align-items: center; /* Centers the items vertically */
+  text-align: center;
+  gap: 20px; /* Adds spacing between videos */
 }
 
 .results-carousel .item {
@@ -119,6 +125,10 @@ body {
   overflow: hidden;
   padding: 20px;
   font-size: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Ensures each video and text are centered */
+  text-align: center;
 }
 
 .results-carousel video {

@@ -238,6 +238,7 @@
   <div class="hero-body">
     <div class="container">
       <h2 class="title is-3">CurricuLLM can learn various robot tasks</h2>
+      <div class="columns is-centered">
       <div class="column is-8">
       <div class="content has-text-justified">
         <p>
@@ -246,23 +247,19 @@
         <pre><code>
 Task 1
 Name: Reach the Block
-Description: The robot manipulator must use its end effector to reach and position itself directly above the block without making contact. The end_effector_position should align with the block_position in the xy-plane, ignoring the z-coordinate.
-Reason: This task focuses on the basic ability to navigate the manipulator's end effector in the workspace and to position it accurately. Mastering precise positioning is essential for the subsequent steps that require interaction with objects.
+Description: The robot manipulator must use its end effector to reach and position itself directly above the block without making contact. 
 
 Task 2
 Name: Maintain Contact With the Block
 Description: Once the end effector is directly above the block, slowly decrease the z-coordinate of the end_effector_position to make gentle contact with the block while ensuring that the block_relative_linear_velocity remains close to zero.
-Reason: This task is designed to teach the manipulator how to approach and make controlled contact with objects. Minimizing the block_relative_linear_velocity ensures that the block is not unintentionally moved during initial contact.
 
 Task 3
 Name: Push to a Short Distance
-Description: After making contact, the robot manipulator must push the block to a predefined point that is a short distance away from the starting point. This task requires controlling the end_effector_linear_velocity in correlation with the block_relative_linear_velocity to move the block steadily.
-Reason: This step focuses on the fundamental skills of manipulating an object and understanding how the end effector's movements translate to the block's movements, laying groundwork for more complex manipulation tasks.
+Description: After making contact, the robot manipulator must push the block to a predefined point that is a short distance away from the starting point. 
 
 Task 4
 Name: Original Task
-Description: The manipulator needs to push the block to a goal position on the table. Both the block's starting and goal positions are random for each trial. Success is determined when the distance between the block position and goal position is less than 0.05.
-Reason: This final task combines all the previously acquired skills of navigation, precision in positioning and movement, and object manipulation to accomplish the primary goal of the environment.
+Description: The manipulator needs to push the block to a goal position on the table.
         </code></pre>
       </div>
 
@@ -274,6 +271,178 @@ Reason: This final task combines all the previously acquired skills of navigatio
         </p>
       </div>
     </div>
+  </div>
+
+  <div id="results-carousel" class="carousel results-carousel">
+    <div class="item">
+      <!-- Your code here -->
+      <pre><code>
+def compute_reward_curriculum(self):
+  end_effector_position, block_position, block_relative_linear_velocity, \
+  end_effector_linear_velocity, goal_position = self.obs()
+  
+  # Parameters for reward weights
+  distance_weight = 1.0
+
+  # Calculate the difference in positions in the xy-plane
+  xy_distance = np.linalg.norm(end_effector_position[:2] - block_position[:2])
+
+  # Define the reward
+  # Since the task is to reach the block in the xy plane, ignore the z-coordinate
+  # The closer the end effector is to the block in xy-plane, the higher the reward
+  reach_block_reward = -distance_weight * xy_distance  # reward becomes more positive as distance decreases
+
+  reward = reach_block_reward
+
+  # Reward components in a dictionary
+  reward_dict = {
+      'reach_block_reward': reach_block_reward
+  }
+
+  return reward, reward_dict
+      </code></pre>
+      <h2 class="subtitle has-text-centered">
+        Reward code for Task 1: Reach the Block. 
+     </h2>
+    </div>
+    <div class="item">
+      <pre><code>
+def compute_reward_curriculum(self):
+  end_effector_position, block_position, block_relative_linear_velocity, \
+  end_effector_linear_velocity, goal_position = self.obs()
+
+  # Parameters for reward weights
+  distance_xy_weight = 1.0
+  # Added weights for new task components
+  contact_z_weight = 2.0  # This task is more crucial at this learning phase
+  velocity_penalty_weight = 2.0  # Important to make sure the block doesn't move unintentionally
+
+  # Calculate the difference in positions in the xy-plane (from previous task)
+  xy_distance = np.linalg.norm(end_effector_position[:2] - block_position[:2])
+
+  # Calculate the difference in the z-coordinate for gentle contact
+  # Assuming the desired z-coordinate is slightly above the block's surface to count as gentle contact
+  z_distance = abs(end_effector_position[2] - (block_position[2] + 0.005))  # 0.005 is a small threshold above the block
+
+  # Calculate the penalty for relative velocity to ensure block is not moved unintentionally
+  velocity_penalty = np.linalg.norm(block_relative_linear_velocity)
+
+  # Calculate rewards and penalties
+  reach_block_reward = -distance_xy_weight * xy_distance  # reward for reaching block in the xy-plane
+  gentle_contact_reward = -contact_z_weight * z_distance  # reward for gentle contact in z-coordinate
+  velocity_penalty_reward = -velocity_penalty_weight * velocity_penalty  # penalty for any relative movement
+
+  # Total reward
+  reward = reach_block_reward + gentle_contact_reward + velocity_penalty_reward
+
+  # Reward components in a dictionary
+  reward_dict = {
+      'reach_block_reward': reach_block_reward,
+      'gentle_contact_reward': gentle_contact_reward,
+      'velocity_penalty_reward': velocity_penalty_reward
+  }
+
+  return reward, reward_dict
+      </code></pre>
+      <h2 class="subtitle has-text-centered">
+        Reward code for Task 2: Maintain Contact. 
+     </h2>
+   </div>
+   <div class="item">
+    <pre><code>
+def compute_reward_curriculum(self):
+  end_effector_position, block_position, block_linear_velocity, \
+  end_effector_linear_velocity, goal_position = self.obs()
+  
+  # Parameters for reward weights from previous tasks
+  distance_xy_weight = 1.0
+  contact_z_weight = 2.0
+  velocity_penalty_weight = 2.0
+  
+  # New parameters for the current task
+  goal_distance_weight = 3.0  # Higher weight as pushing towards goal is the main task
+  velocity_control_weight = 2.0  # Ensuring smooth push
+  
+  # Calculate distances and penalties as before
+  xy_distance = np.linalg.norm(end_effector_position[:2] - block_position[:2])
+  z_distance = abs(end_effector_position[2] - (block_position[2] + 0.005))
+  velocity_penalty = np.linalg.norm(block_linear_velocity - end_effector_linear_velocity)
+  
+  # New calculation for distance to goal from block
+  goal_distance = np.linalg.norm(block_position[:2] - goal_position[:2])
+  
+  # Calculate rewards and penalties for new task
+  reach_and_maintain_reward = -distance_xy_weight * xy_distance - contact_z_weight * z_distance \
+                              - velocity_penalty_weight * velocity_penalty
+  goal_reaching_reward = -goal_distance_weight * goal_distance  # Reward for moving block towards the goal
+  velocity_control_reward = -velocity_control_weight * velocity_penalty  # Penalty for erratic movement
+  
+  # Total reward
+  reward = reach_and_maintain_reward + goal_reaching_reward + velocity_control_reward
+  
+  # Reward components in a dictionary
+  reward_dict = {
+      'reach_block_reward': reach_and_maintain_reward + goal_reaching_reward,
+      'gentle_contact_reward': -contact_z_weight * z_distance,
+      'velocity_penalty_reward': -velocity_penalty_weight * velocity_penalty,
+      'goal_reaching_reward': goal_reaching_reward,
+      'velocity_control_reward': velocity_control_reward
+  }
+  
+  return reward, reward_dict
+    </code></pre>
+    <h2 class="subtitle has-text-centered">
+      Reward code for Task 3: Push to a short distance. 
+   </h2>
+ </div>
+
+  <div class="item">
+    <pre><code>
+def compute_reward_curriculum(self):
+  end_effector_position, block_position, block_linear_velocity, \
+  end_effector_linear_velocity, goal_position = self.obs()
+
+  # Parameters for reward weights
+  distance_xy_weight = 0.5  # Lower weight since reaching is a prerequisite skill
+  contact_z_weight = 1.0  # Important but not as critical as getting the block to the goal
+  velocity_penalty_weight = 1.0  # Ensuring controlled movement of the block
+  goal_distance_weight = 3.0  # Highest weight, as reaching the goal is the main objective
+  goal_achievement_weight = 10.0  # High reward for achieving the goal
+
+  # Calculate distances and penalties as before
+  xy_distance = np.linalg.norm(end_effector_position[:2] - block_position[:2])
+  z_distance = abs(end_effector_position[2] - (block_position[2] + 0.005))  # For gentle contact
+  velocity_penalty = np.linalg.norm(block_linear_velocity - end_effector_linear_velocity)
+  goal_distance = np.linalg.norm(block_position[:2] - goal_position[:2])  # Distance to goal in xy-plane
+
+  # Calculate rewards and penalties
+  reach_block_reward = -distance_xy_weight * xy_distance
+  gentle_contact_reward = -contact_z_weight * z_distance
+  velocity_penalty_reward = -velocity_penalty_weight * velocity_penalty
+  goal_distance_reward = -goal_distance_weight * goal_distance
+
+  # Give a significant reward when the block reaches its target goal position
+  goal_achievement_reward = goal_achievement_weight if goal_distance < 0.05 else 0
+
+  # Total reward
+  reward = reach_block_reward + gentle_contact_reward + velocity_penalty_reward + goal_distance_reward + goal_achievement_reward
+
+  # Reward components in a dictionary
+  reward_dict = {
+      'reach_block_reward': reach_block_reward,
+      'gentle_contact_reward': gentle_contact_reward,
+      'velocity_penalty_reward': velocity_penalty_reward,
+      'goal_distance_reward': goal_distance_reward,
+      'goal_achievement_reward': goal_achievement_reward
+  }
+
+  return reward, reward_dict
+    </code></pre>
+    <h2 class="subtitle has-text-centered">
+      Reward code for Task 4: Final Task. 
+   </h2>
+  </div>
+</div>
 
       <div id="results-carousel" class="carousel results-carousel">
         <div class="item item-video1">

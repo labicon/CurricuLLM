@@ -238,7 +238,7 @@
   <div class="hero-body">
     <div class="container">
       <h2 class="title is-3">CurricuLLM can learn various robot tasks</h2>
-
+      <div class="column is-8">
       <div class="content has-text-justified">
         <p>
           Leveraging the high-level planning capabilities, LLMs can generate series of language descriptions for a task-level sequence curriculum facilitating efficient learning of complex robot skills.
@@ -272,48 +272,8 @@ Reason: This final task combines all the previously acquired skills of navigatio
           In each subtask, Task Code Generation LLM samples $K$ different task codes and fine-tune the policies from the previous subtask. 
           Then, Evaluation LLM evaluates the trained policies based on the trajectory rollout information and subtask description.
         </p>
-        <pre><code>
-def compute_reward_curriculum(self):
-  end_effector_position, block_position, block_linear_velocity, \
-  end_effector_linear_velocity, goal_position = self.obs()
-
-  # Parameters for reward weights
-  distance_xy_weight = 0.5  # Lower weight since reaching is a prerequisite skill
-  contact_z_weight = 1.0  # Important but not as critical as getting the block to the goal
-  velocity_penalty_weight = 1.0  # Ensuring controlled movement of the block
-  goal_distance_weight = 3.0  # Highest weight, as reaching the goal is the main objective
-  goal_achievement_weight = 10.0  # High reward for achieving the goal
-
-  # Calculate distances and penalties as before
-  xy_distance = np.linalg.norm(end_effector_position[:2] - block_position[:2])
-  z_distance = abs(end_effector_position[2] - (block_position[2] + 0.005))  # For gentle contact
-  velocity_penalty = np.linalg.norm(block_linear_velocity - end_effector_linear_velocity)
-  goal_distance = np.linalg.norm(block_position[:2] - goal_position[:2])  # Distance to goal in xy-plane
-
-  # Calculate rewards and penalties
-  reach_block_reward = -distance_xy_weight * xy_distance
-  gentle_contact_reward = -contact_z_weight * z_distance
-  velocity_penalty_reward = -velocity_penalty_weight * velocity_penalty
-  goal_distance_reward = -goal_distance_weight * goal_distance
-
-  # Give a significant reward when the block reaches its target goal position
-  goal_achievement_reward = goal_achievement_weight if goal_distance < 0.05 else 0
-
-  # Total reward
-  reward = reach_block_reward + gentle_contact_reward + velocity_penalty_reward + goal_distance_reward + goal_achievement_reward
-
-  # Reward components in a dictionary
-  reward_dict = {
-      'reach_block_reward': reach_block_reward,
-      'gentle_contact_reward': gentle_contact_reward,
-      'velocity_penalty_reward': velocity_penalty_reward,
-      'goal_distance_reward': goal_distance_reward,
-      'goal_achievement_reward': goal_achievement_reward
-  }
-
-  return reward, reward_dict
-        </code></pre>
       </div>
+    </div>
 
       <div id="results-carousel" class="carousel results-carousel">
         <div class="item item-video1">

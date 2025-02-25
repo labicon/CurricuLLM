@@ -239,88 +239,119 @@
     <div class="container">
       <h2 class="title is-3">CurricuLLM can learn various robot tasks</h2>
 
+      <div class="columns is-centered">
+        <div class="column is-8">
+        <div class="content has-text-justified">
+            <p>
+              CurricuLLM can be applied to various robot tasks. We provide the example curriculum and reward function generated from CurricuLLM for Fetch Push environment.
+            </p>
+            <blockquote>
+              <p>
+Task 1
+Name: Reach the Block
+Description: The robot manipulator must use its end effector to reach and position itself directly above the block without making contact. The end_effector_position should align with the block_position in the xy-plane, ignoring the z-coordinate.]
+Reason: This task focuses on the basic ability to navigate the manipulator's end effector in the workspace and to position it accurately. Mastering precise positioning is essential for the subsequent steps that require interaction with objects.]
+
+Task 2
+Name: Maintain Contact With the Block]
+Description: Once the end effector is directly above the block, slowly decrease the z-coordinate of the end_effector_position to make gentle contact with the block while ensuring that the block_relative_linear_velocity remains close to zero.]
+Reason: This task is designed to teach the manipulator how to approach and make controlled contact with objects. Minimizing the block_relative_linear_velocity ensures that the block is not unintentionally moved during initial contact.]
+
+Task 3
+Name: [Push to a Short Distance]
+Description: [After making contact, the robot manipulator must push the block to a predefined point that is a short distance away from the starting point. This task requires controlling the end_effector_linear_velocity in correlation with the block_relative_linear_velocity to move the block steadily.]
+Reason: [This step focuses on the fundamental skills of manipulating an object and understanding how the end effector's movements translate to the block's movements, laying groundwork for more complex manipulation tasks.]
+
+Task 4
+Name: [Original Task]
+Description: [The manipulator needs to push the block to a goal position on the table. Both the block's starting and goal positions are random for each trial. Success is determined when the distance between the block position and goal position is less than 0.05.]
+Reason: [This final task combines all the previously acquired skills of navigation, precision in positioning and movement, and object manipulation to accomplish the primary goal of the environment.]
+              </p>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+
       <div id="results-carousel" class="carousel results-carousel">
         <div class="item is-active">
           <div class="columns is-vcentered">
-            <!-- Image column -->
-            <div class="column is-half">
-              <figure class="image">
-                <img src="static/images/task 1 code.png" alt="Sample Image">
-              </figure>
-            </div>
             <!-- Video column -->
             <div class="column is-half">
-              <video controls autoplay muted loop width="100%">
+              <video poster="" id="video1" autoplay controls muted loop width="360" height="360">
                 <source src="static/videos/push-reach block.mp4" type="video/mp4">
-                Your browser does not support the video tag.
               </video>
             </div>
+            <!-- Image column -->
+            <div class="column is-half">
+              <figure class="image" width="400">
+                <img src="static/images/task 1 code.png" alt="Image fot task 1">
+              </figure>
+            </div>
           </div>
+          <h2 class="subtitle has-text-centered">
+            Task 1: Reach the block. 
         </div>
 
         <div class="item">
           <div class="columns is-vcentered">
-            <!-- Image column -->
-            <div class="column is-half">
-              <figure class="image">
-                <img src="static/images/task 2 code.png" alt="Sample Image">
-              </figure>
-            </div>
             <!-- Video column -->
             <div class="column is-half">
-              <video controls autoplay muted loop width="100%">
+              <video poster="" id="video2" autoplay controls muted loop width="360" height="360">
                 <source src="static/videos/push-maintain contact.mp4" type="video/mp4">
-                Your browser does not support the video tag.
               </video>
             </div>
+            <!-- Image column -->
+            <div class="column is-half">
+              <figure class="image" width="400">
+                <img src="static/images/task 2 code.png" alt="Image for task 2">
+              </figure>
+            </div>
           </div>
-        </div>
-
-      </div>
-
-      <div id="results-carousel-video" class="carousel results-carousel">
-        <div class="item item-video1">
-          <video poster="" id="video1" autoplay controls muted loop width="360" height="360">
-            <!-- Your video file here -->
-            <source src="static/videos/push-reach block.mp4"
-            type="video/mp4">
-          </video>
-          <h2 class="subtitle has-text-centered">
-            Task 1: Reach the block. 
-        </div>
-        <div class="item item-video2">
-          <video poster="" id="video2" autoplay controls muted loop width="360" height="360">
-            <!-- Your video file here -->
-            <source src="static/videos/push-maintain contact.mp4"
-            type="video/mp4">
-          </video>
           <h2 class="subtitle has-text-centered">
             Task 2: Maintain contact. 
-         </h2>
         </div>
-        <div class="item item-video3">
-          <video poster="" id="video3" autoplay controls muted loop width="360" height="360">\
-            <!-- Your video file here -->
-            <source src="static/videos/push-push a short distance.mp4"
-            type="video/mp4">
-          </video>
+
+        <div class="item">
+          <div class="columns is-vcentered">
+            <!-- Video column -->
+            <div class="column is-half">
+              <video poster="" id="video3" autoplay controls muted loop width="360" height="360">
+                <source src="static/videos/push-push a short distance.mp4" type="video/mp4">
+              </video>
+            </div>
+            <!-- Image column -->
+            <div class="column is-half">
+              <figure class="image" width="400">
+                <img src="static/images/task 3 code.png" alt="Image for task 3">
+              </figure>
+            </div>
+          </div>
           <h2 class="subtitle has-text-centered">
-            Task 3: Push a short distance. 
-         </h2>
+            Task 3: Push a Short Distance. 
         </div>
-        <div class="item item-video4">
-          <video poster="" id="video4" autoplay controls muted loop width="360" height="360">
-            <!-- Your video file here -->
-            <source src="static/videos/push-final.mp4"
-            type="video/mp4">
-          </video>
+
+        <div class="item">
+          <div class="columns is-vcentered">
+            <!-- Video column -->
+            <div class="column is-half">
+              <video poster="" id="video4" autoplay controls muted loop width="360" height="360">
+                <source src="static/videos/push-final.mp4" type="video/mp4">
+              </video>
+            </div>
+            <!-- Image column -->
+            <div class="column is-half">
+              <figure class="image" width="400">
+                <img src="static/images/task 4 code.png" alt="Image for task 4">
+              </figure>
+            </div>
+          </div>
           <h2 class="subtitle has-text-centered">
-            Task 4: Push to the goal. 
-         </h2>
+            Task 4: Final Push Task. 
         </div>
+
       </div>
 
-    <img src="static/images/combined result.png" alt="Result summary" style="height:400px !important; display:block !important; margin:auto !important;"/>  
+    <img src="static/images/combined result.png" alt="Result summary" style="height:360px !important; display:block !important; margin:auto !important;"/>  
    </div>
   </div>
 </section>

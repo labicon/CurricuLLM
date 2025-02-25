@@ -53,13 +53,13 @@
 </head>
 <body>
 
-  <div style="float:left;">
+  <div style="position: absolute;  left: 0;  top: 0;">
     <a href="https://https://www.berkeley.edu/" target="_blank">
     <img src="static/images/UC-Berkeley-Seal.png" alt="UC Berkeley" width="160"/>
     </a>
   </div>
     
-  <div style="float:right;">
+  <div style="position: absolute;  right: 0;  top: 0;">
     <a href="https://iconlab.negarmehr.com/" target="_blank">
     <img src="static/images/ICON_Lab.png" alt="ICON Lab" width="160"/>
     </a>
@@ -182,9 +182,9 @@
             and decomposing skills across various robotics environments. Additionally, the demonstrated success of LLMs in translating natural language
             into executable code for RL agents strengthens their role in generating task curricula. In this work, we propose <strong>CurricuLLM</strong>,
             which leverages the high-level planning and programming capabilities of LLMs for curriculum design, thereby enhancing the
-            efficient learning of complex tasks. CurricuLLM consists of: <strong>(Step 1)</strong> Generating sequence of subtasks in natural language form, <strong>(Step 2)</strong> 
+            efficient learning of complex tasks. CurricuLLM consists of: <em>(Step 1)</em> Generating sequence of subtasks in natural language form, <em>(Step 2)</em> 
             Translating natural language description of subtasks in executable task code, including the reward code and goal distribution code, and 
-            <strong>(Step 3)</strong> Evaluating trained policies based on trajectory rollout
+            <em>(Step 3)</em> Evaluating trained policies based on trajectory rollout
             and subtask description. We evaluate CurricuLLM in various robotics simulation environments, ranging from manipulation,
             navigation, and locomotion, to show that CurricuLLM can aid learning complex robot control tasks. In addition, we validate
             humanoid locomotion policy learned through CurricuLLM in real-world.
@@ -204,7 +204,7 @@
 	<div class="content has-text-justified">
           <p>
           <strong>Step 1: Curriculum generation</strong> - Curriculum generation LLM receives the natural language form of a curriculum prompt as well as the environment description to
-          generate a sequence of subtasks. Our prompt includes instruction for tje curriculum designer, rules for how to describe the subtasks, and
+          generate a sequence of subtasks. Our prompt includes instruction for the curriculum designer, rules for how to describe the subtasks, and
           other tips on describing the curriculum. Environment description consists of the robot and its state variable description, the target task,
           and the initial state description.
           </p>
@@ -224,8 +224,8 @@
           <p>
           <strong>Step 2 & 3: Task code generation and evaluation framework in each subtask</strong> - Task code generation LLM takes the environment and target
           task description, current and past task information, and the reward function used for previous task. Then, $K$ task code candidates for current
-          subtask is sampled and used for fine-tuning policies from previous subtask. Then, evaluation LLM receives the statistics of trajectory
-          rollout from trained policy and find a policy that best aligns with current subtask description.
+          subtask is sampled and used for fine-tuning policies from previous subtask. Then, evaluation LLM receives the trajectory
+          rollout informations from trained policy and find a policy that best aligns with current subtask description.
           </p>
         </div>
       </div>
@@ -233,6 +233,136 @@
   </div>
 </section>
 
+<!-- Video carousel -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <h2 class="title is-3">CurricuLLM can learn various robot tasks</h2>
+
+      <div class="content has-text-justified">
+        <p>
+          Leveraging the high-level planning capabilities, LLMs can generate series of language descriptions for a task-level sequence curriculum facilitating efficient learning of complex robot skills.
+        </p>
+        <pre><code>
+Task 1
+Name: Reach the Block
+Description: The robot manipulator must use its end effector to reach and position itself directly above the block without making contact. The end_effector_position should align with the block_position in the xy-plane, ignoring the z-coordinate.
+Reason: This task focuses on the basic ability to navigate the manipulator's end effector in the workspace and to position it accurately. Mastering precise positioning is essential for the subsequent steps that require interaction with objects.
+
+Task 2
+Name: Maintain Contact With the Block
+Description: Once the end effector is directly above the block, slowly decrease the z-coordinate of the end_effector_position to make gentle contact with the block while ensuring that the block_relative_linear_velocity remains close to zero.
+Reason: This task is designed to teach the manipulator how to approach and make controlled contact with objects. Minimizing the block_relative_linear_velocity ensures that the block is not unintentionally moved during initial contact.
+
+Task 3
+Name: Push to a Short Distance
+Description: After making contact, the robot manipulator must push the block to a predefined point that is a short distance away from the starting point. This task requires controlling the end_effector_linear_velocity in correlation with the block_relative_linear_velocity to move the block steadily.
+Reason: This step focuses on the fundamental skills of manipulating an object and understanding how the end effector's movements translate to the block's movements, laying groundwork for more complex manipulation tasks.
+
+Task 4
+Name: Original Task
+Description: The manipulator needs to push the block to a goal position on the table. Both the block's starting and goal positions are random for each trial. Success is determined when the distance between the block position and goal position is less than 0.05.
+Reason: This final task combines all the previously acquired skills of navigation, precision in positioning and movement, and object manipulation to accomplish the primary goal of the environment.
+        </code></pre>
+      </div>
+
+      <div class="content has-text-justified">
+        <p>
+          Based on a series of language descriptions, CurricuLLM translate them to a sequence of task codes (reward & goal distribution) which is executable code that the RL policies can be trained on.
+          In each subtask, Task Code Generation LLM samples $K$ different task codes and fine-tune the policies from the previous subtask. 
+          Then, Evaluation LLM evaluates the trained policies based on the trajectory rollout information and subtask description.
+        </p>
+        <pre><code>
+def compute_reward_curriculum(self):
+  end_effector_position, block_position, block_linear_velocity, \
+  end_effector_linear_velocity, goal_position = self.obs()
+
+  # Parameters for reward weights
+  distance_xy_weight = 0.5  # Lower weight since reaching is a prerequisite skill
+  contact_z_weight = 1.0  # Important but not as critical as getting the block to the goal
+  velocity_penalty_weight = 1.0  # Ensuring controlled movement of the block
+  goal_distance_weight = 3.0  # Highest weight, as reaching the goal is the main objective
+  goal_achievement_weight = 10.0  # High reward for achieving the goal
+
+  # Calculate distances and penalties as before
+  xy_distance = np.linalg.norm(end_effector_position[:2] - block_position[:2])
+  z_distance = abs(end_effector_position[2] - (block_position[2] + 0.005))  # For gentle contact
+  velocity_penalty = np.linalg.norm(block_linear_velocity - end_effector_linear_velocity)
+  goal_distance = np.linalg.norm(block_position[:2] - goal_position[:2])  # Distance to goal in xy-plane
+
+  # Calculate rewards and penalties
+  reach_block_reward = -distance_xy_weight * xy_distance
+  gentle_contact_reward = -contact_z_weight * z_distance
+  velocity_penalty_reward = -velocity_penalty_weight * velocity_penalty
+  goal_distance_reward = -goal_distance_weight * goal_distance
+
+  # Give a significant reward when the block reaches its target goal position
+  goal_achievement_reward = goal_achievement_weight if goal_distance < 0.05 else 0
+
+  # Total reward
+  reward = reach_block_reward + gentle_contact_reward + velocity_penalty_reward + goal_distance_reward + goal_achievement_reward
+
+  # Reward components in a dictionary
+  reward_dict = {
+      'reach_block_reward': reach_block_reward,
+      'gentle_contact_reward': gentle_contact_reward,
+      'velocity_penalty_reward': velocity_penalty_reward,
+      'goal_distance_reward': goal_distance_reward,
+      'goal_achievement_reward': goal_achievement_reward
+  }
+
+  return reward, reward_dict
+        </code></pre>
+      </div>
+
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item item-video1">
+          <video poster="" id="video1" autoplay controls muted loop width="360" height="360">
+            <!-- Your video file here -->
+            <source src="static/videos/push-reach block.mp4"
+            type="video/mp4">
+          </video>
+          <h2 class="subtitle has-text-centered">
+            Task 1: Reach the block. 
+        </div>
+        <div class="item item-video2">
+          <video poster="" id="video2" autoplay controls muted loop width="360" height="360">
+            <!-- Your video file here -->
+            <source src="static/videos/push-maintain contact.mp4"
+            type="video/mp4">
+          </video>
+          <h2 class="subtitle has-text-centered">
+            Task 2: Maintain contact. 
+         </h2>
+        </div>
+        <div class="item item-video3">
+          <video poster="" id="video3" autoplay controls muted loop width="360" height="360">\
+            <!-- Your video file here -->
+            <source src="static/videos/push-push a short distance.mp4"
+            type="video/mp4">
+          </video>
+          <h2 class="subtitle has-text-centered">
+            Task 3: Push a short distance. 
+         </h2>
+        </div>
+        <div class="item item-video4">
+          <video poster="" id="video4" autoplay controls muted loop width="360" height="360">
+            <!-- Your video file here -->
+            <source src="static/videos/push-final.mp4"
+            type="video/mp4">
+          </video>
+          <h2 class="subtitle has-text-centered">
+            Task 4: Push to the goal. 
+         </h2>
+        </div>
+      </div>
+
+    <img src="static/images/combined result.png" alt="Result summary" style="height:400px !important; display:block !important; margin:auto !important;"/>  
+   </div>
+    </div>
+  </div>
+</section>
+<!-- End video carousel -->
 
 <!-- <section class="section hero is-light">
   <div class="container is-max-desktop">
@@ -265,13 +395,6 @@
 </div>
 
       <div id="results-carousel" class="carousel results-carousel">
-       <div class="item">
-        <!-- Your image here -->
-        <img src="static/images/reward code example.pdf" alt="MY ALT TEXT" style="height:500px !important; display:block !important; margin:auto !important;"/>
-        <h2 class="subtitle has-text-centered">
-          Comparison of reward code from CurricuLLM and zero-shot querying.
-        </h2>
-      </div>
       <div class="item">
         <!-- Your image here -->
         <img src="static/images/CurricuLLM reward code example.pdf" alt="MY ALT TEXT" style="height:400px !important; display:block !important; margin:auto !important;"/>
@@ -291,82 +414,6 @@
 </div>
 </section>
 <!-- End image carousel -->
-
-<!-- Video carousel -->
-<section class="hero is-small">
-  <div class="hero-body">
-    <div class="container">
-      <h2 class="title is-3">CurricuLLM can learn various sparse-reward robot tasks</h2>
-      <div id="results-carousel" class="carousel results-carousel">
-        <div class="item item-video1">
-          <video poster="" id="video1" autoplay controls muted loop width="360" height="360">
-            <!-- Your video file here -->
-            <source src="static/videos/push-reach block.mp4"
-            type="video/mp4">
-          </video>
-          <h2 class="subtitle has-text-centered">
-            Task 1: Reach the block. The robot manipulator must use its end effector to reach and position itself directly above the block without making contact.
-         </h2>
-        </div>
-        <div class="item item-video2">
-          <video poster="" id="video2" autoplay controls muted loop width="360" height="360">
-            <!-- Your video file here -->
-            <source src="static/videos/push-maintain contact.mp4"
-            type="video/mp4">
-          </video>
-          <h2 class="subtitle has-text-centered">
-            Task 2: Maintain contact. Once the end effector is directly above the block, slowly decrease the z-coordinate of the end_effector_position to make gentle contact with the block while ensuring that the block_relative_linear_velocity remains close to zero.
-         </h2>
-        </div>
-        <div class="item item-video3">
-          <video poster="" id="video3" autoplay controls muted loop width="360" height="360">\
-            <!-- Your video file here -->
-            <source src="static/videos/push-push a short distance.mp4"
-            type="video/mp4">
-          </video>
-          <h2 class="subtitle has-text-centered">
-            Task 3: Push a short distance. After making contact, the robot manipulator must push the block to a predefined point that is a short distance away from the starting point.
-         </h2>
-        </div>
-        <div class="item item-video4">
-          <video poster="" id="video4" autoplay controls muted loop width="360" height="360">
-            <!-- Your video file here -->
-            <source src="static/videos/push-final.mp4"
-            type="video/mp4">
-          </video>
-          <h2 class="subtitle has-text-centered">
-            Task 4: Push to the goal. The manipulator needs to push the block to a goal position on the table.
-         </h2>
-        </div>
-      </div>
-
-      <div id="results-carousel" class="carousel results-carousel">
-        <div class="item">
-         <!-- Your image here -->
-         <img src="static/images/antmaze_result.pdf" alt="MY ALT TEXT" style="height:400px !important; display:block !important; margin:auto !important;"/>
-         <h2 class="subtitle has-text-centered">
-           Training result from AntMaze environment.
-         </h2>
-       </div>
-       <div class="item">
-         <!-- Your image here -->
-         <img src="static/images/fetch_push_result.pdf" alt="MY ALT TEXT" style="height:400px !important; display:block !important; margin:auto !important;"/>
-         <h2 class="subtitle has-text-centered">
-           Training result from FetchPush environment.
-         </h2>
-       </div>
-       <div class="item">
-         <!-- Your image here -->
-         <img src="static/images/fetch_slide_result.pdf" alt="MY ALT TEXT" style="height:400px !important; display:block !important; margin:auto !important;"/>
-         <h2 class="subtitle has-text-centered">
-           Training result from FetchSlide environment.
-        </h2>
-      </div>
-   </div>
-    </div>
-  </div>
-</section>
-<!-- End video carousel -->
 
 
 <!-- Youtube video -->
@@ -410,16 +457,14 @@
   <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <h2 class="title">BibTeX</h2>
-      <pre><code>
-@inproceedings{ryu2025curricullm,
+      <pre><code>@inproceedings{ryu2025curricullm,
   title={CurricuLLm: Automatic task curricula design for learning complex robot skills using large language models}, 
   author={Ryu, Kanghyun and Liao, Qiayuan and Li, Zhongyu and Sreenath, Koushil and Mehr, Negar},
   booktitle={2025 IEEE International Conference on Robotics and Automation (ICRA)},
   year={2025},
   organization={IEEE},
   arxiv={2409.18382},
-}
-      </code></pre>
+}</code></pre>
     </div>
 </section>
 <!--End BibTex citation -->

@@ -160,7 +160,7 @@
         type="video/mp4">
       </video>
       <h2 class="subtitle has-text-centered">
-        Curriculum learning a walking policy for a Berkeley Humanoid using CurricuLLM. <br>
+        Curriculum learning of a walking policy for a Berkeley Humanoid using CurricuLLM. <br>
         CurricuLLM can learn a real-world policy without human intervention for curriculum design or reward functions.
       </h2>
     </div>
@@ -223,7 +223,7 @@
 	<div class="content has-text-justified">
           <p>
           <strong>Step 2 & 3: Task code generation and evaluation framework in each subtask</strong> - Task code generation LLM takes the environment and target
-          task description, current and past task information, and the reward function used for previous task. Then, $K$ task code candidates for current
+          task description, current and past task information, and the reward function used for previous subtask. Then, $K$ task code candidates for current
           subtask is sampled and used for fine-tuning policies from previous subtask. Then, evaluation LLM receives the trajectory
           rollout informations from trained policy and find a policy that best aligns with current subtask description.
           </p>
@@ -244,28 +244,26 @@
         <div class="content has-text-justified">
             <p>
               CurricuLLM can be applied to various robot tasks. We provide the example curriculum and reward function generated from CurricuLLM for Fetch Push environment.
+              CurricuLLM can break down the complex task to a sequence of subtasks that are easier to learn.
+              Moreover, as the curriculum progresses, the reward function becomes more informative and aligned with the target task.
             </p>
             <blockquote>
               <p>
-Task 1 <br>
+<strong>Task 1</strong><br>
 Name: Reach the Block <br>
-Description: The robot manipulator must use its end effector to reach and position itself directly above the block without making contact. <br>
-Reason: This task focuses on the basic ability to navigate the manipulator's end effector in the workspace and to position it accurately.<br>
+Description: The robot manipulator must use its end effector to reach and position itself <strong>directly above the block</strong> without making contact. <br>
 <br>
-Task 2 <br>
+<strong>Task 2</strong> <br>
 Name: Maintain Contact With the Block<br>
-Description: Once the end effector is directly above the block, slowly decrease the z-coordinate of the end_effector_position to make gentle contact with the block<br>
-Reason: This task is designed to teach the manipulator how to approach and make controlled contact with objects.<br>
+Description: Slowly decrease the z-coordinate of the end_effector_position to <strong>make gentle contact with the block</strong><br>
 <br>
-Task 3<br>
+<strong>Task 3</strong> <br>
 Name: Push to a Short Distance<br>
-Description: After making contact, the robot manipulator must push the block to a predefined point that is a short distance away from the starting point. <br>
-Reason: This step focuses on the fundamental skills of manipulating an object and understanding how the end effector's movements translate to the block's movements.<br>
+Description: After making contact, the robot manipulator must <strong>push the block</strong> to a predefined point that is a <strong>short distance away</strong> from the starting point. <br>
 <br>
-Task 4<br>
+<strong>Task 4</strong><br>
 Name: Original Task<br>
-Description: The manipulator needs to push the block to a goal position on the table.<br>
-Reason: This final task combines all the previously acquired skills to accomplish the primary goal of the environment.<br>
+Description: The manipulator needs to <strong>push the block to a goal position</strong> on the table.<br>
               </p>
             </blockquote>
           </div>
@@ -361,7 +359,7 @@ Reason: This final task combines all the previously acquired skills to accomplis
 <!-- End video carousel -->
 
 <!-- Image carousel -->
-<section class="hero is-light">
+<!-- <section class="hero is-light">
   <div class="hero-body">
     <div class="container">
      <h2 class="title is-3">CurricuLLM's reward code motivates exploration to the target task</h2>
@@ -374,14 +372,12 @@ Reason: This final task combines all the previously acquired skills to accomplis
 
       <div id="results-carousel" class="carousel results-carousel">
       <div class="item">
-        <!-- Your image here -->
         <img src="static/images/CurricuLLM reward code example.pdf" alt="MY ALT TEXT" style="height:400px !important; display:block !important; margin:auto !important;"/>
         <h2 class="subtitle has-text-centered">
           Reward code from CurricuLLM can capture diverse behaviors required for the target task.
         </h2>
       </div>
       <div class="item">
-        <!-- Your image here -->
         <img src="static/images/LLM-Scratch reward.pdf" alt="MY ALT TEXT" style="height:200px !important; display:block !important; margin:auto !important;"/>
         <h2 class="subtitle has-text-centered">
          Zero-shot querying for the target task reward code leads to sparse, uninformative reward code.
@@ -390,7 +386,7 @@ Reason: This final task combines all the previously acquired skills to accomplis
   </div>
 </div>
 </div>
-</section>
+</section> -->
 <!-- End image carousel -->
 
 <!-- Video carousel -->

@@ -1,6 +1,7 @@
 # CurricuLLM: Automatic Task Curricula Design for Learning Complex Robot Skills using Large Language Models
 
 [[arXiv]](https://arxiv.org/abs/2409.18382)
+[[Project Website]](https://iconlab.negarmehr.com/CurricuLLM/)
 
 ## Introduction
 
